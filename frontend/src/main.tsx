@@ -9,15 +9,9 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";  // Global styles (Tailwind, custom CSS, theme tokens)
 
-console.log("[v0] main.tsx loaded");
-
 // Mount the entire React app into the #root div in index.html
 const rootElement = document.getElementById("root");
-console.log("[v0] Root element found:", !!rootElement);
 
 if (rootElement) {
   createRoot(rootElement).render(<App />);
-  console.log("[v0] App rendered to root");
-} else {
-  console.error("[v0] Root element not found!");
 }

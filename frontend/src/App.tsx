@@ -37,7 +37,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("[v0] React Error Boundary caught:", error, errorInfo);
+    console.error("React Error:", error, errorInfo);
   }
 
   render() {
@@ -115,8 +115,6 @@ import DashboardLayout from "./components/dashboard/DashboardLayout";
 // Clerk publishable key from environment
 const CLERK_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
-console.log("[v0] CLERK_KEY present:", !!CLERK_KEY);
-
 // Create a React Query client for caching API responses
 const queryClient = new QueryClient();
 
@@ -130,36 +128,34 @@ const MissingEnvFallback = () => (
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    background: "hsl(225, 50%, 4%)",
+    background: "#070b14",
     color: "white",
-    fontFamily: "'Inter', system-ui, sans-serif",
-    padding: "2rem",
+    fontFamily: "system-ui, -apple-system, sans-serif",
+    padding: "32px",
   }}>
     <div style={{ maxWidth: 520, textAlign: "center" }}>
       <div style={{
         width: 64, height: 64, borderRadius: 16,
-        background: "linear-gradient(135deg, hsl(217,91%,55%), hsl(260,100%,65%))",
+        background: "linear-gradient(135deg, #3b82f6, #8b5cf6)",
         display: "flex", alignItems: "center", justifyContent: "center",
-        margin: "0 auto 1.5rem", fontSize: 28,
-      }}>⚠️</div>
-      <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 12 }}>
+        margin: "0 auto 24px", fontSize: 28, color: "white",
+      }}>!</div>
+      <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 12, color: "white" }}>
         Configuration Required
       </h1>
-      <p style={{ color: "rgba(255,255,255,0.5)", lineHeight: 1.7, marginBottom: 24, fontSize: 15 }}>
-        The <code style={{ background: "rgba(255,255,255,0.08)", padding: "2px 8px", borderRadius: 6, fontSize: 13 }}>VITE_CLERK_PUBLISHABLE_KEY</code> environment 
-        variable is not set. Please add it to your Vercel project settings or <code style={{ background: "rgba(255,255,255,0.08)", padding: "2px 8px", borderRadius: 6, fontSize: 13 }}>.env</code> file 
-        and redeploy.
+      <p style={{ color: "#9ca3af", lineHeight: 1.7, marginBottom: 24, fontSize: 15 }}>
+        The VITE_CLERK_PUBLISHABLE_KEY environment variable is not set. 
+        Please add it to your Vercel project settings and redeploy.
       </p>
       <div style={{
-        background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
+        background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
         borderRadius: 12, padding: "16px 20px", textAlign: "left", fontSize: 13,
-        color: "rgba(255,255,255,0.6)", lineHeight: 1.8,
+        color: "#9ca3af", lineHeight: 1.8,
       }}>
-        <strong style={{ color: "rgba(255,255,255,0.9)" }}>Steps to fix:</strong><br/>
-        1. Go to Vercel Dashboard → Settings → Environment Variables<br/>
-        2. Add <code style={{ color: "#60a5fa" }}>VITE_CLERK_PUBLISHABLE_KEY</code> = your Clerk key<br/>
-        3. Add <code style={{ color: "#60a5fa" }}>VITE_API_URL</code> = your backend URL<br/>
-        4. Redeploy the project
+        <strong style={{ color: "white" }}>Steps to fix:</strong><br/>
+        1. Go to Vercel Dashboard - Settings - Environment Variables<br/>
+        2. Add VITE_CLERK_PUBLISHABLE_KEY = your Clerk key<br/>
+        3. Redeploy the project
       </div>
     </div>
   </div>
@@ -221,15 +217,10 @@ const AppContent = () => {
  * Order matters: Clerk > QueryClient > Tooltip > Router > Auth
  */
 const App = () => {
-  console.log("[v0] App component rendering");
-  
   // If Clerk key is missing, show a helpful error page instead of a blank screen
   if (!CLERK_KEY) {
-    console.log("[v0] Clerk key missing, showing fallback");
     return <MissingEnvFallback />;
   }
-  
-  console.log("[v0] Clerk key present, rendering full app");
 
   return (
     <ErrorBoundary>
