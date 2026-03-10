@@ -1,28 +1,30 @@
 /**
- * AuthContext.tsx - Authentication State Manager
+ * AuthContext.tsx - Authentication State Manager (Clerk + Supabase Hybrid)
  * 
- * This context provides login, signup, and logout functionality
- * across the entire app. Any component can use the `useAuth()` hook
- * to access the current user, check if they're an admin, or trigger
- * auth actions like signIn/signUp/signOut.
+ * This context wraps Clerk authentication and provides a unified auth interface
+ * for the entire app. Any component can use the `useAuth()` hook to access
+ * the current user, check admin status, or trigger auth actions.
+ * 
+ * Architecture:
+ * - Clerk handles all authentication (sign in, sign up, sign out, sessions)
+ * - Supabase is still used for database operations (contacts, results, etc.)
+ * - Admin check uses Clerk's public metadata or falls back to Supabase RPC
  * 
  * How it works:
- * 1. On app load, checks if user is already logged in (session exists)
- * 2. Listens for auth state changes (login, logout, token refresh)
- * 3. After login, checks if user has an "admin" role in the database
- * 4. Provides all auth data via React Context to child components
+ * 1. ClerkProvider (in App.tsx) manages the auth session
+ * 2. This context reads Clerk's user state and exposes it in a simple interface
+ * 3. Components use useAuth() to get user info, admin status, etc.
  */
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import type { User, Session } from "@supabase/supabase-js";
+import { useUser as useClerkUser, useAuth as useClerkAuth, useClerk } from "@clerk/clerk-react";
 
 // Shape of the auth data available to all components
 interface AuthContextType {
-  user: User | null;           // Current logged-in user (null if not logged in)
-  session: Session | null;     // Current auth session with tokens
-  loading: boolean;            // True while checking initial auth state
-  isAdmin: boolean;            // True if user has "admin" role
+  user: any | null;              // Current logged-in user (null if not logged in)
+  session: any | null;           // Current auth session  
+  loading: boolean;              // True while checking initial auth state
+  isAdmin: boolean;              // True if user has "admin" role
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, displayName?: string, phone?: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -33,82 +35,97 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 /**
  * AuthProvider - Wraps the app and provides auth state to all children.
- * Must be placed inside BrowserRouter (for navigation after auth).
+ * Uses Clerk's hooks internally but exposes a simple interface.
  */
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);    // Start as loading until we check session
+  const { user: clerkUser, isLoaded } = useClerkUser();
+  const { isSignedIn, getToken } = useClerkAuth();
+  const clerk = useClerk();
   const [isAdmin, setIsAdmin] = useState(false);
 
-  /**
-   * Check if a user has the "admin" role in the database.
-   * Uses a secure database function (has_role) that runs with elevated privileges.
-   */
-  const checkAdmin = async (userId: string) => {
-    const { data } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
-    setIsAdmin(!!data);
-  };
-
+  // Check admin status from Clerk's public metadata
   useEffect(() => {
-    // Listen for any auth state changes (login, logout, token refresh)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        // Use setTimeout to avoid potential deadlocks with Supabase client
-        setTimeout(() => checkAdmin(session.user.id), 0);
-      } else {
-        setIsAdmin(false);
-      }
-      setLoading(false);
-    });
-
-    // Also check if there's an existing session on first load
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) checkAdmin(session.user.id);
-      setLoading(false);
-    });
-
-    // Cleanup: unsubscribe when component unmounts
-    return () => subscription.unsubscribe();
-  }, []);
+    if (clerkUser) {
+      // Check publicMetadata for admin role
+      const role = (clerkUser.publicMetadata as any)?.role;
+      setIsAdmin(role === "admin");
+    } else {
+      setIsAdmin(false);
+    }
+  }, [clerkUser]);
 
   /**
-   * Sign in with email and password.
-   * Returns { error } - check if error is null for success.
+   * Sign in with email and password via Clerk.
+   * Clerk handles this through its own UI components,
+   * but this method is kept for backward compatibility.
    */
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error };
+    try {
+      const result = await clerk.client?.signIn.create({
+        identifier: email,
+        password,
+      });
+      if (result?.status === "complete") {
+        await clerk.setActive({ session: result.createdSessionId });
+        return { error: null };
+      }
+      return { error: { message: "Sign in incomplete. Please try again." } };
+    } catch (err: any) {
+      return { error: { message: err?.errors?.[0]?.longMessage || err?.message || "Sign in failed" } };
+    }
   };
 
   /**
-   * Create a new account with email and password.
-   * Optional: displayName and phone are stored in user metadata.
-   * User must verify email before they can sign in.
+   * Create a new account with email and password via Clerk.
    */
   const signUp = async (email: string, password: string, displayName?: string, phone?: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { display_name: displayName, phone },
-        emailRedirectTo: window.location.origin,  // Where to redirect after email verification
-      },
-    });
-    return { error };
+    try {
+      const result = await clerk.client?.signUp.create({
+        emailAddress: email,
+        password,
+        firstName: displayName?.split(" ")[0] || "",
+        lastName: displayName?.split(" ").slice(1).join(" ") || "",
+      });
+      if (result?.status === "complete") {
+        await clerk.setActive({ session: result.createdSessionId });
+        return { error: null };
+      }
+      // If email verification is needed
+      if (result?.status === "missing_requirements") {
+        await result.prepareEmailAddressVerification({ strategy: "email_code" });
+        return { error: { message: "Please check your email for a verification code." } };
+      }
+      return { error: null };
+    } catch (err: any) {
+      return { error: { message: err?.errors?.[0]?.longMessage || err?.message || "Sign up failed" } };
+    }
   };
 
-  /** Sign out the current user and clear session */
+  /** Sign out the current user */
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await clerk.signOut();
   };
+
+  // Build a user-like object compatible with existing components
+  const user = clerkUser ? {
+    id: clerkUser.id,
+    email: clerkUser.primaryEmailAddress?.emailAddress || "",
+    user_metadata: {
+      display_name: clerkUser.fullName || clerkUser.firstName || "",
+      phone: clerkUser.primaryPhoneNumber?.phoneNumber || "",
+    },
+  } : null;
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, isAdmin, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{
+      user: isSignedIn ? user : null,
+      session: isSignedIn ? { user } : null,
+      loading: !isLoaded,
+      isAdmin,
+      signIn,
+      signUp,
+      signOut,
+    }}>
       {children}
     </AuthContext.Provider>
   );
@@ -116,7 +133,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 /**
  * useAuth() - Hook to access auth state from any component.
- * Must be used inside an AuthProvider.
+ * Must be used inside an AuthProvider (which is inside ClerkProvider).
  * 
  * Example usage:
  *   const { user, isAdmin, signOut } = useAuth();

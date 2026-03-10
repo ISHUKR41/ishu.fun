@@ -2,15 +2,16 @@
  * App.tsx - Main Application Entry Point
  * 
  * This is the root component of ISHU — Indian StudentHub University.
- * It sets up all the global providers (React Query, Tooltips, Auth)
+ * It sets up all the global providers (Clerk Auth, React Query, Tooltips)
  * and defines all the page routes for the entire application.
  * 
  * Structure:
+ * - ClerkProvider: Handles user authentication (sign in, sign up, sessions)
  * - QueryClientProvider: Handles server-state caching (API calls)
  * - TooltipProvider: Enables tooltips across the app
  * - Toaster/Sonner: Toast notification systems
  * - BrowserRouter: Enables client-side routing
- * - AuthProvider: Manages user login/signup state globally
+ * - AuthProvider: Bridges Clerk auth state to app components
  */
 
 import { Toaster } from "@/components/ui/toaster";
@@ -18,6 +19,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ClerkProvider } from "@clerk/clerk-react";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { useDynamicFavicon } from "@/hooks/useDynamicFavicon";
@@ -41,6 +43,9 @@ import BlogPostPage from "./pages/BlogPostPage";
 import NewsArticlePage from "./pages/NewsArticlePage";
 import PrivacyPage from "./pages/PrivacyPage";
 import TermsPage from "./pages/TermsPage";
+
+// Clerk publishable key from environment
+const CLERK_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 // Create a React Query client for caching API responses
 const queryClient = new QueryClient();
@@ -87,21 +92,23 @@ const AppContent = () => {
 
 /**
  * App - Root component that wraps everything with providers.
- * Order matters: QueryClient > Tooltip > Router > Auth
+ * Order matters: Clerk > QueryClient > Tooltip > Router > Auth
  */
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      {/* Two toast systems for different notification styles */}
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <AppContent />
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <ClerkProvider publishableKey={CLERK_KEY}>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        {/* Two toast systems for different notification styles */}
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <AppContent />
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ClerkProvider>
 );
 
 export default App;

@@ -86,12 +86,33 @@ const ContactPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.from("contacts").insert({
+
+    // 1. Submit to Formspree (primary — sends email notification)
+    let formspreeOk = false;
+    try {
+      const res = await fetch("https://formspree.io/f/mreypoyw", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          phone: form.phone || "N/A",
+          subject: form.subject,
+          message: form.message,
+        }),
+      });
+      formspreeOk = res.ok;
+    } catch { /* Formspree failed, will try Supabase */ }
+
+    // 2. Also save to Supabase database (backup)
+    const { error: dbError } = await supabase.from("contacts").insert({
       name: form.name, email: form.email, phone: form.phone || null, subject: form.subject, message: form.message,
     });
+
     setLoading(false);
-    if (error) {
-      toast({ title: "Failed to send", description: error.message, variant: "destructive" });
+
+    if (!formspreeOk && dbError) {
+      toast({ title: "Failed to send", description: "Please try again or contact us via WhatsApp.", variant: "destructive" });
     } else {
       setSubmitted(true);
       toast({ title: "Message sent successfully!" });
@@ -285,17 +306,47 @@ const ContactPage = () => {
                   </form>
                 ) : (
                   <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-                    className="rounded-2xl border border-border bg-card p-12 text-center">
-                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200 }}
-                      className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success/10">
-                      <Check size={32} className="text-success" />
+                    transition={{ type: "spring", stiffness: 180, damping: 20 }}
+                    className="rounded-2xl border border-border glass-strong p-12 text-center relative overflow-hidden">
+                    {/* Decorative animated glow */}
+                    <motion.div
+                      animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.6, 0.3] }}
+                      transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                      className="absolute -top-8 left-1/2 -translate-x-1/2 h-32 w-32 rounded-full bg-[hsl(var(--success))]/15 blur-3xl"
+                    />
+                    {/* Success icon with ripple */}
+                    <div className="relative">
+                      <motion.div
+                        animate={{ scale: [1, 1.5, 1], opacity: [0.4, 0, 0.4] }}
+                        transition={{ repeat: Infinity, duration: 2, ease: "easeOut" }}
+                        className="absolute inset-0 mx-auto h-16 w-16 rounded-full bg-[hsl(var(--success))]/20"
+                      />
+                      <motion.div initial={{ scale: 0, rotate: -180 }} animate={{ scale: 1, rotate: 0 }}
+                        transition={{ type: "spring", stiffness: 250, damping: 15, delay: 0.2 }}
+                        className="relative mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-[hsl(var(--success))]/10 border border-[hsl(var(--success))]/20">
+                        <Check size={32} className="text-[hsl(var(--success))]" />
+                      </motion.div>
+                    </div>
+                    <motion.h2 initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }}
+                      className="font-display text-2xl font-bold text-foreground">Thank You!</motion.h2>
+                    <motion.p initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }}
+                      className="mt-3 text-muted-foreground leading-relaxed">
+                      Your message has been received. We'll get back to you within 24 hours.
+                    </motion.p>
+                    <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.5 }}
+                      className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+                      <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                        onClick={() => { setSubmitted(false); setForm({ name: "", email: "", phone: "", subject: "General", message: "" }); setAttachment(null); }}
+                        className="rounded-xl bg-primary px-6 py-2.5 font-display text-sm font-semibold text-primary-foreground transition-all hover:shadow-glow">
+                        Send Another Message
+                      </motion.button>
+                      <a href="https://wa.me/918986985813" target="_blank" rel="noopener noreferrer"
+                        className="rounded-xl border border-border px-6 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors">
+                        Chat on WhatsApp
+                      </a>
                     </motion.div>
-                    <h2 className="font-display text-2xl font-bold text-foreground">Message Sent!</h2>
-                    <p className="mt-2 text-muted-foreground">We usually respond within 24 hours.</p>
-                    <button onClick={() => { setSubmitted(false); setForm({ name: "", email: "", phone: "", subject: "General", message: "" }); setAttachment(null); }}
-                      className="mt-6 rounded-lg border border-border px-6 py-2 text-sm text-foreground hover:bg-secondary">
-                      Send Another Message
-                    </button>
+                    <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}
+                      className="mt-4 text-xs text-muted-foreground">Reference ID: {Date.now().toString(36).toUpperCase()}</motion.p>
                   </motion.div>
                 )}
               </FadeInView>
