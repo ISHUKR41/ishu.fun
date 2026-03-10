@@ -23,6 +23,65 @@ import { ClerkProvider } from "@clerk/clerk-react";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { useDynamicFavicon } from "@/hooks/useDynamicFavicon";
+import { Component, ErrorInfo, ReactNode } from "react";
+
+// Error Boundary Component
+class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; error: Error | null }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("[v0] React Error Boundary caught:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "hsl(225, 50%, 4%)",
+          color: "white",
+          fontFamily: "'Inter', system-ui, sans-serif",
+          padding: "2rem",
+        }}>
+          <div style={{ maxWidth: 520, textAlign: "center" }}>
+            <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 12 }}>
+              Something went wrong
+            </h1>
+            <p style={{ color: "rgba(255,255,255,0.6)", marginBottom: 16 }}>
+              {this.state.error?.message || "An unexpected error occurred"}
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              style={{
+                background: "hsl(210 100% 56%)",
+                color: "white",
+                padding: "12px 24px",
+                borderRadius: "8px",
+                border: "none",
+                cursor: "pointer",
+                fontWeight: 600
+              }}
+            >
+              Reload Page
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 // Page imports - each page is a separate component
 import Index from "./pages/Index";
@@ -55,6 +114,8 @@ import DashboardLayout from "./components/dashboard/DashboardLayout";
 
 // Clerk publishable key from environment
 const CLERK_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+
+console.log("[v0] CLERK_KEY present:", !!CLERK_KEY);
 
 // Create a React Query client for caching API responses
 const queryClient = new QueryClient();
@@ -160,26 +221,33 @@ const AppContent = () => {
  * Order matters: Clerk > QueryClient > Tooltip > Router > Auth
  */
 const App = () => {
+  console.log("[v0] App component rendering");
+  
   // If Clerk key is missing, show a helpful error page instead of a blank screen
   if (!CLERK_KEY) {
+    console.log("[v0] Clerk key missing, showing fallback");
     return <MissingEnvFallback />;
   }
+  
+  console.log("[v0] Clerk key present, rendering full app");
 
   return (
-    <ClerkProvider publishableKey={CLERK_KEY}>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          {/* Two toast systems for different notification styles */}
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AuthProvider>
-              <AppContent />
-            </AuthProvider>
-          </BrowserRouter>
-        </TooltipProvider>
-      </QueryClientProvider>
-    </ClerkProvider>
+    <ErrorBoundary>
+      <ClerkProvider publishableKey={CLERK_KEY}>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            {/* Two toast systems for different notification styles */}
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <AuthProvider>
+                <AppContent />
+              </AuthProvider>
+            </BrowserRouter>
+          </TooltipProvider>
+        </QueryClientProvider>
+      </ClerkProvider>
+    </ErrorBoundary>
   );
 };
 
