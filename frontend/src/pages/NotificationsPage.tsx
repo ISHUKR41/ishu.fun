@@ -100,7 +100,9 @@ const NotificationsPage = () => {
 
   // Handler: mark all as read
   const handleMarkAllRead = async () => {
-    const unreadIds = notifications.filter((n: any) => !n.isRead).map((n: any) => n.id);
+    const unreadIds = notifications
+      .filter((n: any) => !n.isRead)
+      .map((n: any) => n._id || n.id);
     if (unreadIds.length === 0) return;
     try {
       await markAllAsRead(unreadIds);
@@ -197,10 +199,11 @@ const NotificationsPage = () => {
                 {group.items.map((notif: any) => {
                   const config = typeConfig[notif.type] || typeConfig.welcome;
                   const Icon = config.icon;
+                  const notifId = notif._id || notif.id;
                   return (
                     <div
-                      key={notif.id}
-                      onClick={() => handleMarkRead(notif.id, notif.isRead)}
+                      key={notifId}
+                      onClick={() => handleMarkRead(notifId, notif.isRead)}
                       className={`notif-card group flex items-start gap-4 rounded-xl border p-4 transition-all duration-200 hover:bg-white/[0.04] cursor-pointer ${
                         notif.isRead
                           ? "border-white/[0.04] bg-white/[0.01]"

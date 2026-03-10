@@ -60,6 +60,51 @@ const CLERK_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 const queryClient = new QueryClient();
 
 /**
+ * MissingEnvFallback - Shown when Clerk key is not configured.
+ * This prevents the blank page issue on Vercel when env vars are missing.
+ */
+const MissingEnvFallback = () => (
+  <div style={{
+    minHeight: "100vh",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    background: "hsl(225, 50%, 4%)",
+    color: "white",
+    fontFamily: "'Inter', system-ui, sans-serif",
+    padding: "2rem",
+  }}>
+    <div style={{ maxWidth: 520, textAlign: "center" }}>
+      <div style={{
+        width: 64, height: 64, borderRadius: 16,
+        background: "linear-gradient(135deg, hsl(217,91%,55%), hsl(260,100%,65%))",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        margin: "0 auto 1.5rem", fontSize: 28,
+      }}>⚠️</div>
+      <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 12 }}>
+        Configuration Required
+      </h1>
+      <p style={{ color: "rgba(255,255,255,0.5)", lineHeight: 1.7, marginBottom: 24, fontSize: 15 }}>
+        The <code style={{ background: "rgba(255,255,255,0.08)", padding: "2px 8px", borderRadius: 6, fontSize: 13 }}>VITE_CLERK_PUBLISHABLE_KEY</code> environment 
+        variable is not set. Please add it to your Vercel project settings or <code style={{ background: "rgba(255,255,255,0.08)", padding: "2px 8px", borderRadius: 6, fontSize: 13 }}>.env</code> file 
+        and redeploy.
+      </p>
+      <div style={{
+        background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
+        borderRadius: 12, padding: "16px 20px", textAlign: "left", fontSize: 13,
+        color: "rgba(255,255,255,0.6)", lineHeight: 1.8,
+      }}>
+        <strong style={{ color: "rgba(255,255,255,0.9)" }}>Steps to fix:</strong><br/>
+        1. Go to Vercel Dashboard → Settings → Environment Variables<br/>
+        2. Add <code style={{ color: "#60a5fa" }}>VITE_CLERK_PUBLISHABLE_KEY</code> = your Clerk key<br/>
+        3. Add <code style={{ color: "#60a5fa" }}>VITE_API_URL</code> = your backend URL<br/>
+        4. Redeploy the project
+      </div>
+    </div>
+  </div>
+);
+
+/**
  * AppContent - Contains route definitions and dynamic favicon logic.
  * Separated from App so it can use hooks that require Router context.
  */
@@ -111,23 +156,31 @@ const AppContent = () => {
 
 /**
  * App - Root component that wraps everything with providers.
+ * Shows a helpful error message if Clerk key is missing (prevents blank page).
  * Order matters: Clerk > QueryClient > Tooltip > Router > Auth
  */
-const App = () => (
-  <ClerkProvider publishableKey={CLERK_KEY}>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        {/* Two toast systems for different notification styles */}
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AuthProvider>
-            <AppContent />
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
-  </ClerkProvider>
-);
+const App = () => {
+  // If Clerk key is missing, show a helpful error page instead of a blank screen
+  if (!CLERK_KEY) {
+    return <MissingEnvFallback />;
+  }
+
+  return (
+    <ClerkProvider publishableKey={CLERK_KEY}>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          {/* Two toast systems for different notification styles */}
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AuthProvider>
+              <AppContent />
+            </AuthProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ClerkProvider>
+  );
+};
 
 export default App;

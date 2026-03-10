@@ -457,6 +457,18 @@ const SignInPage = () => {
         .cl-footerPages {
           opacity: 0.5;
         }
+        /* Hide phone number fields — Indian numbers not supported on Clerk free plan */
+        .cl-formField__phoneNumber,
+        .cl-phoneNumberInput,
+        [data-field-name="phoneNumber"],
+        .cl-formFieldRow__phoneNumber,
+        .cl-alternativeMethodsBlockButton__phoneCode,
+        .cl-socialButtonsBlockButton__phoneCode,
+        button[data-localization-key*="phone"],
+        .cl-formFieldLabel[for*="phone"],
+        .cl-formFieldInput[name*="phone"] {
+          display: none !important;
+        }
       `}</style>
     </Layout>
   );
