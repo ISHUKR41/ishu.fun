@@ -22,6 +22,7 @@ const navLinks = [
   { label: "Home", href: "/" },
   { label: "Results", href: "/results" },
   { label: "Tools", href: "/tools" },
+  { label: "TV", href: "/tv" },
   { label: "News", href: "/news" },
   { label: "Test", href: "/test" },
   { label: "Blog", href: "/blog" },

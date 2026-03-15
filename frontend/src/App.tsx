@@ -113,6 +113,7 @@ import ToolHistoryPage from "./pages/ToolHistoryPage";
 import YouTubeDownloaderPage from "./pages/YouTubeDownloaderPage";
 import TeraboxDownloaderPage from "./pages/TeraboxDownloaderPage";
 import UniversalVideoDownloaderPage from "./pages/UniversalVideoDownloaderPage";
+import TVPage from "./pages/TVPage";
 import DashboardLayout from "./components/dashboard/DashboardLayout";
 
 // Clerk publishable key from environment
@@ -193,6 +194,7 @@ const AppContent = () => {
       <Route path="/contact" element={<ContactPage />} />
       <Route path="/test" element={<TestPage />} />
       <Route path="/about" element={<AboutPage />} />
+      <Route path="/tv" element={<TVPage />} />
       <Route path="/results/state/:stateSlug" element={<StateResultPage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
       <Route path="/terms" element={<TermsPage />} />
