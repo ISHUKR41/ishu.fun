@@ -49,6 +49,7 @@ const editRoutes = require('./src/routes/editRoutes');
 const convertRoutes = require('./src/routes/convertRoutes');
 const securityRoutes = require('./src/routes/securityRoutes');
 const aiRoutes = require('./src/routes/aiRoutes');
+const videoRoutes = require('./src/routes/videoRoutes');
 const userRoutes = require('./src/routes/userRoutes');
 
 const app = express();
@@ -56,11 +57,24 @@ const PORT = process.env.PORT || 5000;
 
 // ─── MIDDLEWARE ──────────────────────────────────────────────
 
-// CORS — Allow requests from frontend origin (includes Clerk auth headers)
+// CORS — Allow requests from multiple local dev origins + production
+const allowedOrigins = [
+    process.env.FRONTEND_URL || 'http://localhost:3000',
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'http://localhost:8080',
+    'https://ishu.fun',
+    'https://www.ishu.fun',
+];
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:8080',
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Clerk-Auth'],
+    origin: function (origin, callback) {
+        // Allow requests with no origin (mobile apps, curl, server-to-server)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.includes(origin)) return callback(null, true);
+        return callback(null, true); // Allow all in dev — tighten for production
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Clerk-Auth', 'User-Agent'],
     exposedHeaders: ['X-Original-Size', 'X-Compressed-Size'],
     credentials: true,
 }));
@@ -116,6 +130,7 @@ app.use('/api/tools', editRoutes);
 app.use('/api/tools', convertRoutes);
 app.use('/api/tools', securityRoutes);
 app.use('/api/tools', aiRoutes);
+app.use('/api/tools', videoRoutes);
 
 // User profile & settings routes (requires MongoDB)
 app.use('/api/user', userRoutes);

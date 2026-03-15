@@ -513,12 +513,12 @@ const ToolsPage = () => {
           "@type": "WebPage",
           "name": "Free PDF Tools — ISHU",
           "description": "100+ free PDF tools: merge, split, compress, convert, edit, sign, protect & more.",
-          "url": "https://ishu.lovable.app/tools",
+          "url": "https://ishu.fun/tools",
           "breadcrumb": {
             "@type": "BreadcrumbList",
             "itemListElement": [
-              { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://ishu.lovable.app/" },
-              { "@type": "ListItem", "position": 2, "name": "PDF Tools", "item": "https://ishu.lovable.app/tools" }
+              { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://ishu.fun/" },
+              { "@type": "ListItem", "position": 2, "name": "PDF Tools", "item": "https://ishu.fun/tools" }
             ]
           }
         })

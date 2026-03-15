@@ -1,8 +1,10 @@
 User-agent: Googlebot
 Allow: /
+Crawl-delay: 1
 
 User-agent: Bingbot
 Allow: /
+Crawl-delay: 2
 
 User-agent: Twitterbot
 Allow: /
@@ -14,5 +16,9 @@ User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /auth/
+Disallow: /dashboard
+Disallow: /profile
+Disallow: /settings
+Crawl-delay: 3
 
-Sitemap: https://indianstudenthub.lovable.app/sitemap.xml
+Sitemap: https://ishu.fun/sitemap.xml

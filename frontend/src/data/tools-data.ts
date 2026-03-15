@@ -4,7 +4,7 @@
  * Contains the complete list of all 100+ PDF tools available on the platform.
  * Each tool has a slug (URL path), display name, description, category, and icon.
  * 
- * Categories: Convert, Edit, Organize, Security, AI & Others
+ * Categories: Video Tools, Convert, Edit, Organize, Security, AI & Others
  * 
  * This data is used by:
  * - ToolsPage.tsx (main tools listing with search/filter)
@@ -23,6 +23,11 @@ export interface ToolData {
 }
 
 export const allToolsData: ToolData[] = [
+  // Video Tools (NEW — Featured)
+  { slug: "youtube-downloader", name: "YouTube Downloader", desc: "Download YouTube videos in HD quality with preview. Paste URL, select quality, and download instantly — 100% free.", category: "Video Tools", icon: "Youtube" },
+  { slug: "terabox-downloader", name: "Terabox Downloader", desc: "Download Terabox videos and files with preview. Fast, free direct download links from any Terabox share URL.", category: "Video Tools", icon: "Cloud" },
+  { slug: "universal-video-downloader", name: "Universal Video Downloader", desc: "Download videos from YouTube, Instagram, TikTok, Twitter/X, Facebook, Reddit, Vimeo & 1000+ platforms. Quality selection & audio extract.", category: "Video Tools", icon: "Globe" },
+
   // PDF Operations
   { slug: "merge-pdf", name: "Merge PDF", desc: "Combine PDFs in the order you want with the easiest PDF merger available.", category: "Organize", icon: "Merge" },
   { slug: "split-pdf", name: "Split PDF", desc: "Separate one page or a whole set for easy conversion into independent PDF files.", category: "Organize", icon: "Scissors" },
@@ -139,4 +144,4 @@ export const allToolsData: ToolData[] = [
   { slug: "grayscale-pdf", name: "Grayscale PDF", desc: "Convert color PDF to grayscale/black-and-white.", category: "AI & Others", icon: "Contrast" },
 ];
 
-export const toolCategories = ["All", "Convert", "Edit", "Organize", "Security", "AI & Others"];
+export const toolCategories = ["All", "Video Tools", "Convert", "Edit", "Organize", "Security", "AI & Others"];

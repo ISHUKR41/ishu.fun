@@ -11,7 +11,8 @@ import {
   Ruler, Pen, Mail, Archive, RefreshCw, PenTool, Stamp, Hash, AlignVerticalJustifyStart,
   MessageSquare, Highlighter, FormInput, Lock, Unlock, EyeOff, Shield, Settings,
   ScanLine, FileSearch, Languages, MessageCircle, Wrench, Camera, Eye, FilePlus,
-  Maximize, Square, Contrast, ImagePlus, FileUp, FileEdit
+  Maximize, Square, Contrast, ImagePlus, FileUp, FileEdit,
+  Youtube, Cloud
 } from "lucide-react";
 
 const iconMap: Record<string, React.ElementType> = {
@@ -21,6 +22,7 @@ const iconMap: Record<string, React.ElementType> = {
   MessageSquare, Highlighter, FormInput, Lock, Unlock, EyeOff, Shield, Settings,
   ScanLine, FileSearch, Languages, MessageCircle, Wrench, Camera, Eye, FilePlus,
   Maximize, Square, Contrast, ImagePlus, FileUp, FileEdit,
+  Youtube, Cloud,
 };
 
 interface ToolIconProps {
