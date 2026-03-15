@@ -43,6 +43,25 @@ const TeraboxDownloaderPage = () => {
     try { const text = await navigator.clipboard.readText(); setUrl(text); } catch {}
   };
 
+  const fetchWithRetry = async (fetchUrl: string, options: RequestInit, retries = 1): Promise<Response> => {
+    for (let i = 0; i <= retries; i++) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000);
+        const res = await fetch(fetchUrl, { ...options, signal: controller.signal });
+        clearTimeout(timeoutId);
+        return res;
+      } catch (err: any) {
+        if (i < retries && err?.name !== "AbortError") {
+          await new Promise(r => setTimeout(r, 2000));
+          continue;
+        }
+        throw err;
+      }
+    }
+    throw new Error("Request failed after retries");
+  };
+
   const fetchFileInfo = async () => {
     if (!url.trim()) { setError("Please enter a Terabox URL."); return; }
     setLoading(true);
@@ -52,25 +71,20 @@ const TeraboxDownloaderPage = () => {
     setDownloadReady(null);
 
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 45000);
-
-      const res = await fetch(`${API_URL}/api/tools/terabox-info`, {
+      const res = await fetchWithRetry(`${API_URL}/api/tools/terabox-info`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: url.trim() }),
-        signal: controller.signal,
       });
-      clearTimeout(timeoutId);
 
       const data = await res.json();
       if (!data.success) { setError(data.error || "Failed to fetch file info."); return; }
       setFileInfo(data.file);
     } catch (err: any) {
       if (err?.name === "AbortError") {
-        setError("Request timed out. The server took too long to respond. Please try again.");
+        setError("Request timed out. The server might be waking up — please try again in a few seconds.");
       } else {
-        setError("Could not connect to the server. Please make sure the backend is running on " + API_URL);
+        setError("Network error. Please check if the backend server is running and try again.");
       }
     } finally {
       setLoading(false);
@@ -85,24 +99,26 @@ const TeraboxDownloaderPage = () => {
 
     // If the file has a direct download link from third-party API, use it
     if (fileInfo.downloadLink && !fileInfo.useBackendDownload) {
-      window.open(fileInfo.downloadLink, "_blank");
+      const a = document.createElement("a");
+      a.href = fileInfo.downloadLink;
+      a.download = fileInfo.name;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
       setDownloadReady({ url: fileInfo.downloadLink, filename: fileInfo.name });
       setTimeout(() => setDownloading(false), 3000);
       return;
     }
 
-    // Otherwise, use backend download endpoint (yt-dlp)
+    // Otherwise, use backend download endpoint
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 120000);
-
-      const res = await fetch(`${API_URL}/api/tools/terabox-download`, {
+      const res = await fetchWithRetry(`${API_URL}/api/tools/terabox-download`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: url.trim() }),
-        signal: controller.signal,
       });
-      clearTimeout(timeoutId);
 
       const data = await res.json();
       if (!data.success) { setError(data.error || "Download failed."); return; }
@@ -112,7 +128,17 @@ const TeraboxDownloaderPage = () => {
         : `${API_URL}${data.downloadUrl}`;
 
       setDownloadReady({ url: fullDownloadUrl, filename: data.filename || fileInfo.name });
-      window.open(fullDownloadUrl, "_blank");
+
+      const a = document.createElement("a");
+      a.href = fullDownloadUrl;
+      a.download = data.filename || fileInfo.name;
+      if (data.isDirect) {
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+      }
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     } catch (err: any) {
       if (err?.name === "AbortError") {
         setError("Download timed out. The file may be too large or the server is busy.");

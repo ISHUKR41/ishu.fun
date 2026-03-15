@@ -1,19 +1,20 @@
 /**
- * videoRoutes.js — Video Downloader API Routes (WORKING Engine)
+ * videoRoutes.js — Video Downloader API Routes (FULLY WORKING)
  *
- * Multi-engine approach (automatically tries each until one works):
- *   1. yt-dlp (auto-downloaded binary) — 1000+ sites
- *   2. Cobalt API (multiple instances) — YouTube, Instagram, TikTok, Twitter, etc.
- *   3. @distube/ytdl-core — YouTube-specific fallback
- *   4. Third-party APIs — Terabox-specific fallback
+ * Multi-engine download approach:
+ *   1. Cobalt API (updated working instances) — YouTube, Instagram, TikTok, Twitter, etc.
+ *   2. yt-dlp (local binary) — 1000+ sites fallback
+ *   3. @distube/ytdl-core — YouTube-specific last resort
+ *   4. Third-party APIs — Terabox-specific
  *
  * Endpoints:
- *   POST /youtube-info      — Fetch YouTube video metadata + available qualities
- *   POST /youtube-download  — Download YouTube video in selected quality
- *   POST /terabox-info      — Fetch Terabox file info
- *   POST /terabox-download  — Download Terabox file
- *   POST /video-info        — Universal: fetch any video URL metadata
- *   POST /video-download    — Universal: download from any platform
+ *   POST /youtube-info       — Fetch YouTube video metadata + available qualities
+ *   POST /youtube-download   — Download YouTube video in selected quality
+ *   POST /terabox-info       — Fetch Terabox file info
+ *   POST /terabox-download   — Download Terabox file
+ *   POST /video-info         — Universal: fetch any video URL metadata
+ *   POST /video-download     — Universal: download from any platform
+ *   GET  /video-stream/:id   — Stream downloaded file to browser
  */
 
 const express = require('express');
@@ -43,7 +44,7 @@ try {
   ffmpegPath = null;
 }
 
-// ── yt-dlp-wrap setup (auto-downloads binary) ──────────────
+// ── yt-dlp-wrap setup ──────────────────────────────────────
 let YTDlpWrap, ytDlpInstance;
 const YTDLP_BINARY_PATH = path.resolve(__dirname, '../../yt-dlp' + (process.platform === 'win32' ? '.exe' : ''));
 
@@ -51,15 +52,12 @@ let ytDlpInitPromise = null;
 
 async function getYtDlp() {
   if (ytDlpInstance) return ytDlpInstance;
-  
-  // Prevent multiple simultaneous init attempts
   if (ytDlpInitPromise) return ytDlpInitPromise;
 
   ytDlpInitPromise = (async () => {
     try {
       YTDlpWrap = require('yt-dlp-wrap').default || require('yt-dlp-wrap');
 
-      // Check if binary exists, if not download it
       if (!fs.existsSync(YTDLP_BINARY_PATH)) {
         console.log('[Video] ⬇️ Downloading yt-dlp binary...');
         try {
@@ -67,25 +65,23 @@ async function getYtDlp() {
           console.log('[Video] ✅ yt-dlp binary downloaded to:', YTDLP_BINARY_PATH);
         } catch (downloadErr) {
           console.warn('[Video] ⚠️ yt-dlp binary download failed:', downloadErr.message);
-          console.log('[Video] ℹ️ Will use Cobalt API and other fallbacks instead.');
           ytDlpInitPromise = null;
           return null;
         }
       }
 
       ytDlpInstance = new YTDlpWrap(YTDLP_BINARY_PATH);
-      
-      // Quick test to verify binary works
+
       try {
-        await ytDlpInstance.execPromise(['--version']);
-        console.log('[Video] ✅ yt-dlp-wrap initialized and verified');
+        const version = await ytDlpInstance.execPromise(['--version']);
+        console.log('[Video] ✅ yt-dlp version:', version.trim());
       } catch (verifyErr) {
-        console.warn('[Video] ⚠️ yt-dlp binary exists but failed to run:', verifyErr.message);
+        console.warn('[Video] ⚠️ yt-dlp binary failed:', verifyErr.message);
         ytDlpInstance = null;
         ytDlpInitPromise = null;
         return null;
       }
-      
+
       return ytDlpInstance;
     } catch (e) {
       console.error('[Video] ❌ yt-dlp-wrap init failed:', e.message);
@@ -100,7 +96,7 @@ async function getYtDlp() {
 // Initialize on module load (non-blocking)
 getYtDlp().catch(e => console.error('[Video] yt-dlp init error:', e.message));
 
-// ── ytdl-core for YouTube (fallback) ───────────────────────
+// ── ytdl-core for YouTube (last resort) ────────────────────
 let ytdl;
 try {
   ytdl = require('@distube/ytdl-core');
@@ -115,9 +111,7 @@ try {
 // ── HELPERS ───────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════
 
-/**
- * Clean up old downloaded files (older than 15 min)
- */
+/** Clean up old downloaded files (older than 15 min) */
 function cleanupOldFiles() {
   try {
     if (!fs.existsSync(DOWNLOADS_DIR)) return;
@@ -130,15 +124,13 @@ function cleanupOldFiles() {
         if (now - stat.mtimeMs > 15 * 60 * 1000) {
           fs.unlinkSync(filePath);
         }
-      } catch { /* ignore per-file errors */ }
+      } catch { /* ignore */ }
     }
-  } catch (e) { /* ignore cleanup errors */ }
+  } catch { /* ignore */ }
 }
 setInterval(cleanupOldFiles, 5 * 60 * 1000);
 
-/**
- * Detect platform from URL
- */
+/** Detect platform from URL */
 function detectPlatform(url) {
   const platforms = [
     { name: 'YouTube', patterns: [/youtube\.com/i, /youtu\.be/i], icon: '🔴' },
@@ -163,13 +155,8 @@ function detectPlatform(url) {
   return { name: 'Other', icon: '🌐' };
 }
 
-function isYouTubeUrl(url) {
-  return /youtube\.com|youtu\.be/i.test(url);
-}
-
-function isTeraboxUrl(url) {
-  return /terabox\.com|teraboxapp\.com|1024tera\.com|freeterabox\.com|4funbox\.com|mirrobox\.com|nephobox\.com|terabox\.app/i.test(url);
-}
+function isYouTubeUrl(url) { return /youtube\.com|youtu\.be/i.test(url); }
+function isTeraboxUrl(url) { return /terabox\.com|teraboxapp\.com|1024tera\.com|freeterabox\.com|4funbox\.com|mirrobox\.com|nephobox\.com|terabox\.app/i.test(url); }
 
 function extractVideoId(url) {
   const match = url.match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([a-zA-Z0-9_-]{11})/);
@@ -185,21 +172,25 @@ function formatBytes(bytes) {
 
 function sanitizeFilename(name) {
   return (name || 'video')
-    .replace(/[^\w\s\-\u0900-\u097F]/g, '') // Keep letters, numbers, spaces, hyphens, Hindi chars
+    .replace(/[^\w\s\-\u0900-\u097F]/g, '')
     .replace(/\s+/g, '_')
     .substring(0, 80) || 'video';
 }
 
+
+// ═══════════════════════════════════════════════════════════
+// ── COBALT API (Primary Engine) ──────────────────────────
+// ═══════════════════════════════════════════════════════════
+
 /**
- * Try Cobalt API for download
- * Cobalt API v10 format: POST with JSON body
+ * Try Cobalt API for download — updated working instances (2025-2026)
+ * Cobalt API v10 format: POST / with JSON body
  */
 async function tryCobaltDownload(url, options = {}) {
-  // List of working Cobalt API instances (2025-2026)
-  // The official api.cobalt.tools now has bot protection, so we use community instances
+  // Updated list of working Cobalt instances as of 2026
   const COBALT_INSTANCES = [
-    'https://cobalt-api.hyper.lol',
-    'https://cobalt.api.timelessnesses.me',
+    'https://cobalt-api.ayo.tf',
+    'https://cobalt.canine.tools',
     'https://api.cobalt.tools',
   ];
 
@@ -219,10 +210,10 @@ async function tryCobaltDownload(url, options = {}) {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
         },
-        timeout: 25000,
+        timeout: 20000,
       });
       const data = response.data;
-      
+
       if (data.status === 'tunnel' || data.status === 'redirect') {
         console.log(`[Cobalt] ✅ Success from ${instance} (${data.status})`);
         return {
@@ -249,7 +240,7 @@ async function tryCobaltDownload(url, options = {}) {
         continue;
       }
     } catch (err) {
-      console.log(`[Cobalt] Failed ${instance}: ${err.message}`);
+      console.log(`[Cobalt] Failed ${instance}: ${err.response?.status || err.message}`);
       continue;
     }
   }
@@ -257,29 +248,34 @@ async function tryCobaltDownload(url, options = {}) {
 }
 
 
-/**
- * Get video info using yt-dlp --dump-json
- */
+// ═══════════════════════════════════════════════════════════
+// ── YT-DLP HELPERS ───────────────────────────────────────
+// ═══════════════════════════════════════════════════════════
+
+/** Get video info using yt-dlp --dump-json */
 async function getVideoInfoWithYtDlp(url) {
   const ytDlp = await getYtDlp();
   if (!ytDlp) return null;
 
   try {
-    const args = ['--dump-json', '--no-download', '--no-playlist'];
-    if (ffmpegPath) {
-      args.push('--ffmpeg-location', ffmpegPath);
-    }
+    const args = [
+      '--dump-json',
+      '--no-download',
+      '--no-playlist',
+      '--no-check-certificates',
+      '--socket-timeout', '15',
+    ];
+    if (ffmpegPath) args.push('--ffmpeg-location', ffmpegPath);
     args.push(url);
 
     const stdout = await ytDlp.execPromise(args);
     const info = JSON.parse(stdout);
 
-    // Extract unique quality formats
     const formats = (info.formats || [])
       .filter(f => f.height && f.vcodec !== 'none')
       .map(f => ({
         formatId: f.format_id,
-        quality: f.height ? `${f.height}p` : 'unknown',
+        quality: `${f.height}p`,
         height: f.height || 0,
         ext: f.ext || 'mp4',
         filesize: f.filesize || f.filesize_approx || null,
@@ -291,7 +287,6 @@ async function getVideoInfoWithYtDlp(url) {
       }))
       .sort((a, b) => b.height - a.height);
 
-    // Deduplicate by quality
     const seen = new Set();
     const uniqueFormats = formats.filter(f => {
       if (seen.has(f.quality)) return false;
@@ -325,9 +320,7 @@ async function getVideoInfoWithYtDlp(url) {
   }
 }
 
-/**
- * Download video using yt-dlp
- */
+/** Download video using yt-dlp */
 async function downloadWithYtDlp(url, quality, outputPath, options = {}) {
   const ytDlp = await getYtDlp();
   if (!ytDlp) throw new Error('yt-dlp not available');
@@ -344,49 +337,36 @@ async function downloadWithYtDlp(url, quality, outputPath, options = {}) {
     '--no-check-certificates',
     '--socket-timeout', '30',
     '--retries', '3',
+    '--no-warnings',
   ];
 
-  if (ffmpegPath) {
-    args.push('--ffmpeg-location', ffmpegPath);
-  }
+  if (ffmpegPath) args.push('--ffmpeg-location', ffmpegPath);
 
   return new Promise((resolve, reject) => {
-    let lastProgress = 0;
     const subprocess = ytDlp.exec(args);
-
-    // Set a timeout of 2 minutes
     const timeout = setTimeout(() => {
       try { subprocess.kill(); } catch {}
       reject(new Error('Download timed out after 2 minutes'));
     }, 120000);
 
-    subprocess.on('ytDlpEvent', (eventType, data) => {
-      if (eventType === 'download') {
-        const match = String(data).match(/(\d+\.?\d*)%/);
-        if (match) lastProgress = parseFloat(match[1]);
-      }
-    });
-
     subprocess.on('close', () => {
       clearTimeout(timeout);
       if (fs.existsSync(outputPath)) {
-        resolve({ success: true, progress: 100 });
-      } else {
-        // yt-dlp may append extension - check for variations
-        const dir = path.dirname(outputPath);
-        const base = path.basename(outputPath, path.extname(outputPath));
-        const variants = ['.mp4', '.mkv', '.webm', '.mp3', '.m4a'];
-        for (const ext of variants) {
-          const alt = path.join(dir, base + ext);
-          if (fs.existsSync(alt)) {
-            if (alt !== outputPath) {
-              try { fs.renameSync(alt, outputPath); } catch {}
-            }
-            return resolve({ success: true, progress: 100 });
-          }
-        }
-        reject(new Error('Download completed but file not found'));
+        return resolve({ success: true });
       }
+      // yt-dlp may append different extension
+      const dir = path.dirname(outputPath);
+      const base = path.basename(outputPath, path.extname(outputPath));
+      for (const ext of ['.mp4', '.mkv', '.webm', '.mp3', '.m4a']) {
+        const alt = path.join(dir, base + ext);
+        if (fs.existsSync(alt)) {
+          if (alt !== outputPath) {
+            try { fs.renameSync(alt, outputPath); } catch {}
+          }
+          return resolve({ success: true });
+        }
+      }
+      reject(new Error('Download completed but file not found'));
     });
 
     subprocess.on('error', (err) => {
@@ -397,9 +377,7 @@ async function downloadWithYtDlp(url, quality, outputPath, options = {}) {
 }
 
 
-/**
- * Get YouTube video info using oembed (always works, no dependencies)
- */
+/** Get YouTube video info using oembed (always works, no deps) */
 async function getYouTubeInfoViaOembed(url) {
   const videoId = extractVideoId(url);
   if (!videoId) return null;
@@ -407,7 +385,7 @@ async function getYouTubeInfoViaOembed(url) {
   try {
     const oembedRes = await axios.get(
       `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`,
-      { timeout: 10000 }
+      { timeout: 8000 }
     );
     return {
       title: oembedRes.data.title || 'YouTube Video',
@@ -417,7 +395,6 @@ async function getYouTubeInfoViaOembed(url) {
       videoId: videoId,
     };
   } catch {
-    // Even if oembed fails, we can still provide basic info from videoId
     return {
       title: 'YouTube Video',
       channel: 'Unknown',
@@ -427,6 +404,47 @@ async function getYouTubeInfoViaOembed(url) {
     };
   }
 }
+
+
+// ═══════════════════════════════════════════════════════════
+// ── FILE STREAMING ENDPOINT ──────────────────────────────
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * GET /video-stream/:id — Stream a downloaded file directly to browser
+ * This enables proper file download (Content-Disposition: attachment)
+ * instead of opening in new window
+ */
+router.get('/video-stream/:id', (req, res) => {
+  const { id } = req.params;
+  const filename = req.query.filename || 'video.mp4';
+
+  // Sanitize the id to prevent path traversal
+  const safeId = id.replace(/[^a-zA-Z0-9._-]/g, '');
+  const filePath = path.join(DOWNLOADS_DIR, safeId);
+
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ success: false, error: 'File not found or expired.' });
+  }
+
+  const stat = fs.statSync(filePath);
+  const ext = path.extname(safeId).toLowerCase();
+  const mimeTypes = {
+    '.mp4': 'video/mp4',
+    '.mp3': 'audio/mpeg',
+    '.m4a': 'audio/mp4',
+    '.webm': 'video/webm',
+    '.mkv': 'video/x-matroska',
+  };
+
+  res.setHeader('Content-Type', mimeTypes[ext] || 'application/octet-stream');
+  res.setHeader('Content-Length', stat.size);
+  res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
+
+  const stream = fs.createReadStream(filePath);
+  stream.pipe(res);
+  stream.on('error', () => res.status(500).end());
+});
 
 
 // ═══════════════════════════════════════════════════════════
@@ -445,7 +463,6 @@ router.post('/youtube-info', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Invalid YouTube URL. Please enter a valid YouTube video link.' });
     }
 
-    // Check cache
     const cacheKey = `yt_info_${url}`;
     const cached = cache.get(cacheKey);
     if (cached) return res.json(cached);
@@ -453,8 +470,18 @@ router.post('/youtube-info', async (req, res) => {
     const videoId = extractVideoId(url);
     console.log(`[YouTube Info] Processing: ${url} (videoId: ${videoId})`);
 
-    // Method 1: yt-dlp (MOST RELIABLE — gives formats + metadata)
-    const ytDlpInfo = await getVideoInfoWithYtDlp(url);
+    // FAST PATH: Get oembed info first (instant, always works)
+    // This gives us title + thumbnail immediately
+    const oembedInfo = await getYouTubeInfoViaOembed(url);
+
+    // Then try yt-dlp for full format info (parallel attempt)
+    let ytDlpInfo = null;
+    try {
+      ytDlpInfo = await getVideoInfoWithYtDlp(url);
+    } catch (e) {
+      console.log('[YouTube Info] yt-dlp info failed:', e.message);
+    }
+
     if (ytDlpInfo) {
       console.log('[YouTube Info] ✅ Got info via yt-dlp');
       const response = {
@@ -481,62 +508,8 @@ router.post('/youtube-info', async (req, res) => {
       return res.json(response);
     }
 
-    // Method 2: ytdl-core fallback
-    if (ytdl) {
-      try {
-        console.log('[YouTube Info] Trying ytdl-core...');
-        const info = await ytdl.getInfo(url);
-        const videoDetails = info.videoDetails;
-
-        const formats = info.formats
-          .filter(f => f.hasVideo && f.hasAudio)
-          .map(f => ({
-            quality: f.qualityLabel || `${f.height}p`,
-            itag: f.itag,
-            height: f.height || 0,
-            filesize: f.contentLength ? formatBytes(parseInt(f.contentLength)) : null,
-            ext: f.container || 'mp4',
-          }))
-          .filter(f => f.height)
-          .sort((a, b) => b.height - a.height);
-
-        const seen = new Set();
-        const uniqueFormats = formats.filter(f => {
-          if (seen.has(f.quality)) return false;
-          seen.add(f.quality);
-          return true;
-        });
-
-        console.log('[YouTube Info] ✅ Got info via ytdl-core');
-        const response = {
-          success: true,
-          video: {
-            title: videoDetails.title,
-            channel: videoDetails.author?.name || videoDetails.ownerChannelName || 'Unknown',
-            thumbnail: videoDetails.thumbnails?.slice(-1)?.[0]?.url || `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
-            thumbnailHQ: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
-            videoId: videoId || videoDetails.videoId,
-            url: url,
-            duration: videoDetails.lengthSeconds ? `${Math.floor(videoDetails.lengthSeconds / 60)}:${String(videoDetails.lengthSeconds % 60).padStart(2, '0')}` : null,
-            views: videoDetails.viewCount ? parseInt(videoDetails.viewCount).toLocaleString() : null,
-          },
-          formats: uniqueFormats.length > 0 ? uniqueFormats : [
-            { quality: '1080p', height: 1080, ext: 'mp4' },
-            { quality: '720p', height: 720, ext: 'mp4' },
-            { quality: '480p', height: 480, ext: 'mp4' },
-            { quality: '360p', height: 360, ext: 'mp4' },
-          ],
-        };
-        cache.set(cacheKey, response);
-        return res.json(response);
-      } catch (ytdlErr) {
-        console.error('[YouTube Info] ytdl-core fallback error:', ytdlErr.message);
-      }
-    }
-
-    // Method 3: oembed fallback (always works — metadata only, no formats)
-    console.log('[YouTube Info] Using oembed fallback...');
-    const oembedInfo = await getYouTubeInfoViaOembed(url);
+    // Fallback: oembed info (always works — metadata only, standard quality options)
+    console.log('[YouTube Info] ✅ Using oembed info');
     const response = {
       success: true,
       video: {
@@ -555,7 +528,6 @@ router.post('/youtube-info', async (req, res) => {
       ],
     };
     cache.set(cacheKey, response);
-    console.log('[YouTube Info] ✅ Got info via oembed');
     return res.json(response);
   } catch (err) {
     console.error('[YouTube Info Error]', err.message);
@@ -583,9 +555,24 @@ router.post('/youtube-download', async (req, res) => {
     try {
       const oembedInfo = await getYouTubeInfoViaOembed(url);
       if (oembedInfo?.title) videoTitle = sanitizeFilename(oembedInfo.title);
-    } catch { /* ignore, use default filename */ }
+    } catch { /* use default */ }
 
-    // Method 1: yt-dlp (BEST)
+    // Method 1: Cobalt API (FASTEST — returns direct download URL)
+    console.log('[YouTube Download] Trying Cobalt API first...');
+    const cobaltResult = await tryCobaltDownload(url, { quality: quality || '1080' });
+    if (cobaltResult.success && cobaltResult.downloadUrl) {
+      console.log('[YouTube Download] ✅ Success via Cobalt');
+      return res.json({
+        success: true,
+        downloadUrl: cobaltResult.downloadUrl,
+        filename: `${videoTitle}_${quality || '720'}p.mp4`,
+        quality: `${quality || '720'}p`,
+        source: 'cobalt',
+        isDirect: true,
+      });
+    }
+
+    // Method 2: yt-dlp (downloads to server, then serves file)
     const ytDlp = await getYtDlp();
     if (ytDlp) {
       try {
@@ -593,14 +580,15 @@ router.post('/youtube-download', async (req, res) => {
         await downloadWithYtDlp(url, quality || '720', outputFile);
         if (fs.existsSync(outputFile)) {
           const stat = fs.statSync(outputFile);
-          const downloadUrl = `/api/downloads/video-downloads/${sessionId}.mp4`;
+          const streamFilename = `${videoTitle}_${quality || '720'}p.mp4`;
           console.log('[YouTube Download] ✅ Success via yt-dlp');
           return res.json({
             success: true,
-            downloadUrl,
-            filename: `${videoTitle}_${quality || '720'}p.mp4`,
+            downloadUrl: `/api/tools/video-stream/${sessionId}.mp4?filename=${encodeURIComponent(streamFilename)}`,
+            filename: streamFilename,
             filesize: formatBytes(stat.size),
             quality: `${quality || '720'}p`,
+            source: 'yt-dlp',
           });
         }
       } catch (ytDlpErr) {
@@ -609,21 +597,7 @@ router.post('/youtube-download', async (req, res) => {
       }
     }
 
-    // Method 2: Cobalt API fallback
-    console.log('[YouTube Download] Trying Cobalt API...');
-    const cobaltResult = await tryCobaltDownload(url, { quality: quality || '1080' });
-    if (cobaltResult.success) {
-      console.log('[YouTube Download] ✅ Success via Cobalt');
-      return res.json({
-        success: true,
-        downloadUrl: cobaltResult.downloadUrl,
-        filename: cobaltResult.filename || `${videoTitle}.mp4`,
-        quality: `${quality || '720'}p`,
-        source: 'cobalt',
-      });
-    }
-
-    // Method 3: ytdl-core fallback
+    // Method 3: ytdl-core fallback (YouTube only)
     if (ytdl) {
       try {
         console.log('[YouTube Download] Trying ytdl-core...');
@@ -631,9 +605,7 @@ router.post('/youtube-download', async (req, res) => {
         const requestedHeight = parseInt(quality) || 720;
 
         let chosenFormat;
-        if (itag) {
-          chosenFormat = info.formats.find(f => f.itag === parseInt(itag));
-        }
+        if (itag) chosenFormat = info.formats.find(f => f.itag === parseInt(itag));
         if (!chosenFormat) {
           const combinedFormats = info.formats
             .filter(f => f.hasVideo && f.hasAudio && f.container === 'mp4')
@@ -650,14 +622,11 @@ router.post('/youtube-download', async (req, res) => {
         await new Promise((resolve, reject) => {
           const writeStream = fs.createWriteStream(outputFile);
           const downloadStream = ytdl(url, { format: chosenFormat });
-          
-          // Timeout after 2 minutes
           const timeout = setTimeout(() => {
             downloadStream.destroy();
             writeStream.destroy();
             reject(new Error('Download timed out'));
           }, 120000);
-          
           downloadStream.pipe(writeStream);
           writeStream.on('finish', () => { clearTimeout(timeout); resolve(); });
           writeStream.on('error', (err) => { clearTimeout(timeout); reject(err); });
@@ -665,24 +634,25 @@ router.post('/youtube-download', async (req, res) => {
         });
 
         const stat = fs.statSync(outputFile);
+        const streamFilename = `${videoTitle}_${chosenFormat.qualityLabel || quality + 'p'}.mp4`;
         console.log('[YouTube Download] ✅ Success via ytdl-core');
         return res.json({
           success: true,
-          downloadUrl: `/api/downloads/video-downloads/${sessionId}.mp4`,
-          filename: `${videoTitle}_${chosenFormat.qualityLabel || quality + 'p'}.mp4`,
+          downloadUrl: `/api/tools/video-stream/${sessionId}.mp4?filename=${encodeURIComponent(streamFilename)}`,
+          filename: streamFilename,
           filesize: formatBytes(stat.size),
           quality: chosenFormat.qualityLabel || `${quality}p`,
+          source: 'ytdl-core',
         });
       } catch (ytdlErr) {
         console.error('[YouTube Download] ytdl-core error:', ytdlErr.message);
-        // Clean up partial file
         try { if (fs.existsSync(outputFile)) fs.unlinkSync(outputFile); } catch {}
       }
     }
 
     return res.status(500).json({
       success: false,
-      error: 'All download engines failed. This might be due to the video being restricted or a temporary issue. Please try again.',
+      error: 'All download engines failed. This might be due to the video being restricted or a temporary issue. Please try again in a moment.',
     });
   } catch (err) {
     console.error('[YouTube Download Error]', err.message);
@@ -706,7 +676,6 @@ router.post('/terabox-info', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Invalid Terabox URL. Supported: terabox.com, 1024tera.com, freeterabox.com, etc.' });
     }
 
-    // Check cache
     const cacheKey = `tb_${url}`;
     const cached = cache.get(cacheKey);
     if (cached) return res.json(cached);
@@ -717,14 +686,13 @@ router.post('/terabox-info', async (req, res) => {
     const ytDlpInfo = await getVideoInfoWithYtDlp(url);
     if (ytDlpInfo) {
       console.log('[Terabox Info] ✅ Got info via yt-dlp');
-      const name = ytDlpInfo.title || 'Terabox File';
       const response = {
         success: true,
         file: {
-          name: name,
+          name: ytDlpInfo.title || 'Terabox File',
           size: ytDlpInfo.formats[0]?.filesizeStr || 'Unknown',
           thumbnail: ytDlpInfo.thumbnail || '',
-          downloadLink: null, // Will use /terabox-download endpoint
+          downloadLink: null,
           isVideo: true,
           duration: ytDlpInfo.duration,
           platform: 'Terabox',
@@ -738,6 +706,7 @@ router.post('/terabox-info', async (req, res) => {
     // Method 2: Third-party Terabox APIs
     const apis = [
       {
+        name: 'TeraboxDL-Primary',
         url: `https://terabox-dl-arridha.vercel.app/api?url=${encodeURIComponent(url)}`,
         parse: (data) => {
           if (data && (data.file_name || data.name)) {
@@ -753,6 +722,7 @@ router.post('/terabox-info', async (req, res) => {
         },
       },
       {
+        name: 'TeraboxDL-Backup',
         url: `https://teraboxdownloader.online/api?url=${encodeURIComponent(url)}`,
         parse: (data) => {
           if (data && (data.file_name || data.name)) {
@@ -772,18 +742,18 @@ router.post('/terabox-info', async (req, res) => {
     let fileInfo = null;
     for (const api of apis) {
       try {
-        console.log(`[Terabox Info] Trying API: ${api.url.split('?')[0]}...`);
+        console.log(`[Terabox Info] Trying ${api.name}...`);
         const resp = await axios.get(api.url, {
-          timeout: 25000,
+          timeout: 20000,
           headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
         });
         fileInfo = api.parse(resp.data);
         if (fileInfo) {
-          console.log('[Terabox Info] ✅ Got info via third-party API');
+          console.log(`[Terabox Info] ✅ Got info via ${api.name}`);
           break;
         }
       } catch (err) {
-        console.log(`[Terabox Info] API failed: ${err.message}`);
+        console.log(`[Terabox Info] ${api.name} failed: ${err.message}`);
         continue;
       }
     }
@@ -817,7 +787,19 @@ router.post('/terabox-download', async (req, res) => {
     const sessionId = uuidv4();
     const outputFile = path.join(DOWNLOADS_DIR, `${sessionId}.mp4`);
 
-    // Method 1: yt-dlp
+    // Method 1: Cobalt API (supports some Terabox links)
+    const cobaltResult = await tryCobaltDownload(url, { quality: quality || '720' });
+    if (cobaltResult.success && cobaltResult.downloadUrl) {
+      console.log('[Terabox Download] ✅ Success via Cobalt');
+      return res.json({
+        success: true,
+        downloadUrl: cobaltResult.downloadUrl,
+        filename: cobaltResult.filename || 'terabox_video.mp4',
+        isDirect: true,
+      });
+    }
+
+    // Method 2: yt-dlp
     const ytDlp = await getYtDlp();
     if (ytDlp) {
       try {
@@ -828,7 +810,7 @@ router.post('/terabox-download', async (req, res) => {
           console.log('[Terabox Download] ✅ Success via yt-dlp');
           return res.json({
             success: true,
-            downloadUrl: `/api/downloads/video-downloads/${sessionId}.mp4`,
+            downloadUrl: `/api/tools/video-stream/${sessionId}.mp4?filename=terabox_video.mp4`,
             filename: `terabox_${sessionId}.mp4`,
             filesize: formatBytes(stat.size),
           });
@@ -839,19 +821,7 @@ router.post('/terabox-download', async (req, res) => {
       }
     }
 
-    // Method 2: Cobalt API fallback
-    console.log('[Terabox Download] Trying Cobalt API...');
-    const cobaltResult = await tryCobaltDownload(url, { quality: quality || '720' });
-    if (cobaltResult.success) {
-      console.log('[Terabox Download] ✅ Success via Cobalt');
-      return res.json({
-        success: true,
-        downloadUrl: cobaltResult.downloadUrl,
-        filename: cobaltResult.filename || 'terabox_video.mp4',
-      });
-    }
-
-    return res.status(500).json({ success: false, error: 'Could not download from Terabox. Please try again.' });
+    return res.status(500).json({ success: false, error: 'Could not download from Terabox. The file may be private or the link may be expired.' });
   } catch (err) {
     console.error('[Terabox Download Error]', err.message);
     return res.status(500).json({ success: false, error: 'Download failed: ' + err.message });
@@ -923,8 +893,8 @@ router.post('/video-info', async (req, res) => {
       }
     }
 
-    // If yt-dlp not available, still return a basic response so the download can be attempted
-    console.log('[Video Info] ⚠️ No info engine available, returning minimal info');
+    // Return minimal info so download can still be attempted via Cobalt
+    console.log('[Video Info] ⚠️ Returning minimal info');
     const response = {
       success: true,
       video: {
@@ -971,7 +941,25 @@ router.post('/video-download', async (req, res) => {
 
     console.log(`[Video Download] Processing: ${url} (platform: ${platform.name}, quality: ${quality || '1080'})`);
 
-    // Method 1: yt-dlp (handles 1000+ sites)
+    // Method 1: Cobalt API (FASTEST — returns direct download URL)
+    console.log('[Video Download] Trying Cobalt API first...');
+    const cobaltResult = await tryCobaltDownload(url, { quality: quality || '1080', audioOnly });
+    if (cobaltResult.success && cobaltResult.downloadUrl) {
+      console.log('[Video Download] ✅ Success via Cobalt');
+      const response = {
+        success: true,
+        downloadUrl: cobaltResult.downloadUrl,
+        filename: cobaltResult.filename || `video.${ext}`,
+        platform,
+        items: cobaltResult.items,
+        audioUrl: cobaltResult.audioUrl,
+        isDirect: true,
+      };
+      cache.set(cacheKey, response);
+      return res.json(response);
+    }
+
+    // Method 2: yt-dlp (downloads to server, then serves file)
     const ytDlp = await getYtDlp();
     if (ytDlp) {
       try {
@@ -979,19 +967,18 @@ router.post('/video-download', async (req, res) => {
         await downloadWithYtDlp(url, quality || '720', outputFile, { audioOnly });
         if (fs.existsSync(outputFile)) {
           const stat = fs.statSync(outputFile);
-          const downloadUrl = `/api/downloads/video-downloads/${sessionId}.${ext}`;
-
           let videoTitle = 'video';
           try {
             const info = await getVideoInfoWithYtDlp(url);
             if (info) videoTitle = sanitizeFilename(info.title);
           } catch {}
 
+          const streamFilename = `${videoTitle}.${ext}`;
           console.log('[Video Download] ✅ Success via yt-dlp');
           const response = {
             success: true,
-            downloadUrl,
-            filename: `${videoTitle}.${ext}`,
+            downloadUrl: `/api/tools/video-stream/${sessionId}.${ext}?filename=${encodeURIComponent(streamFilename)}`,
+            filename: streamFilename,
             filesize: formatBytes(stat.size),
             platform,
           };
@@ -1002,23 +989,6 @@ router.post('/video-download', async (req, res) => {
         console.error('[Video Download] yt-dlp error:', e.message);
         try { if (fs.existsSync(outputFile)) fs.unlinkSync(outputFile); } catch {}
       }
-    }
-
-    // Method 2: Cobalt API fallback
-    console.log('[Video Download] Trying Cobalt API...');
-    const cobaltResult = await tryCobaltDownload(url, { quality: quality || '1080', audioOnly });
-    if (cobaltResult.success) {
-      console.log('[Video Download] ✅ Success via Cobalt');
-      const response = {
-        success: true,
-        downloadUrl: cobaltResult.downloadUrl,
-        filename: cobaltResult.filename,
-        platform,
-        items: cobaltResult.items,
-        audioUrl: cobaltResult.audioUrl,
-      };
-      cache.set(cacheKey, response);
-      return res.json(response);
     }
 
     // Method 3: For YouTube specifically, try ytdl-core
@@ -1045,25 +1015,22 @@ router.post('/video-download', async (req, res) => {
         await new Promise((resolve, reject) => {
           const writeStream = fs.createWriteStream(outputFile);
           const downloadStream = ytdl(url, { format: chosenFormat });
-          
           const timeout = setTimeout(() => {
-            downloadStream.destroy();
-            writeStream.destroy();
+            downloadStream.destroy(); writeStream.destroy();
             reject(new Error('Download timed out'));
           }, 120000);
-
           downloadStream.pipe(writeStream);
           writeStream.on('finish', () => { clearTimeout(timeout); resolve(); });
           writeStream.on('error', (err) => { clearTimeout(timeout); reject(err); });
           downloadStream.on('error', (err) => { clearTimeout(timeout); reject(err); });
         });
 
-        const downloadUrl = `/api/downloads/video-downloads/${sessionId}.${ext}`;
+        const streamFilename = `${videoTitle}.${ext}`;
         console.log('[Video Download] ✅ Success via ytdl-core');
         const response = {
           success: true,
-          downloadUrl,
-          filename: `${videoTitle}.${ext}`,
+          downloadUrl: `/api/tools/video-stream/${sessionId}.${ext}?filename=${encodeURIComponent(streamFilename)}`,
+          filename: streamFilename,
           platform,
         };
         cache.set(cacheKey, response);

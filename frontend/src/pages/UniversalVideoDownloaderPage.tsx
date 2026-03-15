@@ -72,6 +72,25 @@ const UniversalVideoDownloaderPage = () => {
     try { const text = await navigator.clipboard.readText(); setUrl(text); } catch {}
   };
 
+  const fetchWithRetry = async (fetchUrl: string, options: RequestInit, retries = 1): Promise<Response> => {
+    for (let i = 0; i <= retries; i++) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000);
+        const res = await fetch(fetchUrl, { ...options, signal: controller.signal });
+        clearTimeout(timeoutId);
+        return res;
+      } catch (err: any) {
+        if (i < retries && err?.name !== "AbortError") {
+          await new Promise(r => setTimeout(r, 2000));
+          continue;
+        }
+        throw err;
+      }
+    }
+    throw new Error("Request failed after retries");
+  };
+
   const handleDownload = async () => {
     if (!url.trim()) { setError("Please enter a video URL."); return; }
     setLoading(true);
@@ -79,10 +98,7 @@ const UniversalVideoDownloaderPage = () => {
     setResult(null);
 
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000);
-
-      const res = await fetch(`${API_URL}/api/tools/video-download`, {
+      const res = await fetchWithRetry(`${API_URL}/api/tools/video-download`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -90,9 +106,7 @@ const UniversalVideoDownloaderPage = () => {
           quality: selectedQuality,
           audioOnly,
         }),
-        signal: controller.signal,
       });
-      clearTimeout(timeoutId);
 
       const data = await res.json();
       if (!data.success) { setError(data.error || "Download failed."); return; }
@@ -103,15 +117,24 @@ const UniversalVideoDownloaderPage = () => {
       }
 
       setResult(data);
-      // Auto-open download URL
+      // Trigger proper file download via hidden anchor
       if (data.downloadUrl) {
-        window.open(data.downloadUrl, "_blank");
+        const a = document.createElement("a");
+        a.href = data.downloadUrl;
+        a.download = data.filename || "video.mp4";
+        if (data.isDirect) {
+          a.target = "_blank";
+          a.rel = "noopener noreferrer";
+        }
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
       }
     } catch (err: any) {
       if (err?.name === "AbortError") {
-        setError("Request timed out. The server took too long to respond. Please try again.");
+        setError("Request timed out. The server might be waking up — please try again in a few seconds.");
       } else {
-        setError("Could not connect to the server. Please make sure the backend is running on " + API_URL);
+        setError("Network error. Please check if the backend server is running and try again.");
       }
     } finally {
       setLoading(false);

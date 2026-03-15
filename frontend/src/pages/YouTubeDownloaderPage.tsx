@@ -59,6 +59,26 @@ const YouTubeDownloaderPage = () => {
     } catch { /* clipboard not available */ }
   };
 
+  const fetchWithRetry = async (fetchUrl: string, options: RequestInit, retries = 1): Promise<Response> => {
+    for (let i = 0; i <= retries; i++) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000);
+        const res = await fetch(fetchUrl, { ...options, signal: controller.signal });
+        clearTimeout(timeoutId);
+        return res;
+      } catch (err: any) {
+        if (i < retries && err?.name !== "AbortError") {
+          console.log(`Retry ${i + 1}...`);
+          await new Promise(r => setTimeout(r, 2000));
+          continue;
+        }
+        throw err;
+      }
+    }
+    throw new Error("Request failed after retries");
+  };
+
   const fetchVideoInfo = async () => {
     if (!url.trim()) { setError("Please enter a YouTube URL."); return; }
     setLoading(true);
@@ -69,16 +89,11 @@ const YouTubeDownloaderPage = () => {
     setShowPreview(false);
 
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 45000);
-
-      const res = await fetch(`${API_URL}/api/tools/youtube-info`, {
+      const res = await fetchWithRetry(`${API_URL}/api/tools/youtube-info`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: url.trim() }),
-        signal: controller.signal,
       });
-      clearTimeout(timeoutId);
 
       const data = await res.json();
       if (!data.success) { setError(data.error || "Failed to fetch video info."); return; }
@@ -86,9 +101,9 @@ const YouTubeDownloaderPage = () => {
       setFormats(data.formats || []);
     } catch (err: any) {
       if (err?.name === "AbortError") {
-        setError("Request timed out. The server took too long to respond. Please try again.");
+        setError("Request timed out. The server might be waking up — please try again in a few seconds.");
       } else {
-        setError("Could not connect to the server. Please make sure the backend is running on " + API_URL);
+        setError("Network error. Please check if the backend server is running and try again.");
       }
     } finally {
       setLoading(false);
@@ -101,16 +116,11 @@ const YouTubeDownloaderPage = () => {
     setDownloadReady(null);
 
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 min for downloads
-
-      const res = await fetch(`${API_URL}/api/tools/youtube-download`, {
+      const res = await fetchWithRetry(`${API_URL}/api/tools/youtube-download`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: url.trim(), quality: selectedQuality }),
-        signal: controller.signal,
       });
-      clearTimeout(timeoutId);
 
       const data = await res.json();
       if (!data.success) { setError(data.error || "Download failed."); return; }
@@ -121,8 +131,19 @@ const YouTubeDownloaderPage = () => {
         : `${API_URL}${data.downloadUrl}`;
 
       setDownloadReady({ url: fullDownloadUrl, filename: data.filename, filesize: data.filesize });
-      // Auto-open download
-      window.open(fullDownloadUrl, "_blank");
+
+      // Trigger proper file download via hidden anchor
+      const a = document.createElement("a");
+      a.href = fullDownloadUrl;
+      a.download = data.filename || "video.mp4";
+      // For direct Cobalt URLs (cross-origin), open in new tab
+      if (data.isDirect) {
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+      }
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     } catch (err: any) {
       if (err?.name === "AbortError") {
         setError("Download timed out. The video may be too large or the server is busy.");
