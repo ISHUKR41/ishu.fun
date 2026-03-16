@@ -101,7 +101,7 @@ const https = require('https');
 
 const streamLimiter = rateLimit({
     windowMs: 1 * 60 * 1000,
-    max: 2000,
+    max: 5000,
     message: { success: false, error: 'Stream rate limit exceeded' },
 });
 
@@ -112,6 +112,42 @@ app.options('/api/stream-proxy', (req, res) => {
         'Access-Control-Allow-Headers': '*',
     });
     res.end();
+});
+
+// Stream health check — quick HEAD/GET to verify a stream is alive
+app.get('/api/stream-check', streamLimiter, (req, res) => {
+    const targetUrl = req.query.url;
+    if (!targetUrl) return res.status(400).json({ ok: false, error: 'Missing url' });
+    try {
+        const parsed = new URL(targetUrl);
+        if (!['http:', 'https:'].includes(parsed.protocol))
+            return res.status(400).json({ ok: false, error: 'Invalid protocol' });
+    } catch { return res.status(400).json({ ok: false, error: 'Invalid URL' }); }
+
+    const client = targetUrl.startsWith('https') ? https : http;
+    const startMs = Date.now();
+    let redirects = 0;
+
+    function checkUrl(url) {
+        const proxyReq = client.get(url, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+                'Accept': '*/*',
+            },
+            timeout: 8000,
+        }, (proxyRes) => {
+            proxyRes.destroy(); // Don't download body
+            if (proxyRes.statusCode >= 300 && proxyRes.statusCode < 400 && proxyRes.headers.location) {
+                if (++redirects > 5) return res.json({ ok: false, error: 'Too many redirects', ms: Date.now() - startMs });
+                return checkUrl(new URL(proxyRes.headers.location, url).toString());
+            }
+            const ok = proxyRes.statusCode >= 200 && proxyRes.statusCode < 400;
+            res.json({ ok, status: proxyRes.statusCode, ms: Date.now() - startMs, contentType: proxyRes.headers['content-type'] || '' });
+        });
+        proxyReq.on('error', () => res.json({ ok: false, error: 'Connection failed', ms: Date.now() - startMs }));
+        proxyReq.on('timeout', () => { proxyReq.destroy(); res.json({ ok: false, error: 'Timeout', ms: Date.now() - startMs }); });
+    }
+    checkUrl(targetUrl);
 });
 
 app.get('/api/stream-proxy', streamLimiter, (req, res) => {
@@ -128,57 +164,151 @@ app.get('/api/stream-proxy', streamLimiter, (req, res) => {
         return res.status(400).json({ error: 'Invalid URL' });
     }
 
-    let redirectCount = 0;
-    const MAX_REDIRECTS = 5;
+    function resolveUrl(ref, base) {
+        if (/^https?:\/\//i.test(ref)) return ref;
+        try { return new URL(ref, base).toString(); } catch { return ref; }
+    }
 
-    function doProxy(url) {
-        const client = url.startsWith('https') ? https : http;
+    function getBaseUrl(fullUrl) {
+        const idx = fullUrl.lastIndexOf('/');
+        return idx > 8 ? fullUrl.substring(0, idx + 1) : fullUrl;
+    }
+
+    function rewriteM3U8(body, originalUrl) {
+        const base = getBaseUrl(originalUrl);
+        return body.split('\n').map(line => {
+            const trimmed = line.trim();
+            if (!trimmed) return line;
+            if (trimmed.startsWith('#')) {
+                return line.replace(/URI="([^"]+)"/gi, (match, uri) => {
+                    return `URI="${resolveUrl(uri, base)}"`;
+                });
+            }
+            if (!trimmed.startsWith('#')) {
+                return resolveUrl(trimmed, base);
+            }
+            return line;
+        }).join('\n');
+    }
+
+    let redirectCount = 0;
+    const MAX_REDIRECTS = 8;
+    let finished = false;
+
+    function doProxy(url, retryCount = 0) {
+        if (finished) return;
+        const isHttps = url.startsWith('https');
+        const client = isHttps ? https : http;
+
+        // Determine referer from URL domain
+        let referer = req.query.referer || '';
+        if (!referer) {
+            try { referer = new URL(url).origin; } catch {}
+        }
+
         const proxyReq = client.get(url, {
             headers: {
                 'User-Agent': req.query.ua || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-                ...(req.query.referer ? { 'Referer': req.query.referer } : {}),
+                'Referer': referer,
+                'Origin': referer,
                 'Accept': '*/*',
                 'Accept-Language': 'en-US,en;q=0.9,hi;q=0.8',
                 'Connection': 'keep-alive',
+                'Sec-Fetch-Dest': 'empty',
+                'Sec-Fetch-Mode': 'cors',
+                'Sec-Fetch-Site': 'cross-site',
             },
-            timeout: 15000,
+            timeout: 20000,
+            ...(isHttps ? { rejectUnauthorized: false } : {}),
         }, (proxyRes) => {
-            // Follow redirects internally (up to MAX_REDIRECTS)
+            if (finished) { proxyRes.destroy(); return; }
+
             if (proxyRes.statusCode >= 300 && proxyRes.statusCode < 400 && proxyRes.headers.location) {
                 redirectCount++;
                 if (redirectCount > MAX_REDIRECTS) {
                     if (!res.headersSent) res.status(502).json({ error: 'Too many redirects' });
+                    finished = true;
                     return;
                 }
                 const redirectUrl = new URL(proxyRes.headers.location, url).toString();
-                proxyRes.resume(); // consume the body
-                return doProxy(redirectUrl);
+                proxyRes.resume();
+                return doProxy(redirectUrl, retryCount);
             }
-            // For HLS .m3u8 manifests, rewrite internal URLs to go through proxy
+
+            // Handle server errors with retry
+            if (proxyRes.statusCode >= 500 && retryCount < 2) {
+                proxyRes.resume();
+                setTimeout(() => doProxy(url, retryCount + 1), 500);
+                return;
+            }
+
             const contentType = proxyRes.headers['content-type'] || '';
             const isM3U = contentType.includes('mpegurl') || contentType.includes('x-mpegurl') ||
                           url.endsWith('.m3u8') || url.endsWith('.m3u');
 
-            res.writeHead(proxyRes.statusCode || 200, {
-                'Content-Type': isM3U ? 'application/vnd.apple.mpegurl' : (contentType || 'application/octet-stream'),
+            const corsHeaders = {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Methods': 'GET, OPTIONS',
                 'Access-Control-Allow-Headers': '*',
                 'Access-Control-Expose-Headers': 'Content-Length, Content-Type',
                 'Cache-Control': 'no-cache, no-store',
                 'X-Proxy-Status': 'ok',
-            });
-            proxyRes.pipe(res);
+            };
+
+            if (isM3U) {
+                const chunks = [];
+                proxyRes.on('data', chunk => chunks.push(chunk));
+                proxyRes.on('end', () => {
+                    if (finished) return;
+                    const body = Buffer.concat(chunks).toString('utf8');
+                    const rewritten = rewriteM3U8(body, url);
+                    if (!res.headersSent) {
+                        res.writeHead(proxyRes.statusCode || 200, {
+                            'Content-Type': 'application/vnd.apple.mpegurl',
+                            ...corsHeaders,
+                        });
+                        res.end(rewritten);
+                    }
+                    finished = true;
+                });
+                proxyRes.on('error', () => {
+                    if (!finished && !res.headersSent) res.status(502).json({ error: 'Stream read error' });
+                    finished = true;
+                });
+            } else {
+                if (!res.headersSent) {
+                    res.writeHead(proxyRes.statusCode || 200, {
+                        'Content-Type': contentType || 'application/octet-stream',
+                        ...(proxyRes.headers['content-length'] ? { 'Content-Length': proxyRes.headers['content-length'] } : {}),
+                        ...corsHeaders,
+                    });
+                }
+                proxyRes.pipe(res);
+                proxyRes.on('error', () => { if (!res.writableEnded) res.end(); finished = true; });
+                res.on('finish', () => { finished = true; });
+            }
         });
         proxyReq.on('error', (err) => {
-            console.error('[Stream Proxy] Error:', err.message, 'URL:', url.substring(0, 80));
+            if (finished) return;
+            console.error('[Stream Proxy] Error:', err.code || err.message, 'URL:', url.substring(0, 100));
+            if (retryCount < 2 && ['ECONNRESET', 'ETIMEDOUT', 'ECONNREFUSED', 'ENOTFOUND', 'EHOSTUNREACH', 'EPIPE', 'ERR_TLS_CERT_ALTNAME_INVALID'].includes(err.code)) {
+                setTimeout(() => doProxy(url, retryCount + 1), 300);
+                return;
+            }
             if (!res.headersSent) res.status(502).json({ error: 'Stream proxy error' });
+            finished = true;
         });
         proxyReq.on('timeout', () => {
             proxyReq.destroy();
+            if (finished) return;
+            if (retryCount < 1) {
+                setTimeout(() => doProxy(url, retryCount + 1), 200);
+                return;
+            }
             if (!res.headersSent) res.status(504).json({ error: 'Stream timeout' });
+            finished = true;
         });
-        req.on('close', () => { proxyReq.destroy(); });
+        req.on('close', () => { finished = true; proxyReq.destroy(); });
     }
 
     doProxy(targetUrl);
@@ -276,8 +406,8 @@ const startServer = async () => {
             } catch (e) {
                 console.log(`[Keep-Alive] ⚠️ Error: ${e.message}`);
             }
-        }, 13 * 60 * 1000); // Every 13 minutes (Render sleeps after 15 min)
-        console.log(`🔄 Keep-Alive: Self-ping every 13 minutes to prevent sleep`);
+        }, 10 * 60 * 1000); // Every 10 minutes (Render sleeps after 15 min)
+        console.log(`🔄 Keep-Alive: Self-ping every 10 minutes to prevent sleep`);
     });
 };
 

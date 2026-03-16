@@ -207,7 +207,7 @@ const ContactPage = () => {
           </FadeInView>
 
           {/* Stats Row */}
-          <div className="contact-stats-row mt-12 grid grid-cols-2 gap-4 md:grid-cols-4">
+          <div className="contact-stats-row mt-12 grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4">
             {[
               { icon: Users, label: "Users Served", value: "1M+" },
               { icon: Headphones, label: "Queries Resolved", value: "50K+" },
@@ -429,7 +429,7 @@ const ContactPage = () => {
             </div>
           </FadeInView>
 
-          <div className="testimonials-grid grid gap-6 md:grid-cols-3">
+          <div className="testimonials-grid grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
             {testimonials.map((t) => (
               <Tilt key={t.name} tiltMaxAngleX={8} tiltMaxAngleY={8} glareEnable glareMaxOpacity={0.06} glareBorderRadius="1rem" scale={1.02}>
                 <div className="testimonial-card rounded-2xl border border-border glass-strong p-6 transition-all hover:border-primary/20 hover:shadow-card">

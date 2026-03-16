@@ -102,7 +102,7 @@ const ProfilePage = () => {
   }
 
   return (
-    <div ref={heroRef} className="max-w-5xl mx-auto px-4 py-6 lg:px-8">
+    <div ref={heroRef} className="max-w-5xl mx-auto px-3 py-4 sm:px-4 sm:py-6 lg:px-8">
       {/* ══════ SECTION 1: Hero Banner ══════ */}
       <div className="relative mb-10 overflow-hidden rounded-2xl">
         {/* Cover Image or Gradient Background */}

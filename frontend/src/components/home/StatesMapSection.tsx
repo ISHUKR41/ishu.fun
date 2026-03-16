@@ -167,7 +167,7 @@ const StatesMapSection = () => {
           </Suspense>
         </div>
 
-        <div className="states-grid mt-12 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-9">
+        <div className="states-grid mt-12 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-9">
           {statesData.map((state) => (
             <Link to={`/results/state/${state.code.toLowerCase()}`} key={state.code}>
               <motion.div

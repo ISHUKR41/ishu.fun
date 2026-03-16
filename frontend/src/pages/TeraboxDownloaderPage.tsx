@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL || "https://ishu-site.onrender.com";
 
 interface FileInfo {
   name: string;
@@ -46,17 +46,17 @@ const TeraboxDownloaderPage = () => {
     try { const text = await navigator.clipboard.readText(); setUrl(text); } catch {}
   };
 
-  const fetchWithRetry = async (fetchUrl: string, options: RequestInit, retries = 2): Promise<Response> => {
+  const fetchWithRetry = async (fetchUrl: string, options: RequestInit, retries = 3): Promise<Response> => {
     for (let i = 0; i <= retries; i++) {
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 90000);
+        const timeoutId = setTimeout(() => controller.abort(), i === 0 ? 90000 : 120000);
         const res = await fetch(fetchUrl, { ...options, signal: controller.signal });
         clearTimeout(timeoutId);
         return res;
       } catch (err: any) {
         if (i < retries && err?.name !== "AbortError") {
-          await new Promise(r => setTimeout(r, 3000));
+          await new Promise(r => setTimeout(r, 2000 * (i + 1)));
           continue;
         }
         throw err;

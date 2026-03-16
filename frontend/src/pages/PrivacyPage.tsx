@@ -106,7 +106,7 @@ const PrivacyPage = () => {
       {/* Quick Facts */}
       <section className="border-b border-border bg-card py-12">
         <div className="container">
-          <div className="quick-facts-row grid grid-cols-2 gap-4 md:grid-cols-4">
+          <div className="quick-facts-row grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4">
             {quickFacts.map((f) => (
               <div key={f.label} className="quick-fact flex items-center gap-3 rounded-xl border border-border glass p-4">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">

@@ -115,7 +115,7 @@ const StatsSection = () => {
         </div>
 
         {/* Main stats grid */}
-        <div className="stats-grid grid grid-cols-2 gap-6 md:grid-cols-4">
+        <div className="stats-grid grid grid-cols-2 gap-3 sm:gap-4 md:gap-6 md:grid-cols-4">
           {stats.map((stat, i) => (
             <Tilt key={stat.label} tiltMaxAngleX={12} tiltMaxAngleY={12} glareEnable glareMaxOpacity={0.1} glareColor="hsl(210 100% 56%)" glarePosition="all" glareBorderRadius="1.5rem" scale={1.03} transitionSpeed={400}>
               <motion.div 

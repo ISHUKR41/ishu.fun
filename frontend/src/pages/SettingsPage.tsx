@@ -27,7 +27,7 @@ import { useAuth as useClerkAuth } from "@clerk/clerk-react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_BASE = import.meta.env.VITE_API_URL || "https://ishu-site.onrender.com";
 
 // ──── Tab definition ────
 const tabs = [
@@ -200,7 +200,7 @@ const SettingsPage = () => {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 lg:px-8">
+    <div className="max-w-4xl mx-auto px-3 py-6 sm:px-4 sm:py-8 lg:px-8">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -15 }}
@@ -491,7 +491,7 @@ const SettingsPage = () => {
                   {/* Theme */}
                   <div>
                     <h3 className="text-sm font-medium text-white/60 mb-3">Theme</h3>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
                       {[
                         { id: "dark" as const, icon: Moon, label: "Dark" },
                         { id: "light" as const, icon: Sun, label: "Light" },
@@ -500,7 +500,7 @@ const SettingsPage = () => {
                         <button
                           key={opt.id}
                           onClick={() => setTheme(opt.id)}
-                          className={`relative flex flex-col items-center gap-2 rounded-xl border p-4 transition-all ${
+                          className={`relative flex flex-col sm:flex-col items-center gap-2 rounded-xl border p-3 sm:p-4 transition-all ${
                             theme === opt.id
                               ? "border-blue-500/40 bg-blue-500/[0.06]"
                               : "border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04]"
@@ -537,7 +537,7 @@ const SettingsPage = () => {
                   {/* Animation intensity */}
                   <div>
                     <h3 className="text-sm font-medium text-white/60 mb-3">Animation Intensity</h3>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
                       {[
                         { id: "full" as const, icon: Sparkles, label: "Full" },
                         { id: "reduced" as const, icon: Sparkles, label: "Reduced" },

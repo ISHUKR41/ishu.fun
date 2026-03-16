@@ -219,9 +219,9 @@ const ToolsPage = () => {
       {/* Trust Badges */}
       <section ref={trustRef} className="border-b border-border bg-card/50 py-8">
         <div className="container">
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4">
             {trustBadges.map((b) => (
-              <div key={b.label} className="trust-badge flex items-center gap-3 rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/20">
+              <div key={b.label} className="trust-badge flex items-center gap-2 sm:gap-3 rounded-xl border border-border bg-card p-3 sm:p-4 transition-all hover:border-primary/20">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <b.icon size={20} />
                 </div>
@@ -252,7 +252,7 @@ const ToolsPage = () => {
             </div>
           </FadeInView>
 
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4">
             {popularFiltered.slice(0, 8).map((tool, i) => (
               <FadeInView key={tool.slug} delay={Math.min(i * 0.05, 0.3)}>
                 <Link to={`/tools/${tool.slug}`}>
@@ -343,7 +343,7 @@ const ToolsPage = () => {
             </div>
           </FadeInView>
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-4">
             {howItWorks.map((step, i) => (
               <Tilt key={step.title} tiltMaxAngleX={10} tiltMaxAngleY={10} glareEnable glareMaxOpacity={0.08} glareBorderRadius="1rem" scale={1.03}>
                 <motion.div whileTap={{ scale: 0.98 }}
@@ -381,7 +381,7 @@ const ToolsPage = () => {
       {/* Stats Section */}
       <section className="border-t border-border bg-card/50 py-16">
         <div className="container">
-          <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 sm:gap-6 sm:grid-cols-3 md:grid-cols-4">
             {[
               { value: allToolsData.length, suffix: "+", label: "PDF Tools", icon: FileText },
               { value: 5000000, suffix: "+", label: "Files Processed", icon: Download },
@@ -447,7 +447,7 @@ const ToolsPage = () => {
               </h2>
             </div>
           </FadeInView>
-          <div className="grid gap-6 md:grid-cols-3">
+          <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
             {[
               { name: "Ravi Kumar", role: "UPSC Aspirant", text: "Best PDF tools I've found! Merged all my NCERT notes into one PDF in seconds. No sign-up, no ads.", rating: 5 },
               { name: "Sneha Gupta", role: "SSC CGL 2025", text: "The PDF to Word converter works perfectly. I converted my handwritten notes scans to editable documents.", rating: 5 },

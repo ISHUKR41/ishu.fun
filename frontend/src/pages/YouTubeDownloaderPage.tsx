@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL || "https://ishu-site.onrender.com";
 
 interface VideoInfo {
   title: string;
@@ -61,17 +61,18 @@ const YouTubeDownloaderPage = () => {
     } catch { /* clipboard not available */ }
   };
 
-  const fetchWithRetry = async (fetchUrl: string, options: RequestInit, retries = 2): Promise<Response> => {
+  const fetchWithRetry = async (fetchUrl: string, options: RequestInit, retries = 3): Promise<Response> => {
     for (let i = 0; i <= retries; i++) {
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 90000);
+        const timeoutId = setTimeout(() => controller.abort(), i === 0 ? 90000 : 120000);
         const res = await fetch(fetchUrl, { ...options, signal: controller.signal });
         clearTimeout(timeoutId);
         return res;
       } catch (err: any) {
         if (i < retries && err?.name !== "AbortError") {
           console.log(`Retry ${i + 1}/${retries}...`);
+          await new Promise(r => setTimeout(r, 2000 * (i + 1)));
           await new Promise(r => setTimeout(r, 3000));
           continue;
         }
@@ -103,9 +104,9 @@ const YouTubeDownloaderPage = () => {
       setFormats(data.formats || []);
     } catch (err: any) {
       if (err?.name === "AbortError") {
-        setError("Request timed out. The server might be starting up — please wait 30 seconds and try again.");
+        setError("Request timed out. The backend server might be starting up (takes ~30s on free tier). Please wait and try again.");
       } else {
-        setError("Could not connect to the server. The backend may be waking up (free tier takes ~30s). Please try again in a moment.");
+        setError("Network error. Please check if the backend server is running and try again. The free tier server may take 30-60 seconds to wake up — try again shortly.");
       }
     } finally {
       setLoading(false);

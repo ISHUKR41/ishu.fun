@@ -193,18 +193,12 @@ function parseM3U(text: string, defaultLang: string): { name: string; logo: stri
 
 /* ═══════════════════ PROXY CONFIG ═══════════════════ */
 // Backend proxy for CORS bypass (runs on your Express backend)
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL || "https://ishu-site.onrender.com";
 const BACKEND_PROXY = `${API_URL}/api/stream-proxy`;
 
-// Public CORS proxies as additional fallbacks
+// Backend proxy is primary — it now rewrites M3U8 relative URLs to absolute
 const CORS_PROXIES = [
   (url: string) => `${BACKEND_PROXY}?url=${encodeURIComponent(url)}`,
-  (url: string) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
-  (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-  (url: string) => `https://cors-proxy.fringe.zone/${url}`,
-  (url: string) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
-  (url: string) => `https://corsproxy.org/?url=${encodeURIComponent(url)}`,
-  (url: string) => `https://proxy.cors.sh/${url}`,
 ];
 
 /* ═══════════════════ STREAM RELIABILITY SCORING ═══════════════════ */
@@ -346,6 +340,15 @@ async function fetchAllChannels(
     { url: "https://iptv-org.github.io/iptv/subdivisions/in-mz.m3u", lang: "Hindi" },
     { url: "https://iptv-org.github.io/iptv/subdivisions/in-ar.m3u", lang: "Hindi" },
     { url: "https://iptv-org.github.io/iptv/subdivisions/in-ml.m3u", lang: "Hindi" },
+    // Category-based playlists (will catch Indian channels tagged in these categories)
+    { url: "https://iptv-org.github.io/iptv/categories/kids.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/categories/music.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/categories/movies.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/categories/entertainment.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/categories/sports.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/categories/news.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/categories/education.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/categories/comedy.m3u", lang: "Hindi" },
   ];
 
   const m3uResults = await Promise.allSettled(
@@ -565,16 +568,17 @@ function useRobustPlayer(
     }
   }, []);
 
-  // Build expanded attempt list: for each stream URL, add direct + proxy variants
+  // Build expanded attempt list: proxy FIRST (most streams need CORS bypass),
+  // then direct as fallback for streams that already have CORS headers
   const buildAttemptList = useCallback((streamList: StreamUrl[]) => {
     const list: { url: string; proxyIdx: number; original: StreamUrl }[] = [];
     for (const s of streamList) {
-      // Direct attempt
-      list.push({ url: s.url, proxyIdx: -1, original: s });
-      // Proxy attempts
+      // Backend proxy first (handles CORS + M3U8 URL rewriting)
       for (let i = 0; i < CORS_PROXIES.length; i++) {
         list.push({ url: s.url, proxyIdx: i, original: s });
       }
+      // Direct attempt as fallback (for streams that natively support CORS)
+      list.push({ url: s.url, proxyIdx: -1, original: s });
     }
     return list;
   }, []);
@@ -612,12 +616,12 @@ function useRobustPlayer(
     // Determine the actual URL to load and whether to use proxy xhrSetup
     const isProxied = attempt.proxyIdx >= 0;
     const loadUrl = isProxied ? CORS_PROXIES[attempt.proxyIdx](attempt.url) : attempt.url;
-    const timeout = isProxied ? 8000 : 6000; // Longer timeout for proxied streams
+    const timeout = isProxied ? 25000 : 15000; // Generous timeouts for stream loading
 
     // Stall detection
     const onTimeUpdate = () => {
       if (stallRef.current) clearTimeout(stallRef.current);
-      stallRef.current = setTimeout(() => tryAttempt(idx + 1), 8000);
+      stallRef.current = setTimeout(() => tryAttempt(idx + 1), 15000);
     };
     timeUpdateRef.current = onTimeUpdate;
     video.addEventListener("timeupdate", onTimeUpdate);
@@ -643,15 +647,15 @@ function useRobustPlayer(
       maxBufferLength: 30,
       maxMaxBufferLength: 120,
       startLevel: -1,
-      fragLoadingMaxRetry: 3,
-      fragLoadingRetryDelay: 800,
-      fragLoadingMaxRetryTimeout: 8000,
-      manifestLoadingMaxRetry: 2,
-      manifestLoadingRetryDelay: 800,
+      fragLoadingMaxRetry: 10,
+      fragLoadingRetryDelay: 1000,
+      fragLoadingMaxRetryTimeout: 20000,
+      manifestLoadingMaxRetry: 6,
+      manifestLoadingRetryDelay: 1000,
       manifestLoadingMaxRetryTimeout: timeout,
-      levelLoadingMaxRetry: 2,
-      levelLoadingRetryDelay: 500,
-      levelLoadingMaxRetryTimeout: 6000,
+      levelLoadingMaxRetry: 6,
+      levelLoadingRetryDelay: 800,
+      levelLoadingMaxRetryTimeout: 15000,
       backBufferLength: 30,
       capLevelToPlayerSize: true,
       progressive: true,
@@ -660,10 +664,13 @@ function useRobustPlayer(
     };
 
     // For proxied streams, route ALL XHR requests through the proxy
+    // Since our backend now rewrites M3U8 URLs to absolute, segment URLs
+    // in manifests are already absolute — xhrSetup wraps them in proxy
     if (isProxied) {
       const proxyFn = CORS_PROXIES[attempt.proxyIdx];
       hlsConfig.xhrSetup = (xhr: XMLHttpRequest, url: string) => {
-        // Re-open the request to go through proxy
+        // If URL is already going through our proxy, don't double-wrap
+        if (url.includes('/api/stream-proxy')) return;
         const proxiedUrl = proxyFn(url);
         xhr.open("GET", proxiedUrl, true);
       };
@@ -876,7 +883,7 @@ const TVPage = () => {
       { name: "categoryLabel", weight: 0.1 },
       { name: "network", weight: 0.15 },
     ],
-    threshold: 0.35,
+    threshold: 0.4,
     includeScore: true,
     minMatchCharLength: 1,
     ignoreLocation: true,
@@ -884,7 +891,7 @@ const TVPage = () => {
 
   const searchResults = useMemo(() => {
     if (!search.trim()) return [];
-    return fuse.search(search).slice(0, 25).map((r) => r.item);
+    return fuse.search(search).slice(0, 50).map((r) => r.item);
   }, [fuse, search]);
 
   /* ── Channels filtered by selected language ── */
@@ -1111,7 +1118,7 @@ const TVPage = () => {
         </section>
 
         {/* ═══ STATS ═══ */}
-        {!fetchLoading && channels.length > 0 && (
+        {!fetchLoading && channels.length > 0 && !selectedLang && !playing && (
           <section ref={statsRef} className="container -mt-8 mb-10 relative z-[1]">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {[
@@ -1167,7 +1174,7 @@ const TVPage = () => {
           <>
             {/* ═══ LANGUAGE SELECTION SCREEN ═══ */}
             {!selectedLang && !playing && (
-              <section className="container mb-12 relative z-[5]">
+              <section className="container mb-12 relative z-[10]">
                 <FadeInView>
                   <div className="text-center mb-8">
                     <h2 className="font-display text-2xl font-bold text-foreground sm:text-3xl">
@@ -1516,7 +1523,7 @@ const TVPage = () => {
                                   </div>
                                 </div>
                                 {/* Channel grid */}
-                                <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8">
+                                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8">
                                   {catChannels.map((ch) => (
                                     <ChannelCard
                                       key={ch.id} ch={ch}
@@ -1535,7 +1542,7 @@ const TVPage = () => {
                         </div>
                       ) : viewMode === "grid" ? (
                         /* Flat grid when specific category selected */
-                        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8">
+                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8">
                           {filtered.map((ch) => (
                             <ChannelCard
                               key={ch.id} ch={ch}
@@ -1659,7 +1666,7 @@ const SearchBar = ({
   const showDropdown = searchFocused && search.trim().length > 0;
 
   return (
-    <div className={`relative ${compact ? "" : "mx-auto max-w-xl"}`}>
+    <div className={`relative ${compact ? "" : "mx-auto max-w-xl"}`} style={{ zIndex: 100 }}>
       <div className={`flex items-center gap-3 rounded-2xl border bg-card/80 backdrop-blur-xl transition-all ${compact ? "px-3 py-2" : "px-5 py-3.5"} ${searchFocused ? "border-primary/50 shadow-lg shadow-primary/10" : "border-border/60"}`}>
         <Search className={`${compact ? "h-4 w-4" : "h-5 w-5"} shrink-0 transition-colors ${searchFocused ? "text-primary" : "text-muted-foreground"}`} />
         <input ref={searchRef} type="text"
@@ -1682,11 +1689,11 @@ const SearchBar = ({
         {showDropdown && (
           <motion.div ref={listRef} initial={{ opacity: 0, y: -8, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: 0.98 }}
             transition={{ duration: 0.15 }}
-            className="absolute left-0 right-0 top-full z-50 mt-2 max-h-[400px] overflow-y-auto rounded-2xl border border-border/60 bg-card/95 shadow-2xl backdrop-blur-xl scrollbar-thin">
+            className="absolute left-0 right-0 top-full z-50 mt-2 max-h-[70vh] overflow-y-auto rounded-2xl border border-border/60 bg-card/95 shadow-2xl backdrop-blur-xl scrollbar-thin">
             {searchResults.length > 0 ? (
               <>
                 <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-xl px-4 py-2 text-[10px] uppercase tracking-widest text-muted-foreground border-b border-border/30">
-                  {searchResults.length} results for "{search}" &middot; <span className="text-primary">↑↓</span> navigate &middot; <span className="text-primary">Enter</span> select
+                  {searchResults.length} results &middot; <span className="text-primary">↑↓</span> navigate &middot; <span className="text-primary">Enter</span> select
                 </div>
                 {searchResults.map((ch, idx) => (
                   <button key={ch.id} data-search-item onMouseDown={(e) => { e.preventDefault(); onSelect(ch); }}

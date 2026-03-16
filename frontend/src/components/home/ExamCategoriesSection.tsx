@@ -105,7 +105,7 @@ const ExamCategoriesSection = () => {
           ))}
         </div>
 
-        <div className="exam-grid mt-12 grid grid-cols-2 gap-4 md:grid-cols-4">
+        <div className="exam-grid mt-12 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {categories.map((cat) => (
             <Tilt key={cat.name} tiltMaxAngleX={8} tiltMaxAngleY={8} glareEnable glareMaxOpacity={0.06} glareColor="hsl(210 100% 56%)" glarePosition="all" glareBorderRadius="1rem" scale={1.03} transitionSpeed={400}>
               <motion.div whileTap={{ scale: 0.97 }}

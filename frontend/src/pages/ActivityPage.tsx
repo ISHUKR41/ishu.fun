@@ -21,7 +21,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth as useClerkAuth } from "@clerk/clerk-react";
 import axios from "axios";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_BASE = import.meta.env.VITE_API_URL || "https://ishu-site.onrender.com";
 
 const typeIcons: Record<string, { icon: any; color: string; bg: string }> = {
   tool_used: { icon: Wrench, color: "text-blue-400", bg: "bg-blue-500/10" },
@@ -100,7 +100,7 @@ const ActivityPage = () => {
   }
 
   return (
-    <div ref={listRef} className="max-w-3xl mx-auto px-4 py-8 lg:px-8">
+    <div ref={listRef} className="max-w-3xl mx-auto px-3 py-6 sm:px-4 sm:py-8 lg:px-8">
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -15 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
         <h1 className="text-2xl font-bold text-white flex items-center gap-3">

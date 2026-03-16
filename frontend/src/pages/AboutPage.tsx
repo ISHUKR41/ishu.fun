@@ -232,7 +232,7 @@ const AboutPage = () => {
             </div>
           </FadeInView>
 
-          <div className="grid gap-6 md:grid-cols-3">
+          <div className="grid gap-4 sm:gap-6 md:grid-cols-3">
             {[
               { icon: Target, title: "Our Mission", desc: "To provide every Indian student with instant, accurate, and free access to government exam information, powerful tools, and career guidance — eliminating the information gap that holds millions back.", gradient: "from-blue-500/20 to-cyan-500/20" },
               { icon: Eye, title: "Our Vision", desc: "To become India's most trusted and technologically advanced education platform — where every aspirant, regardless of location or background, can access world-class resources.", gradient: "from-violet-500/20 to-purple-500/20" },
@@ -309,7 +309,7 @@ const AboutPage = () => {
       {/* Stats with GSAP */}
       <section ref={statsRef} className="py-20 aurora-bg">
         <div className="container">
-          <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-4">
             {[
               { value: 1000000, suffix: "+", label: "Active Users", gradient: "from-blue-500 to-cyan-500" },
               { value: 100, suffix: "+", label: "PDF Tools", gradient: "from-violet-500 to-purple-500" },

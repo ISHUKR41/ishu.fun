@@ -187,17 +187,24 @@ function sanitizeFilename(name) {
  * Cobalt API v10 format: POST / with JSON body
  */
 async function tryCobaltDownload(url, options = {}) {
-  // Updated list of working Cobalt instances (2026)
-  const COBALT_INSTANCES = [
+  // Working Cobalt instances — community-maintained, shuffled for load balancing
+  const ALL_INSTANCES = [
     'https://api.cobalt.tools',
-    'https://cobalt-api.ayo.tf',
     'https://cobalt.canine.tools',
     'https://co.eepy.today',
-    'https://cobalt.api.timelessnesses.me',
-    'https://api.savetofiles.com',
+    'https://cobalt-api.ayo.tf',
     'https://cobalt.imput.net',
     'https://cobalt-api.hyper.lol',
+    'https://api.cobalt.best',
+    'https://cobalt.tskau.team',
+    'https://cobalt.api.timelessnesses.me',
+    'https://api.savetofiles.com',
+    'https://cobalt-backend.canine.tools',
+    'https://dl.khyernet.xyz',
+    'https://cobalt.siri.sh',
+    'https://cobalt.rainn.dev',
   ];
+  const COBALT_INSTANCES = ALL_INSTANCES.sort(() => Math.random() - 0.5);
 
   const body = {
     url,
@@ -214,8 +221,9 @@ async function tryCobaltDownload(url, options = {}) {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         },
-        timeout: 25000,
+        timeout: 15000,
       });
       const data = response.data;
 
@@ -513,6 +521,78 @@ router.post('/youtube-info', async (req, res) => {
       return res.json(response);
     }
 
+    // Fallback 2: Try Invidious/Piped for format info
+    if (videoId) {
+      const infoInstances = [
+        { type: 'invidious', url: `https://inv.nadeko.net/api/v1/videos/${videoId}` },
+        { type: 'invidious', url: `https://invidious.nerdvpn.de/api/v1/videos/${videoId}` },
+        { type: 'piped', url: `https://pipedapi.kavin.rocks/streams/${videoId}` },
+        { type: 'piped', url: `https://pipedapi.adminforge.de/streams/${videoId}` },
+      ];
+      for (const inst of infoInstances) {
+        try {
+          const resp = await axios.get(inst.url, { timeout: 10000 });
+          const d = resp.data;
+          if (inst.type === 'invidious' && d.title) {
+            const formats = (d.formatStreams || [])
+              .filter(f => f.type && f.type.includes('video'))
+              .map(f => ({ quality: f.qualityLabel || f.quality, height: parseInt(f.qualityLabel) || 720, ext: 'mp4' }));
+            const response = {
+              success: true,
+              video: {
+                title: d.title,
+                channel: d.author || 'Unknown',
+                thumbnail: videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : '',
+                thumbnailHQ: videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : '',
+                videoId,
+                url,
+                duration: d.lengthSeconds ? `${Math.floor(d.lengthSeconds / 60)}:${String(d.lengthSeconds % 60).padStart(2, '0')}` : null,
+                views: d.viewCount ? parseInt(d.viewCount).toLocaleString() : null,
+              },
+              formats: formats.length > 0 ? formats : [
+                { quality: '1080p', height: 1080, ext: 'mp4' },
+                { quality: '720p', height: 720, ext: 'mp4' },
+                { quality: '480p', height: 480, ext: 'mp4' },
+                { quality: '360p', height: 360, ext: 'mp4' },
+              ],
+            };
+            cache.set(cacheKey, response);
+            console.log('[YouTube Info] ✅ Got info via Invidious');
+            return res.json(response);
+          }
+          if (inst.type === 'piped' && d.title) {
+            const formats = (d.videoStreams || [])
+              .filter(s => !s.videoOnly)
+              .map(s => ({ quality: s.quality || '720p', height: parseInt(s.quality) || 720, ext: 'mp4' }));
+            const seen = new Set();
+            const uniqueFormats = formats.filter(f => { if (seen.has(f.quality)) return false; seen.add(f.quality); return true; });
+            const response = {
+              success: true,
+              video: {
+                title: d.title,
+                channel: d.uploader || 'Unknown',
+                thumbnail: d.thumbnailUrl || `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+                thumbnailHQ: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
+                videoId,
+                url,
+                duration: d.duration ? `${Math.floor(d.duration / 60)}:${String(d.duration % 60).padStart(2, '0')}` : null,
+                views: d.views ? parseInt(d.views).toLocaleString() : null,
+              },
+              formats: uniqueFormats.length > 0 ? uniqueFormats : [
+                { quality: '1080p', height: 1080, ext: 'mp4' },
+                { quality: '720p', height: 720, ext: 'mp4' },
+                { quality: '480p', height: 480, ext: 'mp4' },
+                { quality: '360p', height: 360, ext: 'mp4' },
+              ],
+            };
+            cache.set(cacheKey, response);
+            console.log('[YouTube Info] ✅ Got info via Piped');
+            return res.json(response);
+          }
+        } catch { continue; }
+      }
+    }
+
     // Fallback: oembed info (always works — metadata only, standard quality options)
     console.log('[YouTube Info] ✅ Using oembed info');
     const response = {
@@ -602,7 +682,90 @@ router.post('/youtube-download', async (req, res) => {
       }
     }
 
-    // Method 3: ytdl-core fallback (YouTube only)
+    // Method 3: Invidious/Piped API fallback (YouTube only — returns direct links)
+    if (isYouTubeUrl(url)) {
+      const videoId = extractVideoId(url);
+      if (videoId) {
+        const invidiousInstances = [
+          'https://inv.nadeko.net',
+          'https://invidious.nerdvpn.de',
+          'https://vid.puffyan.us',
+          'https://yt.artemislena.eu',
+          'https://invidious.privacyredirect.com',
+          'https://invidious.lunar.icu',
+          'https://inv.tux.pizza',
+          'https://invidious.protokolla.fi',
+          'https://invidious.perennialte.ch',
+          'https://inv.us.projectsegfau.lt',
+          'https://invidious.einfachzocken.eu',
+        ];
+        // Also try Piped API instances
+        const pipedInstances = [
+          'https://pipedapi.kavin.rocks',
+          'https://pipedapi.adminforge.de',
+          'https://api.piped.projectsegfau.lt',
+          'https://pipedapi.in.projectsegfau.lt',
+          'https://api.piped.privacydev.net',
+          'https://pipedapi.tokhmi.xyz',
+        ];
+        for (const instance of invidiousInstances) {
+          try {
+            console.log(`[YouTube Download] Trying Invidious (${instance})...`);
+            const resp = await axios.get(`${instance}/api/v1/videos/${videoId}`, { timeout: 15000 });
+            const videoData = resp.data;
+            const requestedHeight = parseInt(quality) || 720;
+            // Look for combined format (video+audio)
+            const formats = (videoData.formatStreams || [])
+              .filter(f => f.type && f.type.includes('video'))
+              .sort((a, b) => (parseInt(b.qualityLabel) || 0) - (parseInt(a.qualityLabel) || 0));
+            const chosen = formats.find(f => (parseInt(f.qualityLabel) || 0) <= requestedHeight) || formats[0];
+            if (chosen && chosen.url) {
+              console.log('[YouTube Download] ✅ Success via Invidious');
+              return res.json({
+                success: true,
+                downloadUrl: chosen.url,
+                filename: `${videoTitle}_${chosen.qualityLabel || quality + 'p'}.mp4`,
+                quality: chosen.qualityLabel || `${quality}p`,
+                source: 'invidious',
+                isDirect: true,
+              });
+            }
+          } catch (err) {
+            console.log(`[YouTube Download] Invidious ${instance} failed: ${err.message}`);
+            continue;
+          }
+        }
+
+        // Also try Piped API
+        for (const pipedBase of pipedInstances) {
+          try {
+            console.log(`[YouTube Download] Trying Piped (${pipedBase})...`);
+            const resp = await axios.get(`${pipedBase}/streams/${videoId}`, { timeout: 15000 });
+            const videoStreams = (resp.data.videoStreams || [])
+              .filter(s => s.videoOnly === false)
+              .sort((a, b) => (parseInt(b.quality) || 0) - (parseInt(a.quality) || 0));
+            const requestedHeight = parseInt(quality) || 720;
+            const chosen = videoStreams.find(s => (parseInt(s.quality) || 0) <= requestedHeight) || videoStreams[0];
+            if (chosen && chosen.url) {
+              console.log('[YouTube Download] ✅ Success via Piped');
+              return res.json({
+                success: true,
+                downloadUrl: chosen.url,
+                filename: `${videoTitle}_${chosen.quality || quality + 'p'}.mp4`,
+                quality: chosen.quality || `${quality}p`,
+                source: 'piped',
+                isDirect: true,
+              });
+            }
+          } catch (err) {
+            console.log(`[YouTube Download] Piped ${pipedBase} failed: ${err.message}`);
+            continue;
+          }
+        }
+      }
+    }
+
+    // Method 4: ytdl-core fallback (YouTube only)
     if (ytdl) {
       try {
         console.log('[YouTube Download] Trying ytdl-core...');
@@ -727,11 +890,58 @@ router.post('/terabox-info', async (req, res) => {
         },
       },
       {
+        name: 'TeraboxDL-V2',
+        url: `https://teraboxvideodownloader.nepcoderdevs.com/api/getDownload?url=${encodeURIComponent(url)}`,
+        parse: (data) => {
+          if (data && data.response && data.response.length > 0) {
+            const item = data.response[0];
+            return {
+              name: item.title || item.server_filename || 'Terabox File',
+              size: item.size || 'Unknown',
+              thumbnail: item.thumbs?.url3 || item.thumbs?.url2 || '',
+              downloadLink: item.resolutions?.['720p']?.url || item.resolutions?.['480p']?.url || item.fast_link || '',
+              isVideo: true,
+            };
+          }
+          return null;
+        },
+      },
+      {
         name: 'TeraboxDL-Backup',
         url: `https://teraboxdownloader.online/api?url=${encodeURIComponent(url)}`,
         parse: (data) => {
           if (data && (data.file_name || data.name)) {
             const name = data.file_name || data.name || 'Unknown File';
+            return {
+              name, size: data.size || data.file_size || 'Unknown',
+              thumbnail: data.thumb || data.thumbnail || '',
+              downloadLink: data.direct_link || data.download_link || data.dlink || '',
+              isVideo: /\.(mp4|mkv|avi|mov|wmv|flv|webm|m4v|3gp)$/i.test(name),
+            };
+          }
+          return null;
+        },
+      },
+      {
+        name: 'TeraboxDL-V3',
+        url: `https://terabox-dl-api.vercel.app/api/download?url=${encodeURIComponent(url)}`,
+        parse: (data) => {
+          if (data && data.ok && data.file_name) {
+            return {
+              name: data.file_name, size: data.size || 'Unknown',
+              thumbnail: data.thumb || '', downloadLink: data.download_link || '',
+              isVideo: /\.(mp4|mkv|avi|mov|wmv|flv|webm|m4v|3gp)$/i.test(data.file_name),
+            };
+          }
+          return null;
+        },
+      },
+      {
+        name: 'TeraboxDL-V4',
+        url: `https://tera.instavideosave.com/api?url=${encodeURIComponent(url)}`,
+        parse: (data) => {
+          if (data && (data.file_name || data.title)) {
+            const name = data.file_name || data.title || 'Terabox File';
             return {
               name, size: data.size || data.file_size || 'Unknown',
               thumbnail: data.thumb || data.thumbnail || '',

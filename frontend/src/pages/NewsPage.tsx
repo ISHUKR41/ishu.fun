@@ -1429,7 +1429,7 @@ const NewsPage = () => {
               </div>
             </div>
           </FadeInView>
-          <div className="grid gap-6 md:grid-cols-3">
+          <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
             {trendingNews.slice(0, 3).map((news, i) => {
               const slug = makeSlug(news.title);
               return (
@@ -1471,7 +1471,7 @@ const NewsPage = () => {
       {/* ═══ LIVE NEWS STATS COUNTER ═══ */}
       <section className="border-t border-border bg-card/50 py-12">
         <div className="container">
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
             {[
               { label: "Articles Published Today", value: "1,247", icon: Newspaper, color: "text-primary" },
               { label: "Active Readers Now", value: "12,890", icon: Eye, color: "text-emerald-400" },
@@ -1593,7 +1593,7 @@ const NewsPage = () => {
               <p className="mt-2 text-sm text-muted-foreground">Comprehensive coverage across all 36 states & union territories</p>
             </div>
           </FadeInView>
-          <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-9">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-9">
             {[
               { name: "Delhi", code: "DL", articles: 142 }, { name: "Maharashtra", code: "MH", articles: 128 },
               { name: "Uttar Pradesh", code: "UP", articles: 115 }, { name: "Tamil Nadu", code: "TN", articles: 98 },
@@ -1776,9 +1776,8 @@ const NewsPage = () => {
               <p className="mt-2 text-sm text-muted-foreground">In-depth analysis from education experts and industry leaders</p>
             </div>
           </FadeInView>
-          <div className="grid gap-6 md:grid-cols-3">
-            {[
-              { title: "The Future of Government Exams in Digital India", author: "Dr. Rajesh Kumar", role: "Education Policy Expert", excerpt: "How AI and digital platforms are transforming the way millions of Indian students prepare for competitive exams.", readTime: 8, image: "https://images.unsplash.com/photo-1523050854058-8df90110c476?w=600&h=400&fit=crop" },
+          <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {[, role: "Education Policy Expert", excerpt: "How AI and digital platforms are transforming the way millions of Indian students prepare for competitive exams.", readTime: 8, image: "https://images.unsplash.com/photo-1523050854058-8df90110c476?w=600&h=400&fit=crop" },
               { title: "Why India Needs More Transparent Recruitment Processes", author: "Priya Sharma", role: "Public Administration Analyst", excerpt: "An analysis of current challenges in government recruitment and proposed solutions for a fairer system.", readTime: 6, image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=600&h=400&fit=crop" },
               { title: "EdTech Revolution: Bridging the Urban-Rural Divide", author: "Amit Patel", role: "Technology Journalist", excerpt: "How platforms like ISHU are making quality education resources accessible to students in remote areas.", readTime: 7, image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&h=400&fit=crop" },
             ].map((article, i) => (

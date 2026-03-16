@@ -118,7 +118,7 @@ const Footer = () => {
       {/* ====== App Highlights Strip ====== */}
       <div className="border-b border-border bg-card/50">
         <div className="container py-6">
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4">
             {[
             { icon: Globe, value: "36", label: "States & UTs", desc: "Complete pan-India coverage" },
             { icon: Shield, value: "100%", label: "Verified", desc: "Official sources only" },

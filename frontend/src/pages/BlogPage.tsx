@@ -184,8 +184,7 @@ const BlogPage = () => {
       {/* Blog Stats */}
       <section ref={statsRef} className="border-b border-border bg-card/50 py-8">
         <div className="container">
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            {[
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4">            {[
               { value: blogs.length, suffix: "+", label: "Articles", icon: BookOpen },
               { value: 12, suffix: "", label: "Categories", icon: Tag },
               { value: 50000, suffix: "+", label: "Monthly Readers", icon: Users },
@@ -219,7 +218,7 @@ const BlogPage = () => {
                 </h2>
               </div>
             </FadeInView>
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
               {featured.map((blog, i) => {
                 const slug = blog.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-$/, "");
                 return (

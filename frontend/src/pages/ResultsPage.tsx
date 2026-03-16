@@ -731,7 +731,7 @@ const ResultsPage = () => {
       {/* ═══ QUICK STATS OVERVIEW ═══ */}
       <section className="border-t border-border py-12 bg-card/50">
         <div className="container">
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-6">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
             {[
               { label: "Total Vacancies", value: results.reduce((sum, r) => sum + r.vacancies, 0).toLocaleString(), color: "text-primary" },
               { label: "Active Posts", value: results.filter(r => r.status === "active").length.toString(), color: "text-[hsl(var(--success))]" },

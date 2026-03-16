@@ -179,7 +179,7 @@ const DashboardContent = () => (
         <h2 className="font-display text-lg font-bold text-foreground flex items-center gap-2">
           <Zap size={18} className="text-primary" /> Quick Actions
         </h2>
-        <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-3 md:grid-cols-4">
           {[
             { icon: FileText, label: "Add Result", desc: "Post new vacancy", gradient: "from-blue-500/10 to-cyan-500/10", href: "/admin/results" },
             { icon: Newspaper, label: "Add News", desc: "Publish article", gradient: "from-amber-500/10 to-orange-500/10", href: "/admin/news" },

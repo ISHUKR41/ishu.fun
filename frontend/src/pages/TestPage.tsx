@@ -201,8 +201,7 @@ const TestPage = () => {
       {/* Stats */}
       <section className="border-b border-border bg-card/50 py-10">
         <div className="container">
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            {[
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4">            {[
               { value: 50, suffix: "+", label: "Mock Tests Planned", icon: BookOpen },
               { value: 10, suffix: "+", label: "Exam Categories", icon: Target },
               { value: 100000, suffix: "+", label: "Pre-registered", icon: Users },
@@ -238,7 +237,7 @@ const TestPage = () => {
             </div>
           </FadeInView>
 
-          <div className="mt-14 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-14 grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-4">
             {features.map((feat) => (
               <Tilt key={feat.title} tiltMaxAngleX={10} tiltMaxAngleY={10} glareEnable={true} glareMaxOpacity={0.08}
                 glareColor="hsl(210 100% 56%)" glarePosition="all" glareBorderRadius="1rem" scale={1.03} transitionSpeed={400}>
@@ -301,7 +300,7 @@ const TestPage = () => {
             </div>
           </FadeInView>
 
-          <div className="mx-auto max-w-4xl grid gap-6 md:grid-cols-2">
+          <div className="mx-auto max-w-4xl grid gap-4 sm:gap-6 md:grid-cols-2">
             {roadmap.map((r) => (
               <Tilt key={r.phase} tiltMaxAngleX={6} tiltMaxAngleY={6} scale={1.02}>
                 <div className={`roadmap-card rounded-2xl border p-6 transition-all hover:shadow-card ${

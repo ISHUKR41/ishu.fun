@@ -129,7 +129,7 @@ const DashboardPage = () => {
   }
 
   return (
-    <div ref={gridRef} className="px-4 py-8 lg:px-8 max-w-7xl mx-auto">
+    <div ref={gridRef} className="px-3 py-6 sm:px-4 sm:py-8 md:px-6 lg:px-8 max-w-7xl mx-auto">
       {/* ──── Welcome Hero ──── */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -141,7 +141,7 @@ const DashboardPage = () => {
           <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
           <span className="text-xs font-medium text-white/50">Online</span>
         </div>
-        <h1 className="text-3xl lg:text-4xl font-bold text-white tracking-tight" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
           {getGreeting()},{" "}
           <span className="bg-gradient-to-r from-blue-400 via-violet-400 to-cyan-400 bg-clip-text text-transparent">
             {displayName}
@@ -199,15 +199,15 @@ const DashboardPage = () => {
             All Tools <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+        <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 sm:gap-3">
           {quickTools.map((tool) => (
             <Link
               key={tool.label}
               to={tool.href}
-              className="quick-tool group flex flex-col items-center gap-2.5 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 transition-all duration-200 hover:border-white/[0.12] hover:bg-white/[0.05] hover:scale-[1.03]"
+              className="quick-tool group flex flex-col items-center gap-2 sm:gap-2.5 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 sm:p-4 transition-all duration-200 hover:border-white/[0.12] hover:bg-white/[0.05] hover:scale-[1.03]"
             >
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.04] transition-all group-hover:bg-white/[0.08] group-hover:scale-110">
-                <tool.icon size={20} className={`${tool.color} transition-all`} />
+              <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-white/[0.04] transition-all group-hover:bg-white/[0.08] group-hover:scale-110">
+                <tool.icon size={18} className={`sm:w-5 sm:h-5 ${tool.color} transition-all`} />
               </div>
               <span className="text-[11px] font-medium text-white/50 text-center group-hover:text-white/80 transition-colors">{tool.label}</span>
             </Link>
@@ -268,7 +268,7 @@ const DashboardPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1, duration: 0.6 }}
-          className="relative overflow-hidden rounded-2xl border border-white/[0.06] bg-gradient-to-r from-blue-600/10 via-violet-600/10 to-purple-600/10 p-6 lg:p-8"
+          className="relative overflow-hidden rounded-2xl border border-white/[0.06] bg-gradient-to-r from-blue-600/10 via-violet-600/10 to-purple-600/10 p-4 sm:p-6 lg:p-8"
         >
           <div className="absolute top-0 right-0 h-40 w-40 rounded-full blur-3xl opacity-30 bg-gradient-to-br from-blue-500 to-violet-500" />
           <div className="relative z-10">

@@ -72,7 +72,7 @@ const BookmarksPage = () => {
   }
 
   return (
-    <div ref={gridRef} className="max-w-5xl mx-auto px-4 py-8 lg:px-8">
+    <div ref={gridRef} className="max-w-5xl mx-auto px-3 py-6 sm:px-4 sm:py-8 lg:px-8">
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -15 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
         <h1 className="text-2xl font-bold text-white flex items-center gap-3">
