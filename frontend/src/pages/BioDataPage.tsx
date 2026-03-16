@@ -161,7 +161,7 @@ const BioDataPage = () => {
                   <UserCircle className="h-6 w-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-foreground">Bio-Data Builder</h1>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Bio-Data Builder</h1>
                   <p className="text-sm text-muted-foreground">Fill in your details and download a formatted bio-data PDF</p>
                 </div>
               </div>

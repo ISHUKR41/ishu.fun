@@ -133,7 +133,7 @@ const SignUpPage = () => {
                 </div>
 
                 {/* Dynamic hero heading */}
-                <h2 className="text-4xl font-bold leading-[1.15] tracking-tight text-white lg:text-5xl xl:text-[3.5rem]" style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold leading-[1.15] tracking-tight text-white lg:text-5xl xl:text-[3.5rem]" style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
                   Join India's{" "}
                   <span className="bg-gradient-to-r from-violet-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent">
                     <TypeAnimation
@@ -151,7 +151,7 @@ const SignUpPage = () => {
                 <div className="mt-6 h-[3px] w-20 rounded-full bg-gradient-to-r from-violet-500 via-blue-500 to-cyan-500" />
 
                 {/* Quick stats */}
-                <div className="mt-8 flex items-center gap-7">
+                <div className="mt-8 flex flex-wrap items-center gap-4 sm:gap-7">
                   {[
                     { icon: Users, val: "1M+", label: "Students", color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/10" },
                     { icon: Layers, val: "100+", label: "PDF Tools", color: "text-violet-400", bg: "bg-violet-500/10 border-violet-500/10" },

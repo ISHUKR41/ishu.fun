@@ -131,7 +131,7 @@ const TestPage = () => {
                 <Sparkles size={14} className="text-primary" />
                 <span className="font-semibold text-foreground">ISHU — Indian StudentHub University</span>
               </motion.div>
-              <h1 className="font-display text-5xl font-bold text-foreground md:text-7xl">
+              <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-foreground lg:text-7xl">
                 Coming <span className="text-gradient">Soon</span>
               </h1>
               <p className="mt-6 text-xl text-muted-foreground md:text-2xl">

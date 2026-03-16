@@ -98,8 +98,7 @@ const StateResultPage = () => {
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 font-display text-2xl font-bold text-primary">
                 {state.code}
               </div>
-              <h1 className="font-display text-4xl font-bold text-foreground md:text-5xl">
-                {state.name}
+              <h1 className="font-display text-3xl sm:text-4xl font-bold text-foreground md:text-5xl">
               </h1>
               <h2 className="mt-4 font-display text-2xl text-gradient">Coming Soon</h2>
               <p className="mx-auto mt-4 max-w-md text-muted-foreground">

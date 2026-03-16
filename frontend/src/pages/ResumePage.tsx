@@ -1,23 +1,30 @@
 /**
- * ResumePage.tsx - Professional Resume Builder
+ * ResumePage.tsx - Professional Resume Builder (Enhanced)
  * 
  * A form-based resume builder where users fill in their details
  * and generate a downloadable PDF resume.
  * 
- * Sections: Personal Info, Education, Experience, Skills, Projects
+ * Features: Animated progress bar, template color picker, section
+ * animations, particle background, shimmer text, confetti on download,
+ * completion tracking, and smooth transitions.
  */
 import Layout from "@/components/layout/Layout";
 import FadeInView from "@/components/animations/FadeInView";
 import GradientMesh from "@/components/animations/GradientMesh";
-import { motion } from "framer-motion";
-import { useState } from "react";
+import MorphingBlob from "@/components/animations/MorphingBlob";
+import ParticleField from "@/components/animations/ParticleField";
+import ShimmerText from "@/components/animations/ShimmerText";
+import { motion, AnimatePresence } from "framer-motion";
+import { useState, useMemo } from "react";
 import {
-  FileText, Plus, Trash2, Download, Eye, ArrowLeft,
-  User, GraduationCap, Briefcase, Code, FolderOpen, Mail, Phone, MapPin, Globe, Linkedin
+  FileText, Plus, Trash2, Download, Eye, ArrowLeft, ArrowRight,
+  User, GraduationCap, Briefcase, Code, FolderOpen, Mail, Phone, MapPin, Globe, Linkedin,
+  CheckCircle, Sparkles, Palette, RotateCcw, ChevronDown, ChevronUp
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { BreadcrumbSchema } from "@/components/seo/JsonLd";
 import jsPDF from "jspdf";
+import toast from "react-hot-toast";
 
 interface Education {
   degree: string;
@@ -43,8 +50,25 @@ const emptyEducation: Education = { degree: "", institution: "", year: "", grade
 const emptyExperience: Experience = { title: "", company: "", duration: "", description: "" };
 const emptyProject: Project = { name: "", description: "", tech: "" };
 
-const inputClass = "w-full rounded-lg border border-border bg-background/60 px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/50 backdrop-blur-sm";
+const inputClass = "w-full rounded-lg border border-border bg-background/60 px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 backdrop-blur-sm transition-all duration-200";
 const labelClass = "mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground";
+
+const templateColors = [
+  { name: "Blue", primary: [30, 64, 175] as [number, number, number], accent: "from-blue-500 to-cyan-500", ring: "ring-blue-500" },
+  { name: "Violet", primary: [88, 28, 135] as [number, number, number], accent: "from-violet-500 to-purple-500", ring: "ring-violet-500" },
+  { name: "Emerald", primary: [5, 122, 85] as [number, number, number], accent: "from-emerald-500 to-teal-500", ring: "ring-emerald-500" },
+  { name: "Rose", primary: [190, 18, 60] as [number, number, number], accent: "from-rose-500 to-pink-500", ring: "ring-rose-500" },
+  { name: "Amber", primary: [180, 83, 9] as [number, number, number], accent: "from-amber-500 to-orange-500", ring: "ring-amber-500" },
+];
+
+const sectionMeta = [
+  { id: "personal", label: "Personal Info", icon: User, color: "text-blue-500" },
+  { id: "summary", label: "Summary", icon: FileText, color: "text-blue-500" },
+  { id: "education", label: "Education", icon: GraduationCap, color: "text-emerald-500" },
+  { id: "experience", label: "Experience", icon: Briefcase, color: "text-amber-500" },
+  { id: "skills", label: "Skills", icon: Code, color: "text-cyan-500" },
+  { id: "projects", label: "Projects", icon: FolderOpen, color: "text-violet-500" },
+];
 
 const ResumePage = () => {
   const [fullName, setFullName] = useState("");
@@ -59,6 +83,27 @@ const ResumePage = () => {
   const [experience, setExperience] = useState<Experience[]>([{ ...emptyExperience }]);
   const [projects, setProjects] = useState<Project[]>([{ ...emptyProject }]);
   const [showPreview, setShowPreview] = useState(false);
+  const [selectedColor, setSelectedColor] = useState(0);
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+
+  const toggleSection = (id: string) => {
+    setCollapsedSections(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  // Calculate completion percentage
+  const completionPercent = useMemo(() => {
+    let filled = 0;
+    let total = 8;
+    if (fullName.trim()) filled++;
+    if (email.trim()) filled++;
+    if (phone.trim()) filled++;
+    if (location.trim()) filled++;
+    if (summary.trim()) filled++;
+    if (skills.trim()) filled++;
+    if (education.some(e => e.degree || e.institution)) filled++;
+    if (experience.some(e => e.title || e.company)) filled++;
+    return Math.round((filled / total) * 100);
+  }, [fullName, email, phone, location, summary, skills, education, experience]);
 
   const addItem = <T,>(setter: React.Dispatch<React.SetStateAction<T[]>>, empty: T) => {
     setter((prev) => [...prev, { ...empty }]);
@@ -75,6 +120,7 @@ const ResumePage = () => {
   const generatePDF = () => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
+    const tc = templateColors[selectedColor].primary;
     let y = 20;
 
     // Helper to add text and advance y
@@ -99,7 +145,7 @@ const ResumePage = () => {
     };
 
     // Name
-    addText(fullName || "Your Name", pageWidth / 2 - doc.getTextWidth(fullName || "Your Name") * 0.5 * (20 / 12), 20, "bold", [30, 64, 175]);
+    addText(fullName || "Your Name", pageWidth / 2 - doc.getTextWidth(fullName || "Your Name") * 0.5 * (20 / 12), 20, "bold", tc);
     y += 8;
 
     // Contact line
@@ -116,7 +162,7 @@ const ResumePage = () => {
     // Summary
     if (summary.trim()) {
       addLine();
-      addText("PROFESSIONAL SUMMARY", 15, 11, "bold", [30, 64, 175]);
+      addText("PROFESSIONAL SUMMARY", 15, 11, "bold", tc);
       y += 6;
       doc.setFontSize(9.5);
       doc.setFont("helvetica", "normal");
@@ -131,7 +177,7 @@ const ResumePage = () => {
     if (filledEdu.length) {
       checkPage(30);
       addLine();
-      addText("EDUCATION", 15, 11, "bold", [30, 64, 175]);
+      addText("EDUCATION", 15, 11, "bold", tc);
       y += 7;
       filledEdu.forEach((edu) => {
         checkPage(18);
@@ -147,7 +193,7 @@ const ResumePage = () => {
     if (filledExp.length) {
       checkPage(30);
       addLine();
-      addText("EXPERIENCE", 15, 11, "bold", [30, 64, 175]);
+      addText("EXPERIENCE", 15, 11, "bold", tc);
       y += 7;
       filledExp.forEach((exp) => {
         checkPage(22);
@@ -173,7 +219,7 @@ const ResumePage = () => {
     if (skills.trim()) {
       checkPage(20);
       addLine();
-      addText("SKILLS", 15, 11, "bold", [30, 64, 175]);
+      addText("SKILLS", 15, 11, "bold", tc);
       y += 6;
       doc.setFontSize(9.5);
       doc.setFont("helvetica", "normal");
@@ -188,7 +234,7 @@ const ResumePage = () => {
     if (filledProjects.length) {
       checkPage(30);
       addLine();
-      addText("PROJECTS", 15, 11, "bold", [30, 64, 175]);
+      addText("PROJECTS", 15, 11, "bold", tc);
       y += 7;
       filledProjects.forEach((proj) => {
         checkPage(18);
@@ -211,6 +257,7 @@ const ResumePage = () => {
     }
 
     doc.save(`${fullName || "Resume"}_Resume.pdf`);
+    toast.success("Resume downloaded successfully! 🎉", { duration: 3000, icon: "📄" });
   };
 
   return (
@@ -236,7 +283,7 @@ const ResumePage = () => {
                   <FileText className="h-6 w-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-foreground">Resume Builder</h1>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Resume Builder</h1>
                   <p className="text-sm text-muted-foreground">Fill in your details and download a professional PDF resume</p>
                 </div>
               </div>

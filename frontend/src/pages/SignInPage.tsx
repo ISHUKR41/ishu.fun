@@ -135,7 +135,7 @@ const SignInPage = () => {
                 </div>
 
                 {/* Dynamic hero heading */}
-                <h2 className="text-4xl font-bold leading-[1.15] tracking-tight text-white lg:text-5xl xl:text-[3.5rem]" style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold leading-[1.15] tracking-tight text-white lg:text-5xl xl:text-[3.5rem]" style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
                   Welcome back to{" "}
                   <span className="bg-gradient-to-r from-blue-400 via-violet-400 to-cyan-400 bg-clip-text text-transparent">
                     <TypeAnimation
@@ -153,7 +153,7 @@ const SignInPage = () => {
                 <div className="mt-6 h-[3px] w-20 rounded-full bg-gradient-to-r from-blue-500 via-violet-500 to-cyan-500" />
 
                 {/* Feature cards grid with 3D tilt */}
-                <div className="mt-10 grid grid-cols-2 gap-4">
+                <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   {[
                     { icon: Bell, label: "Instant Alerts", desc: "WhatsApp notifications for exams", color: "from-amber-500/20 to-orange-500/20", iconColor: "text-amber-400" },
                     { icon: Globe, label: "36 States", desc: "Complete nationwide coverage", color: "from-blue-500/20 to-cyan-500/20", iconColor: "text-blue-400" },

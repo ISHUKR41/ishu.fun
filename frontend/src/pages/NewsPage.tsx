@@ -1777,7 +1777,7 @@ const NewsPage = () => {
             </div>
           </FadeInView>
           <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {[, role: "Education Policy Expert", excerpt: "How AI and digital platforms are transforming the way millions of Indian students prepare for competitive exams.", readTime: 8, image: "https://images.unsplash.com/photo-1523050854058-8df90110c476?w=600&h=400&fit=crop" },
+            {[{ title: "The Future of Competitive Exam Preparation in India", author: "Dr. Rajesh Kumar", role: "Education Policy Expert", excerpt: "How AI and digital platforms are transforming the way millions of Indian students prepare for competitive exams.", readTime: 8, image: "https://images.unsplash.com/photo-1523050854058-8df90110c476?w=600&h=400&fit=crop" },
               { title: "Why India Needs More Transparent Recruitment Processes", author: "Priya Sharma", role: "Public Administration Analyst", excerpt: "An analysis of current challenges in government recruitment and proposed solutions for a fairer system.", readTime: 6, image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=600&h=400&fit=crop" },
               { title: "EdTech Revolution: Bridging the Urban-Rural Divide", author: "Amit Patel", role: "Technology Journalist", excerpt: "How platforms like ISHU are making quality education resources accessible to students in remote areas.", readTime: 7, image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&h=400&fit=crop" },
             ].map((article, i) => (
