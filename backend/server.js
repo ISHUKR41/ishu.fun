@@ -61,6 +61,8 @@ const PORT = process.env.PORT || 5000;
 const allowedOrigins = [
     process.env.FRONTEND_URL || 'http://localhost:3000',
     'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:3002',
     'http://localhost:5173',
     'http://localhost:8080',
     'https://ishu.fun',
@@ -91,6 +93,96 @@ app.use(morgan('dev'));
 // Body parser — 50 MB limit for JSON body (base64 signatures, large form data)
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// ─── STREAM PROXY (registered BEFORE global rate limiter) ───
+// This must come before the general rate limiter so it uses its own limit
+const http = require('http');
+const https = require('https');
+
+const streamLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000,
+    max: 2000,
+    message: { success: false, error: 'Stream rate limit exceeded' },
+});
+
+app.options('/api/stream-proxy', (req, res) => {
+    res.writeHead(204, {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, OPTIONS',
+        'Access-Control-Allow-Headers': '*',
+    });
+    res.end();
+});
+
+app.get('/api/stream-proxy', streamLimiter, (req, res) => {
+    const targetUrl = req.query.url;
+    if (!targetUrl) {
+        return res.status(400).json({ error: 'Missing url parameter' });
+    }
+    try {
+        const parsed = new URL(targetUrl);
+        if (!['http:', 'https:'].includes(parsed.protocol)) {
+            return res.status(400).json({ error: 'Invalid protocol' });
+        }
+    } catch {
+        return res.status(400).json({ error: 'Invalid URL' });
+    }
+
+    let redirectCount = 0;
+    const MAX_REDIRECTS = 5;
+
+    function doProxy(url) {
+        const client = url.startsWith('https') ? https : http;
+        const proxyReq = client.get(url, {
+            headers: {
+                'User-Agent': req.query.ua || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+                ...(req.query.referer ? { 'Referer': req.query.referer } : {}),
+                'Accept': '*/*',
+                'Accept-Language': 'en-US,en;q=0.9,hi;q=0.8',
+                'Connection': 'keep-alive',
+            },
+            timeout: 15000,
+        }, (proxyRes) => {
+            // Follow redirects internally (up to MAX_REDIRECTS)
+            if (proxyRes.statusCode >= 300 && proxyRes.statusCode < 400 && proxyRes.headers.location) {
+                redirectCount++;
+                if (redirectCount > MAX_REDIRECTS) {
+                    if (!res.headersSent) res.status(502).json({ error: 'Too many redirects' });
+                    return;
+                }
+                const redirectUrl = new URL(proxyRes.headers.location, url).toString();
+                proxyRes.resume(); // consume the body
+                return doProxy(redirectUrl);
+            }
+            // For HLS .m3u8 manifests, rewrite internal URLs to go through proxy
+            const contentType = proxyRes.headers['content-type'] || '';
+            const isM3U = contentType.includes('mpegurl') || contentType.includes('x-mpegurl') ||
+                          url.endsWith('.m3u8') || url.endsWith('.m3u');
+
+            res.writeHead(proxyRes.statusCode || 200, {
+                'Content-Type': isM3U ? 'application/vnd.apple.mpegurl' : (contentType || 'application/octet-stream'),
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET, OPTIONS',
+                'Access-Control-Allow-Headers': '*',
+                'Access-Control-Expose-Headers': 'Content-Length, Content-Type',
+                'Cache-Control': 'no-cache, no-store',
+                'X-Proxy-Status': 'ok',
+            });
+            proxyRes.pipe(res);
+        });
+        proxyReq.on('error', (err) => {
+            console.error('[Stream Proxy] Error:', err.message, 'URL:', url.substring(0, 80));
+            if (!res.headersSent) res.status(502).json({ error: 'Stream proxy error' });
+        });
+        proxyReq.on('timeout', () => {
+            proxyReq.destroy();
+            if (!res.headersSent) res.status(504).json({ error: 'Stream timeout' });
+        });
+        req.on('close', () => { proxyReq.destroy(); });
+    }
+
+    doProxy(targetUrl);
+});
 
 // Rate limiting — 100 requests per 15 minutes per IP
 const limiter = rateLimit({

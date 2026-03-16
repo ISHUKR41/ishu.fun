@@ -187,11 +187,13 @@ function sanitizeFilename(name) {
  * Cobalt API v10 format: POST / with JSON body
  */
 async function tryCobaltDownload(url, options = {}) {
-  // Updated list of working Cobalt instances as of 2026
+  // Updated list of working Cobalt instances (2026)
   const COBALT_INSTANCES = [
+    'https://api.cobalt.tools',
     'https://cobalt-api.ayo.tf',
     'https://cobalt.canine.tools',
-    'https://api.cobalt.tools',
+    'https://co.eepy.today',
+    'https://cobalt.api.timelessnesses.me',
   ];
 
   const body = {
@@ -210,7 +212,7 @@ async function tryCobaltDownload(url, options = {}) {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
         },
-        timeout: 20000,
+        timeout: 25000,
       });
       const data = response.data;
 

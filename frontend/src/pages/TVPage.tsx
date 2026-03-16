@@ -1,13 +1,17 @@
 /**
- * TVPage.tsx - Live Indian TV (API-powered, Multi-URL Fallback)
+ * TVPage.tsx - Live Indian TV (v3 - Category-Grouped Layout)
  *
- * Architecture:
- * 1. Fetch channels.json → filter country="IN" → get channel metadata + categories
- * 2. Fetch streams.json → group by channel ID → build URL fallback map
- * 3. Each channel can have 1-5 stream URLs sorted by quality
- * 4. Player tries URL1, if fails → URL2 → URL3 → auto-skip to next channel
- * 5. Streams with user_agent/referrer headers are handled via HLS config
- * 6. M3U playlists used as additional fallback source
+ * Flow: Language Selection → Category-Grouped Channels → Player
+ *
+ * Key Improvements:
+ * - Language-first: user picks language, then sees ALL channels of that language
+ *   organized under clear category section headers
+ * - Faster failover: 8s manifest timeout, 8s stall detection
+ * - Reliability scoring: Akamai/CloudFront streams tried first
+ * - 767+ channels from iptv-org + regional subdivisions M3U sources
+ * - Quality selector with real HLS level switching
+ * - Fuzzy search with live suggestions across all languages
+ * - Modern 3D/animated UI
  */
 import Layout from "@/components/layout/Layout";
 import FadeInView from "@/components/animations/FadeInView";
@@ -23,9 +27,10 @@ import {
   BookOpen, Heart, Dumbbell, Globe, Laugh, Church, Utensils,
   Landmark, MonitorPlay, Volume2, VolumeX, Maximize, Minimize, ChevronLeft,
   AlertCircle, Star, Zap, Signal, PictureInPicture2, RotateCcw,
-  SkipForward, Sparkles, Wifi, WifiOff, Languages,
+  SkipForward, Sparkles, WifiOff, Languages,
   Grid3X3, List, TimerReset, RefreshCw, Check,
-  Settings2, ChevronDown, Gauge,
+  ChevronDown, Gauge, ArrowRight, Filter,
+  TrendingUp,
 } from "lucide-react";
 import Hls from "hls.js";
 import Fuse from "fuse.js";
@@ -42,7 +47,9 @@ interface ApiChannel {
   alt_names: string[];
   network: string | null;
   country: string;
+  subdivision: string | null;
   categories: string[];
+  languages: string[];
   is_nsfw: boolean;
   closed: string | null;
   replaced_by: string | null;
@@ -69,12 +76,55 @@ interface Channel {
   logo: string;
   category: string;
   categoryLabel: string;
-  language: string;
+  languages: string[];
   group: string;
   streams: StreamUrl[];
+  network: string | null;
 }
 
+/* ═══════════════════ LANGUAGE CONFIG ═══════════════════ */
+interface LangMeta {
+  label: string;
+  native: string;
+  gradient: string;
+  emoji: string;
+}
+
+const LANGUAGES: Record<string, LangMeta> = {
+  Hindi:     { label: "Hindi",     native: "हिन्दी",     gradient: "from-orange-500 to-red-500",     emoji: "🇮🇳" },
+  Tamil:     { label: "Tamil",     native: "தமிழ்",      gradient: "from-red-500 to-pink-500",       emoji: "🎭" },
+  Telugu:    { label: "Telugu",    native: "తెలుగు",     gradient: "from-yellow-500 to-orange-500",  emoji: "🌟" },
+  Bengali:   { label: "Bengali",   native: "বাংলা",      gradient: "from-green-500 to-teal-500",     emoji: "🌸" },
+  Malayalam: { label: "Malayalam", native: "മലയാളം",    gradient: "from-emerald-500 to-green-500",  emoji: "🌴" },
+  Kannada:   { label: "Kannada",   native: "ಕನ್ನಡ",      gradient: "from-red-600 to-yellow-500",     emoji: "🏛️" },
+  Marathi:   { label: "Marathi",   native: "मराठी",      gradient: "from-orange-600 to-amber-500",   emoji: "🏰" },
+  Gujarati:  { label: "Gujarati",  native: "ગુજરાતી",    gradient: "from-blue-500 to-indigo-500",    emoji: "🦁" },
+  Punjabi:   { label: "Punjabi",   native: "ਪੰਜਾਬੀ",     gradient: "from-amber-500 to-yellow-500",   emoji: "🌾" },
+  Odia:      { label: "Odia",      native: "ଓଡ଼ିଆ",      gradient: "from-teal-500 to-cyan-500",      emoji: "🛕" },
+  Urdu:      { label: "Urdu",      native: "اردو",       gradient: "from-green-600 to-emerald-600",  emoji: "📜" },
+  Assamese:  { label: "Assamese",  native: "অসমীয়া",     gradient: "from-lime-500 to-green-500",     emoji: "🍵" },
+  Bhojpuri:  { label: "Bhojpuri",  native: "भोजपुरी",    gradient: "from-yellow-600 to-orange-500",  emoji: "🎶" },
+  English:   { label: "English",   native: "English",    gradient: "from-blue-600 to-purple-600",    emoji: "🌍" },
+};
+
+const LANG_ISO_MAP: Record<string, string> = {
+  hin: "Hindi", tam: "Tamil", tel: "Telugu", ben: "Bengali", mal: "Malayalam",
+  kan: "Kannada", mar: "Marathi", guj: "Gujarati", pan: "Punjabi", ori: "Odia",
+  urd: "Urdu", asm: "Assamese", bho: "Bhojpuri", eng: "English",
+  sat: "Santali", lus: "Mizo", mai: "Maithili", snd: "Sindhi",
+  kok: "Konkani", gom: "Konkani", bgc: "Haryanvi", hne: "Chhattisgarhi",
+  mni: "Manipuri", nep: "Nepali", kas: "Kashmiri", doi: "Dogri", san: "Sanskrit",
+};
+
 /* ═══════════════════ CATEGORY CONFIG ═══════════════════ */
+// Categories in display order (most popular first)
+const CAT_ORDER = [
+  "news", "entertainment", "movies", "sports", "music", "kids", "animation",
+  "religious", "general", "documentary", "lifestyle", "business", "comedy",
+  "cooking", "education", "family", "science", "classic", "series", "shop",
+  "travel", "culture", "legislative", "outdoor", "weather",
+];
+
 const CAT_META: Record<string, { label: string; icon: typeof Tv; gradient: string }> = {
   news:          { label: "News",          icon: Newspaper,   gradient: "from-red-500 to-orange-500" },
   entertainment: { label: "Entertainment", icon: MonitorPlay,  gradient: "from-purple-500 to-pink-500" },
@@ -98,18 +148,19 @@ const CAT_META: Record<string, { label: string; icon: typeof Tv; gradient: strin
   shop:          { label: "Shopping",      icon: Landmark,     gradient: "from-green-600 to-emerald-600" },
   travel:        { label: "Travel",        icon: Globe,        gradient: "from-sky-500 to-blue-500" },
   culture:       { label: "Culture",       icon: Globe,        gradient: "from-amber-600 to-orange-600" },
+  legislative:   { label: "Legislative",   icon: Landmark,     gradient: "from-gray-500 to-slate-500" },
+  outdoor:       { label: "Outdoor",       icon: Globe,        gradient: "from-lime-500 to-green-500" },
+  weather:       { label: "Weather",       icon: Globe,        gradient: "from-blue-400 to-cyan-400" },
 };
 
 const ALL_CAT = "all";
 const FAV_CAT = "favorites";
+const Q_ORDER: Record<string, number> = { "2160p": 6, "1080p": 5, "720p": 4, "576p": 3, "480p": 2, "360p": 1, "240p": 0 };
 
-// Quality sort priority (higher = better)
-const Q_ORDER: Record<string, number> = { "1080p": 4, "720p": 3, "576p": 2, "480p": 1 };
-
-/* ═══════════════════ M3U PARSER (fallback) ═══════════════════ */
-function parseM3U(text: string, defaultLang: string): { name: string; logo: string; group: string; url: string; language: string }[] {
+/* ═══════════════════ M3U PARSER ═══════════════════ */
+function parseM3U(text: string, defaultLang: string): { name: string; logo: string; group: string; url: string; language: string; id: string }[] {
   const lines = text.split("\n");
-  const out: { name: string; logo: string; group: string; url: string; language: string }[] = [];
+  const out: { name: string; logo: string; group: string; url: string; language: string; id: string }[] = [];
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
     if (!line.startsWith("#EXTINF")) continue;
@@ -133,10 +184,67 @@ function parseM3U(text: string, defaultLang: string): { name: string; logo: stri
         group: groupM?.[1] || "General",
         url,
         language: langM?.[1]?.split(";")[0] || defaultLang,
+        id: idM?.[1] || "",
       });
     }
   }
   return out;
+}
+
+/* ═══════════════════ PROXY CONFIG ═══════════════════ */
+// Backend proxy for CORS bypass (runs on your Express backend)
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const BACKEND_PROXY = `${API_URL}/api/stream-proxy`;
+
+// Public CORS proxies as additional fallbacks
+const CORS_PROXIES = [
+  (url: string) => `${BACKEND_PROXY}?url=${encodeURIComponent(url)}`,
+  (url: string) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+  (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  (url: string) => `https://cors-proxy.fringe.zone/${url}`,
+  (url: string) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+];
+
+/* ═══════════════════ STREAM RELIABILITY SCORING ═══════════════════ */
+function scoreStream(s: StreamUrl): number {
+  let score = 50;
+  const url = s.url.toLowerCase();
+  // Tier 1 - Enterprise CDNs (best reliability + CORS headers)
+  if (url.includes("akamaized.net")) score += 40;
+  else if (url.includes("cloudfront.net")) score += 38;
+  else if (url.includes("fastly.net") || url.includes("fastly.com")) score += 36;
+  else if (url.includes("amagi.tv") || url.includes("amagimedia.com")) score += 35;
+  else if (url.includes("dai.google.com") || url.includes("googlevideo.com")) score += 34;
+  else if (url.includes("youtube.com")) score += 30;
+  else if (url.includes("cdn.jwplayer.com")) score += 30;
+  // Tier 2 - Indian OTT infra (well-known providers)
+  else if (url.includes("jprdigital.in")) score += 25;
+  else if (url.includes("pishow.tv")) score += 22;
+  else if (url.includes("tangotv.in")) score += 22;
+  else if (url.includes("wiseplayout.com")) score += 22;
+  else if (url.includes("smartplaytv.in")) score += 20;
+  else if (url.includes("5centscdn.com")) score += 20;
+  else if (url.includes("wmncdn.net")) score += 18;
+  else if (url.includes("livebox.co.in")) score += 18;
+  else if (url.includes("ottlive.co.in")) score += 18;
+  else if (url.includes("legitpro.co.in")) score += 18;
+  else if (url.includes("mediaops.in")) score += 16;
+  else if (url.includes("broadcast.in")) score += 16;
+  else if (url.includes("newsclick.in")) score += 15;
+  else if (url.includes("mylivecricket")) score += 15;
+  else if (url.includes("streamhits.com")) score += 14;
+  else if (url.includes("prodb.pro")) score += 14;
+  else if (url.includes("botlive.in")) score += 14;
+  else if (url.includes("streamedge.io")) score += 14;
+  // Tier 3 - bare IPs (least reliable)
+  else if (/https?:\/\/\d+\.\d+\.\d+\.\d+/.test(url)) score -= 10;
+  // HTTPS bonus
+  if (url.startsWith("https")) score += 8;
+  // Quality bonus
+  if (s.quality) score += (Q_ORDER[s.quality] || 0) * 5;
+  // Penalty for custom headers (harder to use with proxy)
+  if (s.userAgent || s.referrer) score -= 3;
+  return score;
 }
 
 /* ═══════════════════ DATA FETCHING ═══════════════════ */
@@ -144,10 +252,8 @@ async function fetchAllChannels(
   signal: AbortSignal,
   onProgress: (pct: number, msg: string) => void,
 ): Promise<Channel[]> {
-
   onProgress(5, "Fetching channel database...");
 
-  // 1) Fetch channels.json + streams.json in parallel
   const [chRes, stRes] = await Promise.all([
     fetch("https://iptv-org.github.io/api/channels.json", { signal }),
     fetch("https://iptv-org.github.io/api/streams.json", { signal }),
@@ -160,14 +266,14 @@ async function fetchAllChannels(
   onProgress(50, "Parsing stream URLs...");
   const allStreams: ApiStream[] = await stRes.json();
 
-  onProgress(65, "Mapping Indian channels...");
+  onProgress(60, "Mapping Indian channels...");
 
-  // 2) Filter Indian channels (not closed, not NSFW)
+  // Filter Indian channels
   const indianChannels = allChannels.filter(
     (c) => c.country === "IN" && !c.closed && !c.is_nsfw,
   );
 
-  // 3) Build stream map: channelId → StreamUrl[]
+  // Build stream map
   const streamMap = new Map<string, StreamUrl[]>();
   for (const s of allStreams) {
     if (!s.channel || !s.url) continue;
@@ -180,16 +286,16 @@ async function fetchAllChannels(
     });
   }
 
-  // Sort each channel's streams by quality (best first)
+  // Sort by reliability
   for (const [, urls] of streamMap) {
-    urls.sort((a, b) => (Q_ORDER[b.quality || ""] || 0) - (Q_ORDER[a.quality || ""] || 0));
+    urls.sort((a, b) => scoreStream(b) - scoreStream(a));
   }
 
-  onProgress(75, "Fetching additional sources...");
+  onProgress(70, "Fetching M3U sources for logos & extras...");
 
-  // 4) Also fetch M3U for extra channels + logos
+  // M3U sources: India country + all language + regional subdivisions + Free-TV
   const m3uSources = [
-    { url: "https://iptv-org.github.io/iptv/countries/in.m3u", lang: "Mixed" },
+    { url: "https://iptv-org.github.io/iptv/countries/in.m3u", lang: "Hindi" },
     { url: "https://iptv-org.github.io/iptv/languages/hin.m3u", lang: "Hindi" },
     { url: "https://iptv-org.github.io/iptv/languages/tam.m3u", lang: "Tamil" },
     { url: "https://iptv-org.github.io/iptv/languages/tel.m3u", lang: "Telugu" },
@@ -200,9 +306,25 @@ async function fetchAllChannels(
     { url: "https://iptv-org.github.io/iptv/languages/pan.m3u", lang: "Punjabi" },
     { url: "https://iptv-org.github.io/iptv/languages/guj.m3u", lang: "Gujarati" },
     { url: "https://iptv-org.github.io/iptv/languages/urd.m3u", lang: "Urdu" },
+    { url: "https://iptv-org.github.io/iptv/languages/ori.m3u", lang: "Odia" },
+    { url: "https://iptv-org.github.io/iptv/languages/asm.m3u", lang: "Assamese" },
+    { url: "https://iptv-org.github.io/iptv/languages/bho.m3u", lang: "Bhojpuri" },
+    // Regional subdivisions
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-tn.m3u", lang: "Tamil" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-kl.m3u", lang: "Malayalam" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-ka.m3u", lang: "Kannada" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-mh.m3u", lang: "Marathi" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-ap.m3u", lang: "Telugu" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-dl.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-wb.m3u", lang: "Bengali" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-gj.m3u", lang: "Gujarati" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-pb.m3u", lang: "Punjabi" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-or.m3u", lang: "Odia" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-as.m3u", lang: "Assamese" },
+    // English language (for English news/docs in India)
+    { url: "https://iptv-org.github.io/iptv/languages/eng.m3u", lang: "English" },
   ];
 
-  // Fetch M3Us in parallel (don't wait too long, these are supplementary)
   const m3uResults = await Promise.allSettled(
     m3uSources.map(async (src) => {
       try {
@@ -213,34 +335,38 @@ async function fetchAllChannels(
     }),
   );
 
-  // Build logo + language map from M3U data
+  onProgress(85, "Building channel list...");
+
+  // Build logo + language data from M3U
   const logoMap = new Map<string, string>();
   const langMap = new Map<string, string>();
   const extraStreams = new Map<string, StreamUrl[]>();
+  const m3uIdToLang = new Map<string, string>();
 
   for (const r of m3uResults) {
     if (r.status !== "fulfilled") continue;
     for (const ch of r.value) {
       const key = ch.name.toLowerCase().replace(/\s*\([\d]+p\)\s*/g, "").trim();
-      if (ch.logo) logoMap.set(key, ch.logo);
+      if (ch.logo) {
+        logoMap.set(key, ch.logo);
+        if (ch.id) logoMap.set(ch.id.toLowerCase(), ch.logo);
+      }
+      if (ch.id && ch.language && ch.language !== "Mixed") m3uIdToLang.set(ch.id, ch.language);
       if (ch.language && ch.language !== "Mixed") langMap.set(key, ch.language);
-      // Add as extra stream URLs
       if (!extraStreams.has(key)) extraStreams.set(key, []);
       extraStreams.get(key)!.push({ url: ch.url, quality: null, userAgent: null, referrer: null });
     }
   }
 
-  onProgress(90, "Building channel list...");
-
-  // 5) Build final channels
+  // Build final channels
   const result: Channel[] = [];
   const seenNames = new Set<string>();
 
   for (const ch of indianChannels) {
-    const streams = streamMap.get(ch.id) || [];
+    const streams = [...(streamMap.get(ch.id) || [])];
     const nameKey = ch.name.toLowerCase().trim();
 
-    // Also add M3U extra streams as fallbacks
+    // Add M3U extra streams as fallbacks
     const extras = extraStreams.get(nameKey);
     if (extras) {
       for (const e of extras) {
@@ -248,26 +374,38 @@ async function fetchAllChannels(
       }
     }
 
-    if (streams.length === 0) continue; // No streams = skip
+    if (streams.length === 0) continue;
     if (seenNames.has(nameKey)) continue;
     seenNames.add(nameKey);
 
     const primaryCat = ch.categories[0] || "general";
     const catMeta = CAT_META[primaryCat];
 
+    // Resolve languages
+    let channelLangs: string[] = [];
+    if (ch.languages && ch.languages.length > 0) {
+      channelLangs = ch.languages.map(code => LANG_ISO_MAP[code] || code).filter(Boolean);
+    }
+    if (channelLangs.length === 0) {
+      const m3uLang = m3uIdToLang.get(ch.id) || langMap.get(nameKey);
+      if (m3uLang) channelLangs = [m3uLang];
+    }
+    if (channelLangs.length === 0) channelLangs = ["Hindi"];
+
     result.push({
       id: ch.id,
       name: ch.name,
-      logo: logoMap.get(nameKey) || `https://raw.githubusercontent.com/nicep64/iptv-logo/master/logodata/${encodeURIComponent(ch.name)}.png`,
+      logo: logoMap.get(ch.id.toLowerCase()) || logoMap.get(nameKey) || "",
       category: primaryCat,
       categoryLabel: catMeta?.label || primaryCat.charAt(0).toUpperCase() + primaryCat.slice(1),
-      language: langMap.get(nameKey) || "Hindi",
+      languages: channelLangs,
       group: catMeta?.label || "General",
       streams,
+      network: ch.network,
     });
   }
 
-  // 6) Add M3U-only channels (not in API) as extras
+  // Add M3U-only channels
   for (const r of m3uResults) {
     if (r.status !== "fulfilled") continue;
     for (const ch of r.value) {
@@ -275,36 +413,44 @@ async function fetchAllChannels(
       if (seenNames.has(nameKey)) continue;
       seenNames.add(nameKey);
       const groupLower = ch.group.toLowerCase();
-      let cat = "entertainment";
-      for (const [key, meta] of Object.entries(CAT_META)) {
-        if (groupLower.includes(key)) { cat = key; break; }
-      }
+      let cat = "general";
+      if (groupLower.includes("news")) cat = "news";
+      else if (groupLower.includes("entertainment")) cat = "entertainment";
+      else if (groupLower.includes("movie") || groupLower.includes("cinema")) cat = "movies";
+      else if (groupLower.includes("sport")) cat = "sports";
+      else if (groupLower.includes("music")) cat = "music";
+      else if (groupLower.includes("kid") || groupLower.includes("cartoon") || groupLower.includes("animation")) cat = "kids";
+      else if (groupLower.includes("religio") || groupLower.includes("devotion") || groupLower.includes("spiritual")) cat = "religious";
+      else if (groupLower.includes("document")) cat = "documentary";
+      else if (groupLower.includes("life")) cat = "lifestyle";
+      else if (groupLower.includes("business") || groupLower.includes("finance")) cat = "business";
+      else if (groupLower.includes("comedy")) cat = "comedy";
+      else if (groupLower.includes("cook") || groupLower.includes("food")) cat = "cooking";
+      else if (groupLower.includes("educat")) cat = "education";
+      else if (groupLower.includes("family")) cat = "family";
+
       result.push({
-        id: `m3u_${nameKey}`,
-        name: ch.name,
+        id: ch.id || `m3u_${nameKey.replace(/[^a-z0-9]/g, "_")}`,
+        name: ch.name.replace(/\s*\([\d]+p\)\s*/g, "").trim(),
         logo: ch.logo,
         category: cat,
         categoryLabel: CAT_META[cat]?.label || ch.group,
-        language: ch.language,
+        languages: [ch.language || "Hindi"],
         group: ch.group,
         streams: [{ url: ch.url, quality: null, userAgent: null, referrer: null }],
+        network: null,
       });
     }
   }
+
+  // Sort result by name
+  result.sort((a, b) => a.name.localeCompare(b.name));
 
   onProgress(100, `Loaded ${result.length} channels`);
   return result;
 }
 
-/* ═══════════════════ ROBUST HLS PLAYER HOOK ═══════════════════
-   Multi-URL cascade + quality level control.
-   - tries each stream URL for a channel
-   - Per URL: 3-stage HLS recovery (recoverMedia → swapCodec → reload)
-   - Stall detection: auto-retries if video freezes 12s
-   - Auto-skip: moves to next channel after all URLs exhausted
-   - Exposes hlsLevels for manual quality switching
-   - Auto quality by default, manual override available
-   ═══════════════════════════════════════════════════════════════ */
+/* ═══════════════════ QUALITY LEVEL TYPE ═══════════════════ */
 interface QualityLevel {
   index: number;
   height: number;
@@ -313,38 +459,59 @@ interface QualityLevel {
   label: string;
 }
 
+/* ═══════════════════ ROBUST HLS PLAYER HOOK ═══════════════════
+   Multi-URL cascade with CORS proxy fallback:
+   1. For each stream URL: try DIRECT first (5s timeout)
+   2. If direct fails → try through CORS proxies (6s each)
+   3. All proxies fail → move to next URL
+   4. All URLs exhausted → show error + auto-skip countdown
+
+   HLS recovery: recoverMediaError → swapAudioCodec → next attempt
+   Stall detection: 8s freeze → next attempt
+   Quality: auto by default, manual override with real HLS level switching
+   ═══════════════════════════════════════════════════════════════ */
 function useRobustPlayer(
   videoRef: React.RefObject<HTMLVideoElement | null>,
   streams: StreamUrl[] | null,
   onAutoSkip: () => void,
 ) {
   const hlsRef = useRef<Hls | null>(null);
-  const urlIdxRef = useRef(0);
   const retryRef = useRef(0);
   const stallRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const skipRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const timeUpdateRef = useRef<(() => void) | null>(null);
+  // Track position in the expanded attempt list
+  const attemptListRef = useRef<{ url: string; proxyIdx: number; original: StreamUrl }[]>([]);
+  const attemptIdxRef = useRef(0);
+
   const [state, setState] = useState<"idle" | "loading" | "playing" | "switching" | "error">("idle");
   const [quality, setQuality] = useState("");
   const [urlAttempt, setUrlAttempt] = useState(0);
   const [totalUrls, setTotalUrls] = useState(0);
   const [skipIn, setSkipIn] = useState(0);
   const [hlsLevels, setHlsLevels] = useState<QualityLevel[]>([]);
-  const [currentLevel, setCurrentLevel] = useState(-1); // -1 = auto
+  const [currentLevel, setCurrentLevel] = useState(-1);
   const [isAutoQuality, setIsAutoQuality] = useState(true);
+  const [proxyActive, setProxyActive] = useState(false);
 
   const cleanup = useCallback(() => {
     if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; }
     if (stallRef.current) { clearTimeout(stallRef.current); stallRef.current = null; }
     if (skipRef.current) { clearInterval(skipRef.current); skipRef.current = null; }
+    if (timeUpdateRef.current && videoRef.current) {
+      videoRef.current.removeEventListener("timeupdate", timeUpdateRef.current);
+      timeUpdateRef.current = null;
+    }
     setSkipIn(0);
     setHlsLevels([]);
     setCurrentLevel(-1);
     setIsAutoQuality(true);
-  }, []);
+    setProxyActive(false);
+  }, [videoRef]);
 
   const startSkipCountdown = useCallback(() => {
     if (skipRef.current) return;
-    let c = 6;
+    let c = 5;
     setSkipIn(c);
     skipRef.current = setInterval(() => {
       c--;
@@ -362,11 +529,10 @@ function useRobustPlayer(
     setSkipIn(0);
   }, []);
 
-  // Quality level switching
   const setQualityLevel = useCallback((levelIdx: number) => {
     if (!hlsRef.current) return;
     if (levelIdx === -1) {
-      hlsRef.current.currentLevel = -1; // auto
+      hlsRef.current.currentLevel = -1;
       setIsAutoQuality(true);
       setCurrentLevel(-1);
     } else {
@@ -376,102 +542,151 @@ function useRobustPlayer(
     }
   }, []);
 
-  const tryUrl = useCallback((urlList: StreamUrl[], idx: number) => {
-    cleanup();
+  // Build expanded attempt list: for each stream URL, add direct + proxy variants
+  const buildAttemptList = useCallback((streamList: StreamUrl[]) => {
+    const list: { url: string; proxyIdx: number; original: StreamUrl }[] = [];
+    for (const s of streamList) {
+      // Direct attempt
+      list.push({ url: s.url, proxyIdx: -1, original: s });
+      // Proxy attempts
+      for (let i = 0; i < CORS_PROXIES.length; i++) {
+        list.push({ url: s.url, proxyIdx: i, original: s });
+      }
+    }
+    return list;
+  }, []);
+
+  const tryAttempt = useCallback((idx: number) => {
+    // Cleanup previous
+    if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; }
+    if (stallRef.current) { clearTimeout(stallRef.current); stallRef.current = null; }
+    if (timeUpdateRef.current && videoRef.current) {
+      videoRef.current.removeEventListener("timeupdate", timeUpdateRef.current);
+      timeUpdateRef.current = null;
+    }
+
+    const attempts = attemptListRef.current;
     const video = videoRef.current;
-    if (!video || idx >= urlList.length) {
+
+    if (!video || idx >= attempts.length) {
       setState("error");
       startSkipCountdown();
       return;
     }
 
-    const s = urlList[idx];
-    urlIdxRef.current = idx;
+    const attempt = attempts[idx];
+    attemptIdxRef.current = idx;
     retryRef.current = 0;
-    setUrlAttempt(idx + 1);
+
+    // Calculate which original URL # we're on (for UI display)
+    const originalUrlIdx = Math.floor(idx / (1 + CORS_PROXIES.length));
+    setUrlAttempt(originalUrlIdx + 1);
+    setProxyActive(attempt.proxyIdx >= 0);
+
     setState(idx === 0 ? "loading" : "switching");
-    setQuality(s.quality || "");
+    setQuality(attempt.original.quality || "");
+
+    // Determine the actual URL to load and whether to use proxy xhrSetup
+    const isProxied = attempt.proxyIdx >= 0;
+    const loadUrl = isProxied ? CORS_PROXIES[attempt.proxyIdx](attempt.url) : attempt.url;
+    const timeout = isProxied ? 8000 : 6000; // Longer timeout for proxied streams
 
     // Stall detection
     const onTimeUpdate = () => {
       if (stallRef.current) clearTimeout(stallRef.current);
-      stallRef.current = setTimeout(() => {
-        tryUrl(urlList, idx + 1);
-      }, 12000);
+      stallRef.current = setTimeout(() => tryAttempt(idx + 1), 8000);
     };
+    timeUpdateRef.current = onTimeUpdate;
     video.addEventListener("timeupdate", onTimeUpdate);
 
-    if (video.canPlayType("application/vnd.apple.mpegurl") && !s.userAgent && !s.referrer) {
-      video.src = s.url;
+    // Native HLS (Safari) - only for direct, no proxy needed
+    if (!isProxied && video.canPlayType("application/vnd.apple.mpegurl") && !attempt.original.userAgent && !attempt.original.referrer) {
+      video.src = loadUrl;
       video.addEventListener("loadeddata", () => setState("playing"), { once: true });
-      video.addEventListener("error", () => tryUrl(urlList, idx + 1), { once: true });
+      video.addEventListener("error", () => {
+        video.removeEventListener("timeupdate", onTimeUpdate);
+        timeUpdateRef.current = null;
+        tryAttempt(idx + 1);
+      }, { once: true });
       video.play().catch(() => {});
       return;
     }
 
-    if (!Hls.isSupported()) { tryUrl(urlList, idx + 1); return; }
+    if (!Hls.isSupported()) { tryAttempt(idx + 1); return; }
 
     const hlsConfig: Partial<any> = {
       enableWorker: true,
-      lowLatencyMode: true,
+      lowLatencyMode: false,
       maxBufferLength: 30,
-      maxMaxBufferLength: 60,
+      maxMaxBufferLength: 120,
       startLevel: -1,
-      fragLoadingMaxRetry: 4,
-      fragLoadingRetryDelay: 1000,
+      fragLoadingMaxRetry: 3,
+      fragLoadingRetryDelay: 800,
       fragLoadingMaxRetryTimeout: 8000,
-      manifestLoadingMaxRetry: 3,
-      manifestLoadingRetryDelay: 1000,
-      manifestLoadingMaxRetryTimeout: 10000,
-      levelLoadingMaxRetry: 3,
-      levelLoadingRetryDelay: 1000,
-      levelLoadingMaxRetryTimeout: 10000,
+      manifestLoadingMaxRetry: 2,
+      manifestLoadingRetryDelay: 800,
+      manifestLoadingMaxRetryTimeout: timeout,
+      levelLoadingMaxRetry: 2,
+      levelLoadingRetryDelay: 500,
+      levelLoadingMaxRetryTimeout: 6000,
+      backBufferLength: 30,
+      capLevelToPlayerSize: true,
+      progressive: true,
+      testBandwidth: true,
+      abrEwmaDefaultEstimate: 500000,
     };
 
-    if (s.userAgent || s.referrer) {
+    // For proxied streams, route ALL XHR requests through the proxy
+    if (isProxied) {
+      const proxyFn = CORS_PROXIES[attempt.proxyIdx];
+      hlsConfig.xhrSetup = (xhr: XMLHttpRequest, url: string) => {
+        // Re-open the request to go through proxy
+        const proxiedUrl = proxyFn(url);
+        xhr.open("GET", proxiedUrl, true);
+      };
+    } else if (attempt.original.referrer) {
       hlsConfig.xhrSetup = (xhr: XMLHttpRequest) => {
-        if (s.referrer) {
-          try { xhr.setRequestHeader("Referer", s.referrer); } catch {}
-        }
+        try { xhr.setRequestHeader("Referer", attempt.original.referrer!); } catch {}
       };
     }
 
     const hls = new Hls(hlsConfig);
     hlsRef.current = hls;
-    hls.loadSource(s.url);
+    hls.loadSource(loadUrl);
     hls.attachMedia(video);
 
     const loadTimeout = setTimeout(() => {
       if (hlsRef.current === hls) {
         hls.destroy();
         hlsRef.current = null;
-        tryUrl(urlList, idx + 1);
+        video.removeEventListener("timeupdate", onTimeUpdate);
+        timeUpdateRef.current = null;
+        tryAttempt(idx + 1);
       }
-    }, 15000);
+    }, timeout);
 
-    hls.on(Hls.Events.MANIFEST_PARSED, (_e, data) => {
+    hls.on(Hls.Events.MANIFEST_PARSED, (_e: any, data: any) => {
       clearTimeout(loadTimeout);
       setState("playing");
       retryRef.current = 0;
 
-      // Extract quality levels for the selector
       if (data.levels.length > 0) {
-        const levels: QualityLevel[] = data.levels.map((lvl, i) => ({
+        const levels: QualityLevel[] = data.levels.map((lvl: any, i: number) => ({
           index: i,
           height: lvl.height || 0,
           width: lvl.width || 0,
           bitrate: lvl.bitrate || 0,
           label: lvl.height ? `${lvl.height}p` : `${Math.round((lvl.bitrate || 0) / 1000)}kbps`,
         }));
+        levels.sort((a, b) => b.height - a.height);
         setHlsLevels(levels);
         const best = data.levels[data.levels.length - 1];
-        setQuality(best.height ? `${best.height}p` : s.quality || "");
+        setQuality(best.height ? `${best.height}p` : attempt.original.quality || "");
       }
       video.play().catch(() => {});
     });
 
-    // Track auto quality level changes
-    hls.on(Hls.Events.LEVEL_SWITCHED, (_e, data) => {
+    hls.on(Hls.Events.LEVEL_SWITCHED, (_e: any, data: any) => {
       const lvl = hls.levels[data.level];
       if (lvl) {
         setQuality(lvl.height ? `${lvl.height}p` : "");
@@ -479,7 +694,7 @@ function useRobustPlayer(
       }
     });
 
-    hls.on(Hls.Events.ERROR, (_e, data) => {
+    hls.on(Hls.Events.ERROR, (_e: any, data: any) => {
       if (!data.fatal) return;
       if (data.type === Hls.ErrorTypes.MEDIA_ERROR && retryRef.current === 0) {
         retryRef.current++;
@@ -496,25 +711,94 @@ function useRobustPlayer(
       hls.destroy();
       hlsRef.current = null;
       video.removeEventListener("timeupdate", onTimeUpdate);
-      tryUrl(urlList, idx + 1);
+      timeUpdateRef.current = null;
+      tryAttempt(idx + 1);
     });
   }, [cleanup, startSkipCountdown, videoRef]);
 
   const retry = useCallback(() => {
     if (!streams || streams.length === 0) return;
     cancelSkip();
-    tryUrl(streams, 0);
-  }, [streams, tryUrl, cancelSkip]);
+    attemptIdxRef.current = 0;
+    tryAttempt(0);
+  }, [streams, tryAttempt, cancelSkip]);
 
   useEffect(() => {
     if (!streams || streams.length === 0) { cleanup(); setState("idle"); return; }
+    const expandedList = buildAttemptList(streams);
+    attemptListRef.current = expandedList;
+    attemptIdxRef.current = 0;
     setTotalUrls(streams.length);
-    tryUrl(streams, 0);
+    tryAttempt(0);
     return cleanup;
   }, [streams]);
 
-  return { state, quality, urlAttempt, totalUrls, skipIn, retry, cancelSkip, hlsLevels, currentLevel, isAutoQuality, setQualityLevel };
+  return { state, quality, urlAttempt, totalUrls, skipIn, retry, cancelSkip, hlsLevels, currentLevel, isAutoQuality, setQualityLevel, proxyActive };
 }
+
+/* ═══════════════════ CHANNEL CARD COMPONENT ═══════════════════ */
+const ChannelCard = ({
+  ch, isPlaying, isFav, isDead, showLang, onPlay, onToggleFav,
+}: {
+  ch: Channel;
+  isPlaying: boolean;
+  isFav: boolean;
+  isDead: boolean;
+  showLang: boolean;
+  onPlay: () => void;
+  onToggleFav: () => void;
+}) => (
+  <Tilt tiltMaxAngleX={5} tiltMaxAngleY={5} glareEnable glareMaxOpacity={0.05} scale={1.02}>
+    <div onClick={onPlay}
+      className={`group relative flex h-full flex-col items-center gap-2 rounded-2xl border p-3 sm:p-4 text-center cursor-pointer transition-all ${
+        isPlaying ? "border-primary/60 bg-primary/10 shadow-xl shadow-primary/20 ring-1 ring-primary/30"
+        : isDead ? "border-red-500/20 bg-red-500/5 opacity-40"
+        : "border-border/40 glass hover:border-primary/30 hover:shadow-lg"
+      }`}>
+      {isDead && !isPlaying && (
+        <div className="absolute left-1.5 top-1.5 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-red-500/20">
+          <WifiOff className="h-3 w-3 text-red-400" />
+        </div>
+      )}
+      {ch.streams.length > 1 && !isDead && (
+        <div className="absolute left-1.5 top-1.5 z-10 rounded-full bg-green-500/15 px-1.5 py-0.5 text-[8px] font-bold text-green-400">
+          {ch.streams.length}
+        </div>
+      )}
+      <button onClick={(e) => { e.stopPropagation(); onToggleFav(); }}
+        className={`absolute right-1.5 top-1.5 z-10 rounded-full p-1 transition-all ${isFav ? "text-yellow-400" : "text-transparent group-hover:text-muted-foreground/40"}`}>
+        <Star className="h-3.5 w-3.5" fill={isFav ? "currentColor" : "none"} />
+      </button>
+      <div className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center overflow-hidden rounded-xl bg-white/5 p-1 group-hover:scale-105 transition-transform">
+        {ch.logo ? (
+          <img src={ch.logo} alt={ch.name} loading="lazy" className="h-full w-full object-contain"
+            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; (e.target as HTMLImageElement).nextElementSibling && ((e.target as HTMLImageElement).parentElement!.querySelector('.fallback-icon') as HTMLElement)?.classList.remove('hidden'); }} />
+        ) : null}
+        <Tv className={`h-6 w-6 text-muted-foreground ${ch.logo ? "hidden fallback-icon" : ""}`} />
+      </div>
+      <h3 className="line-clamp-2 text-[11px] sm:text-xs font-semibold leading-tight text-foreground">{ch.name}</h3>
+      <div className="flex flex-wrap items-center justify-center gap-1">
+        <span className="rounded-full bg-secondary/80 px-1.5 py-0.5 text-[8px] sm:text-[9px] font-medium text-muted-foreground">{ch.categoryLabel}</span>
+        {showLang && ch.languages[0] && (
+          <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[8px] sm:text-[9px] font-medium text-primary">{ch.languages[0]}</span>
+        )}
+      </div>
+      {isPlaying ? (
+        <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-primary/5 backdrop-blur-[1px]">
+          <div className="flex items-center gap-1.5 rounded-full bg-primary/90 px-3 py-1.5 text-[10px] font-bold text-white">
+            <Radio className="h-3 w-3 animate-pulse" /> LIVE
+          </div>
+        </div>
+      ) : (
+        <div className="absolute inset-0 flex items-center justify-center rounded-2xl opacity-0 transition-all group-hover:bg-black/50 group-hover:opacity-100">
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/90 shadow-lg transition-transform group-hover:scale-110">
+            <Play className="h-5 w-5 text-white ml-0.5" fill="white" />
+          </div>
+        </div>
+      )}
+    </div>
+  </Tilt>
+);
 
 /* ═══════════════════ MAIN COMPONENT ═══════════════════ */
 const TVPage = () => {
@@ -523,14 +807,24 @@ const TVPage = () => {
   const [fetchProgress, setFetchProgress] = useState(0);
   const [fetchMsg, setFetchMsg] = useState("Initializing...");
   const [fetchError, setFetchError] = useState("");
+
+  // Language-first selection
+  const [selectedLang, setSelectedLang] = useState<string | null>(null);
+
+  // Filters
   const [activeCat, setActiveCat] = useState(ALL_CAT);
-  const [activeLang, setActiveLang] = useState("all");
   const [search, setSearch] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
+  // Player
   const [playing, setPlaying] = useState<Channel | null>(null);
   const [muted, setMuted] = useState(false);
   const [isFs, setIsFs] = useState(false);
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [showQualityMenu, setShowQualityMenu] = useState(false);
+  const [volume, setVolume] = useState(80);
+
+  // Tracking
   const [failedIds, setFailedIds] = useState<Set<string>>(new Set());
   const [favorites, setFavorites] = useState<Set<string>>(() => {
     try { const s = localStorage.getItem("ishu_tv_favs"); return s ? new Set(JSON.parse(s)) : new Set<string>(); }
@@ -542,38 +836,105 @@ const TVPage = () => {
   const searchRef = useRef<HTMLInputElement | null>(null);
   const statsRef = useRef<HTMLDivElement | null>(null);
 
+  /* ── Volume sync ── */
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.volume = volume / 100;
+      videoRef.current.muted = muted;
+    }
+  }, [volume, muted]);
+
   /* ── Fuse.js search ── */
   const fuse = useMemo(() => new Fuse(channels, {
-    keys: [{ name: "name", weight: 0.6 }, { name: "group", weight: 0.15 }, { name: "language", weight: 0.15 }, { name: "categoryLabel", weight: 0.1 }],
-    threshold: 0.35, includeScore: true, minMatchCharLength: 1,
+    keys: [
+      { name: "name", weight: 0.5 },
+      { name: "group", weight: 0.1 },
+      { name: "languages", weight: 0.15 },
+      { name: "categoryLabel", weight: 0.1 },
+      { name: "network", weight: 0.15 },
+    ],
+    threshold: 0.35,
+    includeScore: true,
+    minMatchCharLength: 1,
+    ignoreLocation: true,
   }), [channels]);
 
   const searchResults = useMemo(() => {
     if (!search.trim()) return [];
-    return fuse.search(search).slice(0, 10).map((r) => r.item);
+    return fuse.search(search).slice(0, 25).map((r) => r.item);
   }, [fuse, search]);
 
-  /* ── filtered channels (sorted by reliability) ── */
+  /* ── Channels filtered by selected language ── */
+  const langChannels = useMemo(() => {
+    if (!selectedLang || selectedLang === "all") return channels;
+    return channels.filter(ch => ch.languages.some(l => l.toLowerCase() === selectedLang.toLowerCase()));
+  }, [channels, selectedLang]);
+
+  /* ── Filtered channels (category + search) ── */
   const filtered = useMemo(() => {
-    let list = channels;
+    let list = langChannels;
     if (activeCat === FAV_CAT) list = list.filter((c) => favorites.has(c.id));
     else if (activeCat !== ALL_CAT) list = list.filter((c) => c.category === activeCat);
-    if (activeLang !== "all") list = list.filter((c) => c.language.toLowerCase() === activeLang.toLowerCase());
-    if (search.trim()) { const ids = new Set(fuse.search(search).map((r) => r.item.id)); list = list.filter((c) => ids.has(c.id)); }
-    // Sort: multi-stream channels first (more reliable), then alphabetical
+    if (search.trim()) {
+      const ids = new Set(fuse.search(search).map((r) => r.item.id));
+      list = list.filter((c) => ids.has(c.id));
+    }
     return [...list].sort((a, b) => {
-      // Failed channels go last
-      const aFailed = failedIds.has(a.id) ? 1 : 0;
-      const bFailed = failedIds.has(b.id) ? 1 : 0;
-      if (aFailed !== bFailed) return aFailed - bFailed;
-      // More streams = more reliable = first
+      const aF = failedIds.has(a.id) ? 1 : 0;
+      const bF = failedIds.has(b.id) ? 1 : 0;
+      if (aF !== bF) return aF - bF;
       if (b.streams.length !== a.streams.length) return b.streams.length - a.streams.length;
-      // Alphabetical
       return a.name.localeCompare(b.name);
     });
-  }, [channels, activeCat, activeLang, search, fuse, favorites, failedIds]);
+  }, [langChannels, activeCat, search, fuse, favorites, failedIds]);
 
-  /* ── auto-skip ── */
+  /* ── Category-grouped channels for section view ── */
+  const categoryGroups = useMemo(() => {
+    if (activeCat !== ALL_CAT) return null; // Don't group when filtering by specific category
+    const groups: { key: string; channels: Channel[] }[] = [];
+    const byCategory = new Map<string, Channel[]>();
+    for (const ch of filtered) {
+      if (!byCategory.has(ch.category)) byCategory.set(ch.category, []);
+      byCategory.get(ch.category)!.push(ch);
+    }
+    // Use CAT_ORDER for consistent display
+    for (const cat of CAT_ORDER) {
+      const chs = byCategory.get(cat);
+      if (chs && chs.length > 0) {
+        groups.push({ key: cat, channels: chs });
+      }
+    }
+    // Unknown cats at end
+    for (const [cat, chs] of byCategory) {
+      if (!CAT_ORDER.includes(cat) && chs.length > 0) {
+        groups.push({ key: cat, channels: chs });
+      }
+    }
+    return groups;
+  }, [filtered, activeCat]);
+
+  /* ── Language counts ── */
+  const langCounts = useMemo(() => {
+    const m: Record<string, number> = {};
+    for (const ch of channels) {
+      for (const lang of ch.languages) {
+        m[lang] = (m[lang] || 0) + 1;
+      }
+    }
+    return Object.entries(m).sort((a, b) => b[1] - a[1]);
+  }, [channels]);
+
+  /* ── Category counts ── */
+  const catCounts = useMemo(() => {
+    const c: Record<string, number> = {
+      [ALL_CAT]: langChannels.length,
+      [FAV_CAT]: langChannels.filter((ch) => favorites.has(ch.id)).length,
+    };
+    for (const ch of langChannels) c[ch.category] = (c[ch.category] || 0) + 1;
+    return c;
+  }, [langChannels, favorites]);
+
+  /* ── Auto-skip callback ── */
   const playNext = useCallback(() => {
     if (!playing) return;
     setFailedIds((p) => new Set(p).add(playing.id));
@@ -585,75 +946,96 @@ const TVPage = () => {
     if (filtered.length > 1) setPlaying(filtered[(idx + 1) % filtered.length]);
   }, [playing, filtered, failedIds]);
 
-  /* ── player ── */
+  /* ── Player hook ── */
   const playingStreams = useMemo(() => playing?.streams ?? null, [playing]);
-  const { state: pState, quality, urlAttempt, totalUrls, skipIn, retry: pRetry, cancelSkip, hlsLevels, currentLevel, isAutoQuality, setQualityLevel } = useRobustPlayer(videoRef, playingStreams, playNext);
-  const [showQualityMenu, setShowQualityMenu] = useState(false);
+  const {
+    state: pState, quality, urlAttempt, totalUrls, skipIn,
+    retry: pRetry, cancelSkip, hlsLevels, currentLevel,
+    isAutoQuality, setQualityLevel,
+    proxyActive,
+  } = useRobustPlayer(videoRef, playingStreams, playNext);
 
   useEffect(() => {
-    if (pState === "playing" && playing) setFailedIds((p) => { const n = new Set(p); n.delete(playing.id); return n; });
+    if (pState === "playing" && playing) {
+      setFailedIds((p) => { const n = new Set(p); n.delete(playing.id); return n; });
+    }
   }, [pState, playing]);
 
-  /* ── fetch data ── */
+  /* ── Fetch data ── */
   useEffect(() => {
     const ctrl = new AbortController();
     fetchAllChannels(ctrl.signal, (pct, msg) => { setFetchProgress(pct); setFetchMsg(msg); })
       .then((chs) => { setChannels(chs); setFetchLoading(false); })
-      .catch((err) => { if (err.name !== "AbortError") { setFetchError(err.message); setFetchLoading(false); } });
+      .catch((err) => {
+        if (err.name !== "AbortError") { setFetchError(err.message); setFetchLoading(false); }
+      });
     return () => ctrl.abort();
   }, []);
 
-  /* ── GSAP ── */
+  /* ── GSAP animations ── */
   useEffect(() => {
     if (fetchLoading) return;
     const ctx = gsap.context(() => {
-      gsap.fromTo(".tv-stat", { y: 40, opacity: 0 }, { scrollTrigger: { trigger: statsRef.current, start: "top 85%" }, y: 0, opacity: 1, stagger: 0.1, duration: 0.6, ease: "back.out(1.7)" });
-      gsap.fromTo(".tv-chip", { scale: 0.8, opacity: 0 }, { scrollTrigger: { trigger: ".tv-chips", start: "top 90%" }, scale: 1, opacity: 1, stagger: 0.04, duration: 0.4, ease: "back.out(2)" });
+      gsap.fromTo(".tv-stat", { y: 40, opacity: 0 }, {
+        scrollTrigger: { trigger: statsRef.current, start: "top 85%" },
+        y: 0, opacity: 1, stagger: 0.1, duration: 0.6, ease: "back.out(1.7)",
+      });
     });
     return () => ctx.revert();
   }, [fetchLoading]);
 
-  /* ── favorites persistence ── */
+  /* ── Favorites ── */
   useEffect(() => { localStorage.setItem("ishu_tv_favs", JSON.stringify([...favorites])); }, [favorites]);
-  const toggleFav = useCallback((id: string) => { setFavorites((p) => { const n = new Set(p); if (n.has(id)) n.delete(id); else n.add(id); return n; }); }, []);
+  const toggleFav = useCallback((id: string) => {
+    setFavorites((p) => { const n = new Set(p); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+  }, []);
 
-  /* ── counts ── */
-  const catCounts = useMemo(() => {
-    const c: Record<string, number> = { [ALL_CAT]: channels.length, [FAV_CAT]: channels.filter((ch) => favorites.has(ch.id)).length };
-    for (const ch of channels) c[ch.category] = (c[ch.category] || 0) + 1;
-    return c;
-  }, [channels, favorites]);
-  const langList = useMemo(() => {
-    const m: Record<string, number> = {};
-    for (const ch of channels) m[ch.language] = (m[ch.language] || 0) + 1;
-    return Object.entries(m).sort((a, b) => b[1] - a[1]);
-  }, [channels]);
-
-  /* ── player controls ── */
+  /* ── Controls ── */
   const toggleFs = useCallback(() => {
     if (!playerRef.current) return;
-    if (document.fullscreenElement) { document.exitFullscreen(); setIsFs(false); } else { playerRef.current.requestFullscreen(); setIsFs(true); }
+    if (document.fullscreenElement) document.exitFullscreen();
+    else playerRef.current.requestFullscreen();
   }, []);
   const togglePiP = useCallback(async () => {
     if (!videoRef.current) return;
-    try { if (document.pictureInPictureElement) await document.exitPictureInPicture(); else await videoRef.current.requestPictureInPicture(); } catch {}
+    try {
+      if (document.pictureInPictureElement) await document.exitPictureInPicture();
+      else await videoRef.current.requestPictureInPicture();
+    } catch {}
   }, []);
-  const playChannel = useCallback((ch: Channel) => { cancelSkip(); setPlaying(ch); setTimeout(() => playerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100); }, [cancelSkip]);
+  const playChannel = useCallback((ch: Channel) => {
+    cancelSkip();
+    setPlaying(ch);
+    setShowQualityMenu(false);
+    setTimeout(() => playerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+  }, [cancelSkip]);
 
-  /* ── keyboard ── */
+  /* ── Keyboard shortcuts ── */
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement) return;
       if (e.key === "m") setMuted((p) => !p);
       if (e.key === "f") toggleFs();
       if (e.key === "n") playNext();
-      if (e.key === "Escape" && playing) { setPlaying(null); cancelSkip(); setShowQualityMenu(false); }
-      if (e.key === "Escape" && showQualityMenu) { setShowQualityMenu(false); return; }
+      if (e.key === "Escape") {
+        if (showQualityMenu) { setShowQualityMenu(false); return; }
+        if (playing) { setPlaying(null); cancelSkip(); }
+      }
       if (e.key === "/" && !playing) { e.preventDefault(); searchRef.current?.focus(); }
+      if (e.key === "ArrowUp" && playing) { setVolume(v => Math.min(100, v + 5)); }
+      if (e.key === "ArrowDown" && playing) { setVolume(v => Math.max(0, v - 5)); }
     };
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
-  }, [playing, toggleFs, playNext, cancelSkip]);
+  }, [playing, toggleFs, playNext, cancelSkip, showQualityMenu]);
+
+  useEffect(() => {
+    const handler = () => setIsFs(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", handler);
+    return () => document.removeEventListener("fullscreenchange", handler);
+  }, []);
+
+  const showAllLangs = selectedLang === "all";
 
   /* ═══════════════════ RENDER ═══════════════════ */
   return (
@@ -671,7 +1053,6 @@ const TVPage = () => {
           </div>
           <ParticleField />
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent" />
-
           <div className="container relative z-10">
             <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} className="mx-auto max-w-3xl text-center">
               <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}
@@ -680,65 +1061,27 @@ const TVPage = () => {
                 <span className="text-sm font-medium text-primary">Live Streaming</span>
                 <span className="flex h-2 w-2 rounded-full bg-green-400 animate-pulse" />
               </motion.div>
-
               <h1 className="font-display text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
                 <span className="text-shimmer">Live Indian TV</span><br />
                 <span className="text-gradient">Channels</span>
               </h1>
               <p className="mx-auto mt-5 max-w-xl text-base text-muted-foreground sm:text-lg">
-                Watch <span className="font-semibold text-foreground">{channels.length || "500+"}</span> Indian TV channels with
-                <span className="font-semibold text-foreground"> multi-stream fallback</span>. If one stream is down, we automatically try alternatives.
+                Watch <span className="font-semibold text-foreground">{channels.length || "700+"}</span> Indian TV channels across
+                <span className="font-semibold text-foreground"> {langCounts.length || "14+"} languages</span> with
+                <span className="font-semibold text-foreground"> multi-stream fallback</span>.
               </p>
-
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
                 className="mt-6 flex flex-wrap items-center justify-center gap-3">
                 {[
                   { icon: Zap, text: "Instant Play" },
                   { icon: RefreshCw, text: "Auto-Fallback" },
-                  { icon: Languages, text: "14+ Languages" },
-                  { icon: Sparkles, text: "HD Quality" },
+                  { icon: Languages, text: `${langCounts.length || "14+"} Languages` },
+                  { icon: Gauge, text: "Quality Control" },
                 ].map(({ icon: Icon, text }) => (
                   <span key={text} className="flex items-center gap-1.5 rounded-full border border-border/50 glass px-4 py-2 text-xs font-medium text-muted-foreground">
                     <Icon className="h-3.5 w-3.5 text-primary" /> {text}
                   </span>
                 ))}
-              </motion.div>
-
-              {/* Search */}
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="relative mx-auto mt-10 max-w-xl">
-                <div className={`flex items-center gap-3 rounded-2xl border bg-card/80 px-5 py-3.5 backdrop-blur-xl transition-all ${searchFocused ? "border-primary/50 shadow-lg shadow-primary/10" : "border-border/60"}`}>
-                  <Search className={`h-5 w-5 shrink-0 transition-colors ${searchFocused ? "text-primary" : "text-muted-foreground"}`} />
-                  <input ref={searchRef} type="text" placeholder='Search channels... (Press "/" to focus)' value={search}
-                    onChange={(e) => setSearch(e.target.value)} onFocus={() => setSearchFocused(true)} onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
-                    className="flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/60" />
-                  {search && <button onClick={() => setSearch("")} className="rounded-lg p-1 text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>}
-                  <kbd className="hidden rounded-md border border-border/60 bg-secondary/50 px-2 py-0.5 text-[10px] text-muted-foreground sm:block">/</kbd>
-                </div>
-                <AnimatePresence>
-                  {searchFocused && search.trim() && searchResults.length > 0 && (
-                    <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-                      className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-2xl border border-border/60 bg-card/95 shadow-2xl backdrop-blur-xl">
-                      <div className="px-4 py-2 text-[10px] uppercase tracking-widest text-muted-foreground">{searchResults.length} results</div>
-                      {searchResults.map((ch) => (
-                        <button key={ch.id} onMouseDown={(e) => { e.preventDefault(); playChannel(ch); setSearch(""); }}
-                          className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-primary/5">
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white/5">
-                            {ch.logo ? <img src={ch.logo} alt="" className="h-full w-full object-contain p-1" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} /> : <Tv className="h-5 w-5 text-muted-foreground" />}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-medium text-foreground">{ch.name}</p>
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                              <span>{ch.categoryLabel}</span>
-                              <span className="text-primary">{ch.language}</span>
-                              <span className="text-green-400">{ch.streams.length} stream{ch.streams.length > 1 ? "s" : ""}</span>
-                            </div>
-                          </div>
-                          <Play className="h-4 w-4 shrink-0 text-primary" />
-                        </button>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
               </motion.div>
             </motion.div>
           </div>
@@ -750,9 +1093,9 @@ const TVPage = () => {
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {[
                 { icon: Tv, label: "Total Channels", value: channels.length, gradient: "from-blue-500 to-cyan-500" },
-                { icon: Languages, label: "Languages", value: langList.length, gradient: "from-purple-500 to-pink-500" },
+                { icon: Languages, label: "Languages", value: langCounts.length, gradient: "from-purple-500 to-pink-500" },
                 { icon: Signal, label: "Stream URLs", value: channels.reduce((a, c) => a + c.streams.length, 0), gradient: "from-green-500 to-emerald-500" },
-                { icon: RefreshCw, label: "Multi-URL Channels", value: channels.filter((c) => c.streams.length > 1).length, gradient: "from-amber-500 to-orange-500" },
+                { icon: TrendingUp, label: "Multi-Stream", value: channels.filter((c) => c.streams.length > 1).length, gradient: "from-amber-500 to-orange-500" },
               ].map(({ icon: Icon, label, value, gradient }) => (
                 <div key={label} className="tv-stat rounded-2xl border border-border/40 glass-strong p-4 text-center">
                   <div className={`mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${gradient} shadow-lg`}>
@@ -766,204 +1109,9 @@ const TVPage = () => {
           </section>
         )}
 
-        {/* ═══ VIDEO PLAYER ═══ */}
-        <AnimatePresence>
-          {playing && (
-            <motion.section ref={playerRef} initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }} className="container mb-10">
-              <div className="overflow-hidden rounded-3xl border border-border/40 bg-black shadow-2xl shadow-black/50">
-                {/* chrome */}
-                <div className="flex items-center justify-between bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 px-4 py-3 sm:px-6">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <button onClick={() => { setPlaying(null); cancelSkip(); }} className="rounded-xl p-1.5 hover:bg-white/20 transition-colors">
-                      <ChevronLeft className="h-5 w-5 text-white" />
-                    </button>
-                    {playing.logo && <img src={playing.logo} alt="" className="h-9 w-9 rounded-xl bg-white object-contain p-0.5 shadow-md"
-                      onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />}
-                    <div className="min-w-0">
-                      <h3 className="truncate text-sm font-bold text-white sm:text-base">{playing.name}</h3>
-                      <p className="text-xs text-white/60">{playing.categoryLabel} &middot; {playing.language} &middot; {playing.streams.length} stream{playing.streams.length > 1 ? "s" : ""}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1.5 sm:gap-2">
-                    {pState === "playing" && (
-                      <span className="flex items-center gap-1 rounded-full bg-green-500/90 px-2.5 py-1 text-[10px] font-bold uppercase text-white">
-                        <Check className="h-3 w-3" /> Live
-                      </span>
-                    )}
-                    {(pState === "loading" || pState === "switching") && (
-                      <span className="flex items-center gap-1 rounded-full bg-yellow-500/90 px-2.5 py-1 text-[10px] font-bold uppercase text-white">
-                        <Loader2 className="h-3 w-3 animate-spin" /> {pState === "switching" ? `URL ${urlAttempt}/${totalUrls}` : "Connecting"}
-                      </span>
-                    )}
-                    {pState === "error" && (
-                      <span className="flex items-center gap-1 rounded-full bg-red-500/90 px-2.5 py-1 text-[10px] font-bold uppercase text-white">
-                        <WifiOff className="h-3 w-3" /> Offline
-                      </span>
-                    )}
-                    {/* Quality selector dropdown */}
-                    <div className="relative hidden sm:block">
-                      <button onClick={() => setShowQualityMenu((p) => !p)}
-                        className="flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-bold text-white hover:bg-white/25 transition-colors">
-                        <Gauge className="h-3 w-3" />
-                        {isAutoQuality ? `Auto${quality ? ` (${quality})` : ""}` : quality || "Quality"}
-                        <ChevronDown className="h-3 w-3" />
-                      </button>
-                      <AnimatePresence>
-                        {showQualityMenu && (
-                          <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
-                            className="absolute right-0 top-full z-50 mt-2 min-w-[140px] overflow-hidden rounded-xl border border-white/10 bg-black/95 shadow-2xl backdrop-blur-xl">
-                            <div className="px-3 py-1.5 text-[9px] uppercase tracking-widest text-white/40">Quality</div>
-                            <button onClick={() => { setQualityLevel(-1); setShowQualityMenu(false); }}
-                              className={`flex w-full items-center justify-between px-3 py-2 text-xs transition-colors hover:bg-white/10 ${isAutoQuality ? "text-blue-400 font-bold" : "text-white/70"}`}>
-                              Auto {isAutoQuality && <Check className="h-3 w-3" />}
-                            </button>
-                            {hlsLevels.map((lvl) => (
-                              <button key={lvl.index} onClick={() => { setQualityLevel(lvl.index); setShowQualityMenu(false); }}
-                                className={`flex w-full items-center justify-between px-3 py-2 text-xs transition-colors hover:bg-white/10 ${!isAutoQuality && currentLevel === lvl.index ? "text-blue-400 font-bold" : "text-white/70"}`}>
-                                <span>{lvl.label}</span>
-                                <span className="text-[9px] text-white/30">{lvl.bitrate > 0 ? `${Math.round(lvl.bitrate / 1000)}k` : ""}</span>
-                                {!isAutoQuality && currentLevel === lvl.index && <Check className="h-3 w-3 ml-1" />}
-                              </button>
-                            ))}
-                            {hlsLevels.length === 0 && (
-                              <div className="px-3 py-2 text-xs text-white/30">Single quality stream</div>
-                            )}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                    <button onClick={() => toggleFav(playing.id)} className={`rounded-xl p-1.5 transition-colors ${favorites.has(playing.id) ? "text-yellow-300 bg-yellow-400/20" : "text-white/60 hover:bg-white/20"}`}>
-                      <Star className="h-4 w-4" fill={favorites.has(playing.id) ? "currentColor" : "none"} />
-                    </button>
-                    <button onClick={() => setMuted(!muted)} className="rounded-xl p-1.5 text-white/80 hover:bg-white/20"><Volume2 className="h-4 w-4" /></button>
-                    <button onClick={togglePiP} className="hidden rounded-xl p-1.5 text-white/80 hover:bg-white/20 sm:block"><PictureInPicture2 className="h-4 w-4" /></button>
-                    <button onClick={playNext} className="rounded-xl p-1.5 text-white/80 hover:bg-white/20"><SkipForward className="h-4 w-4" /></button>
-                    <button onClick={toggleFs} className="rounded-xl p-1.5 text-white/80 hover:bg-white/20">{isFs ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}</button>
-                  </div>
-                </div>
-
-                {/* video */}
-                <div className="relative aspect-video w-full bg-black">
-                  {(pState === "loading" || pState === "switching") && (
-                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4">
-                      <div className="relative">
-                        <div className="h-16 w-16 animate-spin rounded-full border-4 border-white/10 border-t-blue-500" />
-                        <Tv className="absolute left-1/2 top-1/2 h-6 w-6 -translate-x-1/2 -translate-y-1/2 text-blue-400" />
-                      </div>
-                      <p className="text-sm text-white/50">{pState === "switching" ? `Trying stream ${urlAttempt} of ${totalUrls}...` : "Connecting..."}</p>
-                      {totalUrls > 1 && <p className="text-xs text-white/30">{totalUrls} backup streams available</p>}
-                    </div>
-                  )}
-                  {pState === "error" && (
-                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4">
-                      <WifiOff className="h-12 w-12 text-red-400" />
-                      <p className="text-sm font-medium text-white/70">All {totalUrls} stream URLs tried - channel offline</p>
-                      {skipIn > 0 && (
-                        <div className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-2">
-                          <TimerReset className="h-4 w-4 text-blue-400" />
-                          <span className="text-sm text-white/70">Next channel in <span className="font-bold text-blue-400">{skipIn}s</span></span>
-                          <button onClick={cancelSkip} className="ml-2 rounded-md bg-white/10 px-2 py-0.5 text-xs text-white/60 hover:bg-white/20">Cancel</button>
-                        </div>
-                      )}
-                      <div className="flex gap-3">
-                        <button onClick={pRetry} className="flex items-center gap-2 rounded-xl bg-blue-500 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-600">
-                          <RotateCcw className="h-4 w-4" /> Retry All
-                        </button>
-                        <button onClick={playNext} className="flex items-center gap-2 rounded-xl bg-white/10 px-5 py-2.5 text-sm font-medium text-white hover:bg-white/20">
-                          <SkipForward className="h-4 w-4" /> Next Channel
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  <video ref={videoRef} muted={muted} autoPlay playsInline controls className="h-full w-full" />
-                </div>
-
-                <div className="hidden items-center justify-center gap-4 bg-black/80 px-4 py-2 text-[10px] text-white/30 sm:flex">
-                  {[{ k: "M", a: "Mute" }, { k: "F", a: "Fullscreen" }, { k: "N", a: "Next" }, { k: "ESC", a: "Close" }].map(({ k, a }) => (
-                    <span key={k} className="flex items-center gap-1"><kbd className="rounded border border-white/10 bg-white/5 px-1.5 py-0.5 font-mono">{k}</kbd> {a}</span>
-                  ))}
-                </div>
-              </div>
-            </motion.section>
-          )}
-        </AnimatePresence>
-
-        {/* ═══ CATEGORIES ═══ */}
-        <section className="container mb-4">
-          <FadeInView delay={0.1}>
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-xs font-semibold uppercase tracking-widest text-primary">Categories</h2>
-              <div className="flex items-center gap-2">
-                {failedIds.size > 0 && (
-                  <button onClick={() => setFailedIds(new Set())} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
-                    <RotateCcw className="h-3 w-3" /> Reset {failedIds.size} offline
-                  </button>
-                )}
-                <div className="flex gap-1">
-                  <button onClick={() => setViewMode("grid")} className={`rounded-lg p-1.5 ${viewMode === "grid" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}><Grid3X3 className="h-4 w-4" /></button>
-                  <button onClick={() => setViewMode("list")} className={`rounded-lg p-1.5 ${viewMode === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}><List className="h-4 w-4" /></button>
-                </div>
-              </div>
-            </div>
-          </FadeInView>
-          <div className="tv-chips flex flex-wrap gap-2">
-            <button onClick={() => setActiveCat(ALL_CAT)}
-              className={`tv-chip flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${activeCat === ALL_CAT ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25" : "glass border border-border/40 text-muted-foreground hover:text-foreground"}`}>
-              <Globe className="h-4 w-4" /> All <span className="text-xs opacity-60">({catCounts[ALL_CAT] || 0})</span>
-            </button>
-            <button onClick={() => setActiveCat(FAV_CAT)}
-              className={`tv-chip flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${activeCat === FAV_CAT ? "bg-yellow-500 text-black shadow-lg" : "glass border border-border/40 text-muted-foreground hover:text-foreground"}`}>
-              <Star className="h-4 w-4" /> Favorites <span className="text-xs opacity-60">({catCounts[FAV_CAT] || 0})</span>
-            </button>
-            {Object.entries(CAT_META).map(([key, { label, icon: Icon, gradient }]) => {
-              const count = catCounts[key] || 0;
-              if (count === 0) return null;
-              return (
-                <button key={key} onClick={() => setActiveCat(key)}
-                  className={`tv-chip flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${activeCat === key ? `bg-gradient-to-r ${gradient} text-white shadow-lg` : "glass border border-border/40 text-muted-foreground hover:text-foreground"}`}>
-                  <Icon className="h-4 w-4" /> {label} <span className="text-xs opacity-60">({count})</span>
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* ═══ LANGUAGES ═══ */}
-        {langList.length > 1 && (
-          <section className="container mb-8">
-            <FadeInView delay={0.15}>
-              <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-primary flex items-center gap-2">
-                <Languages className="h-4 w-4" /> Filter by Language
-                {activeLang !== "all" && (
-                  <button onClick={() => setActiveLang("all")} className="ml-2 flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary hover:bg-primary/20 transition-colors">
-                    <X className="h-3 w-3" /> Clear
-                  </button>
-                )}
-              </h2>
-            </FadeInView>
-            <div className="flex flex-wrap gap-2">
-              <button onClick={() => setActiveLang("all")}
-                className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-medium transition-all ${
-                  activeLang === "all" ? "bg-secondary text-foreground shadow-md" : "glass border border-border/40 text-muted-foreground hover:text-foreground"
-                }`}>
-                <Globe className="h-3.5 w-3.5" /> All <span className="text-xs opacity-60">({channels.length})</span>
-              </button>
-              {langList.map(([lang, count]) => (
-                <button key={lang} onClick={() => setActiveLang(lang)}
-                  className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-medium transition-all ${
-                    activeLang === lang ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg" : "glass border border-border/40 text-muted-foreground hover:text-foreground"
-                  }`}>
-                  {lang} <span className="text-xs opacity-60">({count})</span>
-                </button>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* ═══ CHANNEL GRID ═══ */}
-        <section className="container pb-24">
-          {fetchLoading ? (
+        {/* ═══ LOADING ═══ */}
+        {fetchLoading && (
+          <section className="container pb-24">
             <div className="flex flex-col items-center justify-center py-24 gap-6">
               <div className="relative">
                 <div className="h-20 w-20 animate-spin rounded-full border-4 border-border/30 border-t-primary" />
@@ -977,159 +1125,576 @@ const TVPage = () => {
                 <p className="mt-2 text-xs text-muted-foreground">{fetchProgress}%</p>
               </div>
             </div>
-          ) : fetchError ? (
+          </section>
+        )}
+
+        {/* ═══ ERROR ═══ */}
+        {!fetchLoading && fetchError && (
+          <section className="container pb-24">
             <div className="flex flex-col items-center justify-center py-24 gap-4">
               <AlertCircle className="h-12 w-12 text-red-400" />
               <p className="font-medium text-red-400">{fetchError}</p>
               <button onClick={() => window.location.reload()} className="rounded-xl bg-primary px-6 py-3 text-sm font-medium text-primary-foreground">Retry</button>
             </div>
-          ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-24 gap-4">
-              <Tv className="h-12 w-12 text-muted-foreground" />
-              <p className="font-medium text-foreground">No channels found</p>
-              <button onClick={() => { setSearch(""); setActiveCat(ALL_CAT); setActiveLang("all"); }}
-                className="rounded-xl border border-border px-5 py-2.5 text-sm text-foreground hover:bg-secondary">Clear Filters</button>
-            </div>
-          ) : (
-            <>
-              <div className="mb-4 flex flex-wrap items-center gap-3">
-                <p className="text-sm text-muted-foreground">
-                  Showing <span className="font-semibold text-foreground">{filtered.length}</span> channels
-                  {failedIds.size > 0 && <span className="text-yellow-500 ml-1">({failedIds.size} offline)</span>}
-                </p>
-                {/* Active filters */}
-                {(activeCat !== ALL_CAT || activeLang !== "all" || search) && (
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    {activeCat !== ALL_CAT && activeCat !== FAV_CAT && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
-                        {CAT_META[activeCat]?.label || activeCat}
-                        <button onClick={() => setActiveCat(ALL_CAT)} className="ml-0.5 hover:text-foreground"><X className="h-3 w-3" /></button>
-                      </span>
-                    )}
-                    {activeCat === FAV_CAT && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-yellow-500/10 px-2.5 py-1 text-xs font-medium text-yellow-500">
-                        Favorites
-                        <button onClick={() => setActiveCat(ALL_CAT)} className="ml-0.5 hover:text-foreground"><X className="h-3 w-3" /></button>
-                      </span>
-                    )}
-                    {activeLang !== "all" && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 px-2.5 py-1 text-xs font-medium text-blue-400">
-                        {activeLang}
-                        <button onClick={() => setActiveLang("all")} className="ml-0.5 hover:text-foreground"><X className="h-3 w-3" /></button>
-                      </span>
-                    )}
-                    {search && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-foreground">
-                        &quot;{search}&quot;
-                        <button onClick={() => setSearch("")} className="ml-0.5 hover:text-foreground"><X className="h-3 w-3" /></button>
-                      </span>
-                    )}
-                    <button onClick={() => { setSearch(""); setActiveCat(ALL_CAT); setActiveLang("all"); }}
-                      className="text-xs text-muted-foreground hover:text-foreground underline ml-1">Clear all</button>
+          </section>
+        )}
+
+        {/* ═══ MAIN CONTENT ═══ */}
+        {!fetchLoading && !fetchError && channels.length > 0 && (
+          <>
+            {/* ═══ LANGUAGE SELECTION SCREEN ═══ */}
+            {!selectedLang && !playing && (
+              <section className="container mb-12">
+                <FadeInView>
+                  <div className="text-center mb-8">
+                    <h2 className="font-display text-2xl font-bold text-foreground sm:text-3xl">
+                      Select Your <span className="text-gradient">Language</span>
+                    </h2>
+                    <p className="mt-2 text-sm text-muted-foreground">Choose a language to see all channels in that language, organized by category</p>
                   </div>
-                )}
-              </div>
-              {viewMode === "grid" ? (
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-                  {filtered.map((ch, idx) => {
-                    const isP = playing?.id === ch.id;
-                    const isF = favorites.has(ch.id);
-                    const isDead = failedIds.has(ch.id);
-                    return (
-                      <FadeInView key={ch.id} delay={Math.min(idx * 0.012, 0.25)}>
-                        <Tilt tiltMaxAngleX={5} tiltMaxAngleY={5} glareEnable glareMaxOpacity={0.05} scale={1.02}>
-                          <div onClick={() => playChannel(ch)}
-                            className={`group relative flex h-full flex-col items-center gap-2.5 rounded-2xl border p-4 text-center cursor-pointer transition-all ${
-                              isP ? "border-primary/60 bg-primary/10 shadow-xl shadow-primary/20"
-                              : isDead ? "border-red-500/20 bg-red-500/5 opacity-50"
-                              : "border-border/40 glass hover:border-primary/30 hover:shadow-lg"
-                            }`}>
+                </FadeInView>
 
-                            {isDead && !isP && <div className="absolute left-2 top-2 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-red-500/20"><WifiOff className="h-3 w-3 text-red-400" /></div>}
-                            {ch.streams.length > 1 && !isDead && <div className="absolute left-2 top-2 z-10 rounded-full bg-green-500/10 px-1.5 py-0.5 text-[8px] font-bold text-green-400">{ch.streams.length} URLs</div>}
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                  {/* All Languages */}
+                  <FadeInView delay={0.02}>
+                    <Tilt tiltMaxAngleX={8} tiltMaxAngleY={8} glareEnable glareMaxOpacity={0.08} scale={1.03}>
+                      <button onClick={() => setSelectedLang("all")}
+                        className="group relative flex w-full flex-col items-center gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-5 sm:p-6 text-center transition-all hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10">
+                        <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 text-2xl sm:text-3xl shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform">
+                          🌐
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-foreground">All Languages</p>
+                          <p className="text-xs text-primary font-medium mt-0.5">{channels.length} channels</p>
+                        </div>
+                        <ArrowRight className="h-4 w-4 text-primary opacity-0 group-hover:opacity-100 transition-opacity absolute right-3 top-3" />
+                      </button>
+                    </Tilt>
+                  </FadeInView>
 
-                            <button onClick={(e) => { e.stopPropagation(); toggleFav(ch.id); }}
-                              className={`absolute right-2 top-2 z-10 rounded-full p-1 transition-all ${isF ? "text-yellow-400" : "text-transparent group-hover:text-muted-foreground/50"}`}>
-                              <Star className="h-3.5 w-3.5" fill={isF ? "currentColor" : "none"} />
+                  {/* Known languages */}
+                  {langCounts
+                    .filter(([lang]) => LANGUAGES[lang])
+                    .map(([lang, count], idx) => {
+                      const meta = LANGUAGES[lang]!;
+                      return (
+                        <FadeInView key={lang} delay={Math.min((idx + 1) * 0.03, 0.3)}>
+                          <Tilt tiltMaxAngleX={8} tiltMaxAngleY={8} glareEnable glareMaxOpacity={0.08} scale={1.03}>
+                            <button onClick={() => setSelectedLang(lang)}
+                              className="group relative flex w-full flex-col items-center gap-3 rounded-2xl border border-border/40 glass p-5 sm:p-6 text-center transition-all hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10">
+                              <div className={`flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-gradient-to-br ${meta.gradient} text-2xl sm:text-3xl shadow-lg group-hover:scale-110 transition-transform`}>
+                                {meta.emoji}
+                              </div>
+                              <div>
+                                <p className="text-sm font-bold text-foreground">{meta.label}</p>
+                                <p className="text-[11px] text-muted-foreground/70">{meta.native}</p>
+                                <p className="text-xs text-primary font-medium mt-0.5">{count} channels</p>
+                              </div>
+                              <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity absolute right-3 top-3" />
                             </button>
+                          </Tilt>
+                        </FadeInView>
+                      );
+                    })}
 
-                            <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl bg-white/5 p-1.5 group-hover:scale-105 transition-transform">
-                              {ch.logo ? <img src={ch.logo} alt={ch.name} loading="lazy" className="h-full w-full object-contain"
-                                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} /> : <Tv className="h-7 w-7 text-muted-foreground" />}
+                  {/* Other languages */}
+                  {langCounts
+                    .filter(([lang]) => !LANGUAGES[lang])
+                    .map(([lang, count], idx) => (
+                      <FadeInView key={lang} delay={Math.min((idx + 15) * 0.03, 0.5)}>
+                        <Tilt tiltMaxAngleX={8} tiltMaxAngleY={8} glareEnable glareMaxOpacity={0.08} scale={1.03}>
+                          <button onClick={() => setSelectedLang(lang)}
+                            className="group relative flex w-full flex-col items-center gap-3 rounded-2xl border border-border/40 glass p-5 sm:p-6 text-center transition-all hover:border-primary/40 hover:shadow-xl">
+                            <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-gray-500 to-gray-600 text-2xl sm:text-3xl shadow-lg group-hover:scale-110 transition-transform">
+                              🗣️
                             </div>
-
-                            <h3 className="line-clamp-2 text-xs font-semibold leading-tight text-foreground sm:text-sm">{ch.name}</h3>
-
-                            <div className="flex flex-wrap items-center justify-center gap-1">
-                              <span className="rounded-full bg-secondary/80 px-2 py-0.5 text-[9px] font-medium text-muted-foreground">{ch.categoryLabel}</span>
-                              {ch.language && ch.language !== "Hindi" && (
-                                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-medium text-primary">{ch.language}</span>
-                              )}
+                            <div>
+                              <p className="text-sm font-bold text-foreground">{lang}</p>
+                              <p className="text-xs text-primary font-medium mt-0.5">{count} channels</p>
                             </div>
-
-                            {isP ? (
-                              <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-primary/5 backdrop-blur-[1px]">
-                                <div className="flex items-center gap-1.5 rounded-full bg-primary/90 px-3 py-1.5 text-[10px] font-bold text-white">
-                                  <Radio className="h-3 w-3 animate-pulse" /> PLAYING
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="absolute inset-0 flex items-center justify-center rounded-2xl opacity-0 transition-all group-hover:bg-black/50 group-hover:opacity-100">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/90 shadow-lg transition-transform group-hover:scale-110">
-                                  <Play className="h-5 w-5 text-white ml-0.5" fill="white" />
-                                </div>
-                              </div>
-                            )}
-                          </div>
+                          </button>
                         </Tilt>
                       </FadeInView>
-                    );
-                  })}
+                    ))}
                 </div>
-              ) : (
-                <div className="space-y-2">
-                  {filtered.map((ch, idx) => {
-                    const isP = playing?.id === ch.id;
-                    const isF = favorites.has(ch.id);
-                    const isDead = failedIds.has(ch.id);
-                    return (
-                      <motion.div key={ch.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: Math.min(idx * 0.02, 0.5) }}
-                        onClick={() => playChannel(ch)}
-                        className={`flex cursor-pointer items-center gap-4 rounded-xl border px-4 py-3 transition-all hover:bg-card ${
-                          isP ? "border-primary/50 bg-primary/5" : isDead ? "border-red-500/20 opacity-50" : "border-border/30 glass"
-                        }`}>
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white/5 p-1">
-                          {ch.logo ? <img src={ch.logo} alt="" loading="lazy" className="h-full w-full object-contain"
-                            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} /> : <Tv className="h-5 w-5 text-muted-foreground" />}
+
+                {/* Quick search */}
+                <FadeInView delay={0.3}>
+                  <div className="mt-10 text-center">
+                    <p className="text-xs text-muted-foreground mb-3">Or search across all languages</p>
+                    <SearchBar
+                      searchRef={searchRef} search={search} setSearch={setSearch}
+                      searchFocused={searchFocused} setSearchFocused={setSearchFocused}
+                      searchResults={searchResults}
+                      onSelect={(ch) => { setSelectedLang("all"); playChannel(ch); setSearch(""); }}
+                    />
+                  </div>
+                </FadeInView>
+              </section>
+            )}
+
+            {/* ═══ VIDEO PLAYER ═══ */}
+            <AnimatePresence>
+              {playing && (
+                <motion.section ref={playerRef} initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }} className="container mb-10">
+                  <div className="overflow-hidden rounded-3xl border border-border/40 bg-black shadow-2xl shadow-black/50">
+                    {/* Chrome bar */}
+                    <div className="flex items-center justify-between bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 px-3 py-2.5 sm:px-6 sm:py-3">
+                      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                        <button onClick={() => { setPlaying(null); cancelSkip(); setShowQualityMenu(false); }} className="rounded-xl p-1.5 hover:bg-white/20 transition-colors">
+                          <ChevronLeft className="h-5 w-5 text-white" />
+                        </button>
+                        {playing.logo && (
+                          <img src={playing.logo} alt="" className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-white object-contain p-0.5 shadow-md"
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                        )}
+                        <div className="min-w-0">
+                          <h3 className="truncate text-xs sm:text-sm font-bold text-white">{playing.name}</h3>
+                          <p className="text-[10px] sm:text-xs text-white/60">{playing.categoryLabel} &middot; {playing.languages.join(", ")}</p>
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium text-foreground">{ch.name}</p>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <span>{ch.categoryLabel}</span>
-                            <span className="text-primary">{ch.language}</span>
-                            <span className="text-green-400">{ch.streams.length} URLs</span>
-                            {isDead && <span className="text-red-400">offline</span>}
+                      </div>
+                      <div className="flex items-center gap-1 sm:gap-1.5">
+                        {pState === "playing" && (
+                          <span className="hidden sm:flex items-center gap-1 rounded-full bg-green-500/90 px-2 py-1 text-[9px] sm:text-[10px] font-bold uppercase text-white">
+                            <Check className="h-3 w-3" /> Live {proxyActive && "(Proxy)"}
+                          </span>
+                        )}
+                        {(pState === "loading" || pState === "switching") && (
+                          <span className="flex items-center gap-1 rounded-full bg-yellow-500/90 px-2 py-1 text-[9px] sm:text-[10px] font-bold uppercase text-white">
+                            <Loader2 className="h-3 w-3 animate-spin" /> <span className="hidden sm:inline">{pState === "switching" ? `${urlAttempt}/${totalUrls}` : "Loading"}</span>
+                          </span>
+                        )}
+                        {pState === "error" && (
+                          <span className="flex items-center gap-1 rounded-full bg-red-500/90 px-2 py-1 text-[9px] sm:text-[10px] font-bold uppercase text-white">
+                            <WifiOff className="h-3 w-3" /> <span className="hidden sm:inline">Offline</span>
+                          </span>
+                        )}
+                        {/* Quality */}
+                        <div className="relative">
+                          <button onClick={() => setShowQualityMenu((p) => !p)}
+                            className="flex items-center gap-1 rounded-full bg-white/15 px-2 py-1 text-[9px] sm:text-[10px] font-bold text-white hover:bg-white/25 transition-colors">
+                            <Gauge className="h-3 w-3" />
+                            <span>{isAutoQuality ? (quality ? `A(${quality})` : "Auto") : quality || "Q"}</span>
+                            <ChevronDown className="h-3 w-3" />
+                          </button>
+                          <AnimatePresence>
+                            {showQualityMenu && (
+                              <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+                                className="absolute right-0 top-full z-50 mt-2 min-w-[150px] overflow-hidden rounded-xl border border-white/10 bg-black/95 shadow-2xl backdrop-blur-xl">
+                                <div className="px-3 py-1.5 text-[9px] uppercase tracking-widest text-white/40">Quality</div>
+                                <button onClick={() => { setQualityLevel(-1); setShowQualityMenu(false); }}
+                                  className={`flex w-full items-center justify-between px-3 py-2.5 text-xs transition-colors hover:bg-white/10 ${isAutoQuality ? "text-blue-400 font-bold" : "text-white/70"}`}>
+                                  <span className="flex items-center gap-2"><Sparkles className="h-3 w-3" /> Auto</span>
+                                  {isAutoQuality && <Check className="h-3 w-3" />}
+                                </button>
+                                <div className="mx-3 border-t border-white/5" />
+                                {hlsLevels.map((lvl) => (
+                                  <button key={lvl.index} onClick={() => { setQualityLevel(lvl.index); setShowQualityMenu(false); }}
+                                    className={`flex w-full items-center justify-between px-3 py-2.5 text-xs transition-colors hover:bg-white/10 ${!isAutoQuality && currentLevel === lvl.index ? "text-blue-400 font-bold" : "text-white/70"}`}>
+                                    <span>{lvl.label}</span>
+                                    <div className="flex items-center gap-1">
+                                      {lvl.bitrate > 0 && <span className="text-[9px] text-white/30">{Math.round(lvl.bitrate / 1000)}k</span>}
+                                      {!isAutoQuality && currentLevel === lvl.index && <Check className="h-3 w-3 ml-1" />}
+                                    </div>
+                                  </button>
+                                ))}
+                                {hlsLevels.length === 0 && <div className="px-3 py-2 text-xs text-white/30">Single quality</div>}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                        <button onClick={() => toggleFav(playing.id)} className={`rounded-xl p-1.5 transition-colors ${favorites.has(playing.id) ? "text-yellow-300 bg-yellow-400/20" : "text-white/60 hover:bg-white/20"}`}>
+                          <Star className="h-4 w-4" fill={favorites.has(playing.id) ? "currentColor" : "none"} />
+                        </button>
+                        <button onClick={() => setMuted(!muted)} className="rounded-xl p-1.5 text-white/80 hover:bg-white/20">
+                          {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                        </button>
+                        <button onClick={togglePiP} className="hidden sm:block rounded-xl p-1.5 text-white/80 hover:bg-white/20"><PictureInPicture2 className="h-4 w-4" /></button>
+                        <button onClick={playNext} className="rounded-xl p-1.5 text-white/80 hover:bg-white/20"><SkipForward className="h-4 w-4" /></button>
+                        <button onClick={toggleFs} className="rounded-xl p-1.5 text-white/80 hover:bg-white/20">{isFs ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}</button>
+                      </div>
+                    </div>
+                    {/* Video */}
+                    <div className="relative aspect-video w-full bg-black">
+                      {(pState === "loading" || pState === "switching") && (
+                        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4">
+                          <div className="relative">
+                            <div className="h-16 w-16 animate-spin rounded-full border-4 border-white/10 border-t-blue-500" />
+                            <Tv className="absolute left-1/2 top-1/2 h-6 w-6 -translate-x-1/2 -translate-y-1/2 text-blue-400" />
+                          </div>
+                          <p className="text-sm text-white/50">{pState === "switching" ? `Trying stream ${urlAttempt} of ${totalUrls}...` : "Connecting..."}</p>
+                          {totalUrls > 1 && <p className="text-xs text-white/30">{totalUrls} backup streams available</p>}
+                        </div>
+                      )}
+                      {pState === "error" && (
+                        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4">
+                          <WifiOff className="h-12 w-12 text-red-400/80" />
+                          <p className="text-sm text-white/60">Channel currently unavailable</p>
+                          <p className="text-xs text-white/30">Tried {totalUrls} stream sources</p>
+                          {skipIn > 0 && (
+                            <div className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-2">
+                              <TimerReset className="h-4 w-4 text-blue-400" />
+                              <span className="text-sm text-white/70">Next in <span className="font-bold text-blue-400">{skipIn}s</span></span>
+                              <button onClick={cancelSkip} className="ml-2 rounded-md bg-white/10 px-2 py-0.5 text-xs text-white/60 hover:bg-white/20">Stay</button>
+                            </div>
+                          )}
+                          <div className="flex gap-3">
+                            <button onClick={pRetry} className="flex items-center gap-2 rounded-xl bg-blue-500 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-600">
+                              <RotateCcw className="h-4 w-4" /> Retry
+                            </button>
+                            <button onClick={playNext} className="flex items-center gap-2 rounded-xl bg-white/10 px-5 py-2.5 text-sm font-medium text-white hover:bg-white/20">
+                              <SkipForward className="h-4 w-4" /> Next
+                            </button>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <button onClick={(e) => { e.stopPropagation(); toggleFav(ch.id); }}
-                            className={isF ? "text-yellow-400" : "text-muted-foreground/30 hover:text-muted-foreground"}>
-                            <Star className="h-4 w-4" fill={isF ? "currentColor" : "none"} />
-                          </button>
-                          {isP ? <span className="flex items-center gap-1 rounded-full bg-primary/20 px-2 py-0.5 text-[10px] font-bold text-primary"><Radio className="h-3 w-3 animate-pulse" /> LIVE</span>
-                          : <Play className="h-4 w-4 text-muted-foreground" />}
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
+                      )}
+                      <video ref={videoRef} muted={muted} autoPlay playsInline controls className="h-full w-full object-contain" style={{ background: '#000' }} />
+                    </div>
+                    {/* Volume + shortcuts */}
+                    <div className="flex items-center justify-between bg-black/80 px-4 py-2">
+                      <div className="flex items-center gap-3">
+                        <button onClick={() => setMuted(!muted)} className="text-white/40 hover:text-white/70">
+                          {muted || volume === 0 ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
+                        </button>
+                        <input type="range" min="0" max="100" value={muted ? 0 : volume}
+                          onChange={(e) => { setVolume(Number(e.target.value)); if (muted) setMuted(false); }}
+                          className="h-1 w-20 sm:w-28 cursor-pointer appearance-none rounded-full bg-white/10 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-400" />
+                        <span className="text-[10px] text-white/30 w-8">{muted ? 0 : volume}%</span>
+                      </div>
+                      <div className="hidden sm:flex items-center gap-4 text-[10px] text-white/30">
+                        {[{ k: "M", a: "Mute" }, { k: "F", a: "Full" }, { k: "N", a: "Next" }, { k: "↑↓", a: "Vol" }, { k: "ESC", a: "Close" }].map(({ k, a }) => (
+                          <span key={k} className="flex items-center gap-1"><kbd className="rounded border border-white/10 bg-white/5 px-1.5 py-0.5 font-mono">{k}</kbd> {a}</span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </motion.section>
               )}
-            </>
-          )}
-        </section>
+            </AnimatePresence>
+
+            {/* ═══ CHANNEL BROWSER (after language selection) ═══ */}
+            {(selectedLang || playing) && (
+              <>
+                {/* Top bar: back + language badge + search */}
+                <section className="container mb-6">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <button onClick={() => { setSelectedLang(null); setActiveCat(ALL_CAT); setSearch(""); }}
+                        className="flex items-center gap-1.5 rounded-xl border border-border/40 glass px-3 py-2 text-sm font-medium text-foreground hover:border-primary/30 transition-all">
+                        <ChevronLeft className="h-4 w-4" /> Languages
+                      </button>
+                      {selectedLang && selectedLang !== "all" && LANGUAGES[selectedLang] && (
+                        <span className={`flex items-center gap-2 rounded-xl bg-gradient-to-r ${LANGUAGES[selectedLang].gradient} px-4 py-2 text-sm font-bold text-white shadow-lg`}>
+                          {LANGUAGES[selectedLang].emoji} {LANGUAGES[selectedLang].label}
+                          <span className="text-white/70 font-normal text-xs">({langChannels.length})</span>
+                        </span>
+                      )}
+                      {showAllLangs && (
+                        <span className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 px-4 py-2 text-sm font-bold text-white shadow-lg">
+                          🌐 All Languages <span className="text-white/70 font-normal text-xs">({channels.length})</span>
+                        </span>
+                      )}
+                      {selectedLang && selectedLang !== "all" && !LANGUAGES[selectedLang] && (
+                        <span className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-gray-500 to-gray-600 px-4 py-2 text-sm font-bold text-white shadow-lg">
+                          🗣️ {selectedLang} <span className="text-white/70 font-normal text-xs">({langChannels.length})</span>
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex-1 max-w-sm">
+                      <SearchBar
+                        searchRef={searchRef} search={search} setSearch={setSearch}
+                        searchFocused={searchFocused} setSearchFocused={setSearchFocused}
+                        searchResults={searchResults}
+                        onSelect={(ch) => { playChannel(ch); setSearch(""); }}
+                        compact
+                      />
+                    </div>
+                  </div>
+                </section>
+
+                {/* Category filter chips */}
+                <section className="container mb-6">
+                  <div className="mb-3 flex items-center justify-between">
+                    <h2 className="text-xs font-semibold uppercase tracking-widest text-primary flex items-center gap-2">
+                      <Filter className="h-3.5 w-3.5" /> Categories
+                    </h2>
+                    <div className="flex items-center gap-2">
+                      {failedIds.size > 0 && (
+                        <button onClick={() => setFailedIds(new Set())} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+                          <RotateCcw className="h-3 w-3" /> Reset {failedIds.size} offline
+                        </button>
+                      )}
+                      <div className="flex gap-1">
+                        <button onClick={() => setViewMode("grid")} className={`rounded-lg p-1.5 ${viewMode === "grid" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
+                          <Grid3X3 className="h-4 w-4" />
+                        </button>
+                        <button onClick={() => setViewMode("list")} className={`rounded-lg p-1.5 ${viewMode === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
+                          <List className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button onClick={() => setActiveCat(ALL_CAT)}
+                      className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs sm:text-sm font-medium transition-all ${activeCat === ALL_CAT ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25" : "glass border border-border/40 text-muted-foreground hover:text-foreground"}`}>
+                      <Globe className="h-3.5 w-3.5" /> All <span className="text-[10px] opacity-60">({catCounts[ALL_CAT] || 0})</span>
+                    </button>
+                    <button onClick={() => setActiveCat(FAV_CAT)}
+                      className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs sm:text-sm font-medium transition-all ${activeCat === FAV_CAT ? "bg-yellow-500 text-black shadow-lg" : "glass border border-border/40 text-muted-foreground hover:text-foreground"}`}>
+                      <Star className="h-3.5 w-3.5" /> Favs <span className="text-[10px] opacity-60">({catCounts[FAV_CAT] || 0})</span>
+                    </button>
+                    {CAT_ORDER.map((key) => {
+                      const count = catCounts[key] || 0;
+                      if (count === 0) return null;
+                      const { label, icon: Icon, gradient } = CAT_META[key];
+                      return (
+                        <button key={key} onClick={() => setActiveCat(key)}
+                          className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs sm:text-sm font-medium transition-all ${activeCat === key ? `bg-gradient-to-r ${gradient} text-white shadow-lg` : "glass border border-border/40 text-muted-foreground hover:text-foreground"}`}>
+                          <Icon className="h-3.5 w-3.5" /> {label} <span className="text-[10px] opacity-60">({count})</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </section>
+
+                {/* Channel display */}
+                <section className="container pb-24">
+                  {filtered.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-24 gap-4">
+                      <Tv className="h-12 w-12 text-muted-foreground" />
+                      <p className="font-medium text-foreground">No channels found</p>
+                      <button onClick={() => { setSearch(""); setActiveCat(ALL_CAT); }}
+                        className="rounded-xl border border-border px-5 py-2.5 text-sm text-foreground hover:bg-secondary">Clear Filters</button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="mb-4 flex items-center gap-3 text-sm text-muted-foreground">
+                        <span>Showing <span className="font-semibold text-foreground">{filtered.length}</span> channels</span>
+                        {failedIds.size > 0 && <span className="text-yellow-500">({failedIds.size} offline)</span>}
+                      </div>
+
+                      {/* CATEGORY-GROUPED VIEW (when ALL category selected) */}
+                      {categoryGroups && viewMode === "grid" ? (
+                        <div className="space-y-10">
+                          {categoryGroups.map(({ key, channels: catChannels }) => {
+                            const meta = CAT_META[key];
+                            const Icon = meta?.icon || Globe;
+                            return (
+                              <div key={key}>
+                                {/* Category section header */}
+                                <div className="mb-4 flex items-center gap-3">
+                                  <div className={`flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br ${meta?.gradient || "from-gray-500 to-gray-600"} shadow-md`}>
+                                    <Icon className="h-4.5 w-4.5 text-white" />
+                                  </div>
+                                  <div>
+                                    <h3 className="text-base sm:text-lg font-bold text-foreground">{meta?.label || key}</h3>
+                                    <p className="text-xs text-muted-foreground">{catChannels.length} channels</p>
+                                  </div>
+                                </div>
+                                {/* Channel grid */}
+                                <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8">
+                                  {catChannels.map((ch) => (
+                                    <ChannelCard
+                                      key={ch.id} ch={ch}
+                                      isPlaying={playing?.id === ch.id}
+                                      isFav={favorites.has(ch.id)}
+                                      isDead={failedIds.has(ch.id)}
+                                      showLang={showAllLangs}
+                                      onPlay={() => playChannel(ch)}
+                                      onToggleFav={() => toggleFav(ch.id)}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : viewMode === "grid" ? (
+                        /* Flat grid when specific category selected */
+                        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8">
+                          {filtered.map((ch) => (
+                            <ChannelCard
+                              key={ch.id} ch={ch}
+                              isPlaying={playing?.id === ch.id}
+                              isFav={favorites.has(ch.id)}
+                              isDead={failedIds.has(ch.id)}
+                              showLang={showAllLangs}
+                              onPlay={() => playChannel(ch)}
+                              onToggleFav={() => toggleFav(ch.id)}
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        /* List view */
+                        <div className="space-y-1.5">
+                          {filtered.map((ch) => {
+                            const isP = playing?.id === ch.id;
+                            const isF = favorites.has(ch.id);
+                            const isDead = failedIds.has(ch.id);
+                            return (
+                              <div key={ch.id} onClick={() => playChannel(ch)}
+                                className={`flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 transition-all hover:bg-card ${
+                                  isP ? "border-primary/50 bg-primary/5" : isDead ? "border-red-500/20 opacity-40" : "border-border/30 glass"
+                                }`}>
+                                <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white/5 p-0.5">
+                                  {ch.logo ? <img src={ch.logo} alt="" loading="lazy" className="h-full w-full object-contain"
+                                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} /> : <Tv className="h-4 w-4 text-muted-foreground" />}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="truncate text-sm font-medium text-foreground">{ch.name}</p>
+                                  <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                                    <span>{ch.categoryLabel}</span>
+                                    {showAllLangs && <span className="text-primary">{ch.languages[0]}</span>}
+                                    <span className="text-green-400">{ch.streams.length} URLs</span>
+                                    {isDead && <span className="text-red-400">offline</span>}
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <button onClick={(e) => { e.stopPropagation(); toggleFav(ch.id); }}
+                                    className={isF ? "text-yellow-400" : "text-muted-foreground/20 hover:text-muted-foreground"}>
+                                    <Star className="h-4 w-4" fill={isF ? "currentColor" : "none"} />
+                                  </button>
+                                  {isP ? (
+                                    <span className="flex items-center gap-1 rounded-full bg-primary/20 px-2 py-0.5 text-[10px] font-bold text-primary">
+                                      <Radio className="h-3 w-3 animate-pulse" /> LIVE
+                                    </span>
+                                  ) : <Play className="h-4 w-4 text-muted-foreground" />}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </section>
+              </>
+            )}
+          </>
+        )}
       </div>
     </Layout>
+  );
+};
+
+/* ═══════════════════ SEARCH BAR COMPONENT ═══════════════════ */
+const SearchBar = ({
+  searchRef, search, setSearch, searchFocused, setSearchFocused,
+  searchResults, onSelect, compact,
+}: {
+  searchRef: React.RefObject<HTMLInputElement | null>;
+  search: string;
+  setSearch: (s: string) => void;
+  searchFocused: boolean;
+  setSearchFocused: (f: boolean) => void;
+  searchResults: Channel[];
+  onSelect: (ch: Channel) => void;
+  compact?: boolean;
+}) => {
+  const [selectedIdx, setSelectedIdx] = useState(-1);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  // Reset selection when results change
+  useEffect(() => { setSelectedIdx(-1); }, [searchResults]);
+
+  // Keyboard navigation
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!searchResults.length) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setSelectedIdx(prev => Math.min(prev + 1, searchResults.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setSelectedIdx(prev => Math.max(prev - 1, -1));
+    } else if (e.key === "Enter" && selectedIdx >= 0) {
+      e.preventDefault();
+      onSelect(searchResults[selectedIdx]);
+    }
+  };
+
+  // Scroll selected item into view
+  useEffect(() => {
+    if (selectedIdx >= 0 && listRef.current) {
+      const items = listRef.current.querySelectorAll("[data-search-item]");
+      items[selectedIdx]?.scrollIntoView({ block: "nearest" });
+    }
+  }, [selectedIdx]);
+
+  // Highlight matching text
+  const highlightMatch = (text: string, query: string) => {
+    if (!query.trim()) return text;
+    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
+    const parts = text.split(regex);
+    return parts.map((part, i) =>
+      regex.test(part)
+        ? <span key={i} className="text-primary font-bold bg-primary/10 rounded px-0.5">{part}</span>
+        : part
+    );
+  };
+
+  const showDropdown = searchFocused && search.trim().length > 0;
+
+  return (
+    <div className={`relative ${compact ? "" : "mx-auto max-w-xl"}`}>
+      <div className={`flex items-center gap-3 rounded-2xl border bg-card/80 backdrop-blur-xl transition-all ${compact ? "px-3 py-2" : "px-5 py-3.5"} ${searchFocused ? "border-primary/50 shadow-lg shadow-primary/10" : "border-border/60"}`}>
+        <Search className={`${compact ? "h-4 w-4" : "h-5 w-5"} shrink-0 transition-colors ${searchFocused ? "text-primary" : "text-muted-foreground"}`} />
+        <input ref={searchRef} type="text"
+          placeholder={compact ? "Search channels..." : 'Search any channel... (Press "/" to focus)'}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          onFocus={() => setSearchFocused(true)}
+          onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
+          onKeyDown={handleKeyDown}
+          className={`flex-1 bg-transparent ${compact ? "text-xs" : "text-sm"} text-foreground outline-none placeholder:text-muted-foreground/60`}
+        />
+        {search && (
+          <button onClick={() => setSearch("")} className="rounded-lg p-1 text-muted-foreground hover:text-foreground">
+            <X className="h-4 w-4" />
+          </button>
+        )}
+        {!compact && <kbd className="hidden sm:block rounded-md border border-border/60 bg-secondary/50 px-2 py-0.5 text-[10px] text-muted-foreground">/</kbd>}
+      </div>
+      <AnimatePresence>
+        {showDropdown && (
+          <motion.div ref={listRef} initial={{ opacity: 0, y: -8, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: 0.98 }}
+            transition={{ duration: 0.15 }}
+            className="absolute left-0 right-0 top-full z-50 mt-2 max-h-[400px] overflow-y-auto rounded-2xl border border-border/60 bg-card/95 shadow-2xl backdrop-blur-xl scrollbar-thin">
+            {searchResults.length > 0 ? (
+              <>
+                <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-xl px-4 py-2 text-[10px] uppercase tracking-widest text-muted-foreground border-b border-border/30">
+                  {searchResults.length} results for "{search}" &middot; <span className="text-primary">↑↓</span> navigate &middot; <span className="text-primary">Enter</span> select
+                </div>
+                {searchResults.map((ch, idx) => (
+                  <button key={ch.id} data-search-item onMouseDown={(e) => { e.preventDefault(); onSelect(ch); }}
+                    onMouseEnter={() => setSelectedIdx(idx)}
+                    className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors ${idx === selectedIdx ? "bg-primary/10" : "hover:bg-primary/5"}`}>
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white/5 border border-border/20">
+                      {ch.logo ? <img src={ch.logo} alt="" className="h-full w-full object-contain p-1" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} /> : <Tv className="h-4 w-4 text-muted-foreground" />}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-foreground">{highlightMatch(ch.name, search)}</p>
+                      <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-0.5">
+                        <span className="rounded-full bg-secondary/80 px-1.5 py-0.5 text-[9px]">{ch.categoryLabel}</span>
+                        <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] text-primary">{ch.languages[0]}</span>
+                        <span className="text-green-400 text-[9px]">{ch.streams.length} streams</span>
+                      </div>
+                    </div>
+                    <Play className={`h-4 w-4 shrink-0 ${idx === selectedIdx ? "text-primary" : "text-muted-foreground/40"}`} />
+                  </button>
+                ))}
+              </>
+            ) : (
+              <div className="px-4 py-8 text-center">
+                <Search className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
+                <p className="text-sm text-muted-foreground">No channels found for "{search}"</p>
+                <p className="text-xs text-muted-foreground/60 mt-1">Try a different search term</p>
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 };
 

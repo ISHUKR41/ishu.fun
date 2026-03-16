@@ -6,6 +6,7 @@
   <url><loc>https://ishu.fun/tools/youtube-downloader</loc><changefreq>weekly</changefreq><priority>0.95</priority></url>
   <url><loc>https://ishu.fun/tools/terabox-downloader</loc><changefreq>weekly</changefreq><priority>0.95</priority></url>
   <url><loc>https://ishu.fun/tools/universal-video-downloader</loc><changefreq>weekly</changefreq><priority>0.95</priority></url>
+  <url><loc>https://ishu.fun/tv</loc><changefreq>daily</changefreq><priority>0.95</priority></url>
   <url><loc>https://ishu.fun/tools/merge-pdf</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://ishu.fun/tools/compress-pdf</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://ishu.fun/tools/pdf-to-word</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
