@@ -1089,7 +1089,7 @@ const TVPage = () => {
 
         {/* ═══ STATS ═══ */}
         {!fetchLoading && channels.length > 0 && (
-          <section ref={statsRef} className="container -mt-8 mb-10 relative z-10">
+          <section ref={statsRef} className="container -mt-8 mb-10 relative z-[1]">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {[
                 { icon: Tv, label: "Total Channels", value: channels.length, gradient: "from-blue-500 to-cyan-500" },
@@ -1144,7 +1144,7 @@ const TVPage = () => {
           <>
             {/* ═══ LANGUAGE SELECTION SCREEN ═══ */}
             {!selectedLang && !playing && (
-              <section className="container mb-12">
+              <section className="container mb-12 relative z-[5]">
                 <FadeInView>
                   <div className="text-center mb-8">
                     <h2 className="font-display text-2xl font-bold text-foreground sm:text-3xl">

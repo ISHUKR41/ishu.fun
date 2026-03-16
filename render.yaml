@@ -1,0 +1,17 @@
+# render.yaml — Render deployment config for ISHU Backend
+services:
+  - type: web
+    name: ishu-backend
+    runtime: node
+    region: singapore
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: FRONTEND_URL
+        value: https://ishu.fun

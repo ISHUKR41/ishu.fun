@@ -9,7 +9,7 @@ import FadeInView from "@/components/animations/FadeInView";
 import GradientMesh from "@/components/animations/GradientMesh";
 import MorphingBlob from "@/components/animations/MorphingBlob";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ArrowLeft, Search, Loader2, Download, Play, Eye,
   User, Youtube, Clipboard, AlertCircle, CheckCircle,
@@ -51,6 +51,14 @@ const YouTubeDownloaderPage = () => {
   const [downloading, setDownloading] = useState(false);
   const [downloadReady, setDownloadReady] = useState<{url: string; filename: string; filesize?: string} | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [backendReady, setBackendReady] = useState(false);
+
+  // Pre-warm the backend on page load (Render free tier sleeps after inactivity)
+  useEffect(() => {
+    fetch(`${API_URL}/api/health`, { method: "GET" })
+      .then(r => { if (r.ok) setBackendReady(true); })
+      .catch(() => {});
+  }, []);
 
   const handlePaste = async () => {
     try {
@@ -59,18 +67,18 @@ const YouTubeDownloaderPage = () => {
     } catch { /* clipboard not available */ }
   };
 
-  const fetchWithRetry = async (fetchUrl: string, options: RequestInit, retries = 1): Promise<Response> => {
+  const fetchWithRetry = async (fetchUrl: string, options: RequestInit, retries = 2): Promise<Response> => {
     for (let i = 0; i <= retries; i++) {
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 60000);
+        const timeoutId = setTimeout(() => controller.abort(), 90000);
         const res = await fetch(fetchUrl, { ...options, signal: controller.signal });
         clearTimeout(timeoutId);
         return res;
       } catch (err: any) {
         if (i < retries && err?.name !== "AbortError") {
-          console.log(`Retry ${i + 1}...`);
-          await new Promise(r => setTimeout(r, 2000));
+          console.log(`Retry ${i + 1}/${retries}...`);
+          await new Promise(r => setTimeout(r, 3000));
           continue;
         }
         throw err;
@@ -101,9 +109,9 @@ const YouTubeDownloaderPage = () => {
       setFormats(data.formats || []);
     } catch (err: any) {
       if (err?.name === "AbortError") {
-        setError("Request timed out. The server might be waking up — please try again in a few seconds.");
+        setError("Request timed out. The server might be starting up — please wait 30 seconds and try again.");
       } else {
-        setError("Network error. Please check if the backend server is running and try again.");
+        setError("Could not connect to the server. The backend may be waking up (free tier takes ~30s). Please try again in a moment.");
       }
     } finally {
       setLoading(false);
