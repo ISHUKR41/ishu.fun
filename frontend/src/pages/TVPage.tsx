@@ -203,6 +203,8 @@ const CORS_PROXIES = [
   (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
   (url: string) => `https://cors-proxy.fringe.zone/${url}`,
   (url: string) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+  (url: string) => `https://corsproxy.org/?url=${encodeURIComponent(url)}`,
+  (url: string) => `https://proxy.cors.sh/${url}`,
 ];
 
 /* ═══════════════════ STREAM RELIABILITY SCORING ═══════════════════ */
@@ -323,6 +325,27 @@ async function fetchAllChannels(
     { url: "https://iptv-org.github.io/iptv/subdivisions/in-as.m3u", lang: "Assamese" },
     // English language (for English news/docs in India)
     { url: "https://iptv-org.github.io/iptv/languages/eng.m3u", lang: "English" },
+    // Free-TV IPTV (additional sources for India)
+    { url: "https://raw.githubusercontent.com/Free-TV/IPTV/master/playlists/playlist_india.m3u8", lang: "Hindi" },
+    // Additional subdivision feeds
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-ts.m3u", lang: "Telugu" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-rj.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-up.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-br.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-jh.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-mp.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-ct.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-hr.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-ga.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-hp.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-uk.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-mn.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-tr.m3u", lang: "Bengali" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-sk.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-nl.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-mz.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-ar.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-ml.m3u", lang: "Hindi" },
   ];
 
   const m3uResults = await Promise.allSettled(

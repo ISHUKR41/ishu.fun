@@ -13,6 +13,7 @@
  * - Responsive premium UI
  */
 import Layout from "@/components/layout/Layout";
+import BackendStatusBar from "@/components/tools/BackendStatusBar";
 import FadeInView from "@/components/animations/FadeInView";
 import GradientMesh from "@/components/animations/GradientMesh";
 import MorphingBlob from "@/components/animations/MorphingBlob";
@@ -68,10 +69,7 @@ const UniversalVideoDownloaderPage = () => {
   const [result, setResult] = useState<DownloadResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Pre-warm the backend on page load (Render free tier sleeps after inactivity)
-  useEffect(() => {
-    fetch(`${API_URL}/api/health`, { method: "GET" }).catch(() => {});
-  }, []);
+  const [backendReady, setBackendReady] = useState(false);
 
   const handlePaste = async () => {
     try { const text = await navigator.clipboard.readText(); setUrl(text); } catch {}
@@ -199,6 +197,9 @@ const UniversalVideoDownloaderPage = () => {
       <section className="py-12">
         <div className="container">
           <div className="mx-auto max-w-3xl">
+            {/* Backend Status */}
+            <BackendStatusBar onReady={() => setBackendReady(true)} compact />
+
             {/* URL Input + Options */}
             <FadeInView>
               <div className="rounded-2xl border border-border glass-strong p-6 md:p-8">

@@ -184,11 +184,12 @@ app.get('/api/stream-proxy', streamLimiter, (req, res) => {
     doProxy(targetUrl);
 });
 
-// Rate limiting — 100 requests per 15 minutes per IP
+// Rate limiting — 500 requests per 15 minutes per IP (increased for TV streaming)
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 100,
+    max: 500,
     message: { success: false, error: 'Too many requests, please try again later.' },
+    skip: (req) => req.path === '/api/stream-proxy' || req.path === '/api/wake',
 });
 app.use('/api/', limiter);
 
@@ -205,6 +206,7 @@ app.get('/api/health', (_req, res) => {
         success: true,
         status: 'ok',
         timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
         toolGroups: {
             organize: 9,
             edit: 11,
@@ -214,6 +216,11 @@ app.get('/api/health', (_req, res) => {
             total: 116,
         },
     });
+});
+
+// Lightweight wake endpoint (frontend pings this on load)
+app.get('/api/wake', (_req, res) => {
+    res.json({ ok: true, ts: Date.now() });
 });
 
 // Mount all tool route groups under /api/tools
@@ -252,6 +259,25 @@ const startServer = async () => {
 
         // Start automatic temp file cleanup scheduler
         startCleanupSchedule();
+
+        // ── Self-ping keep-alive (prevents Render free tier from sleeping) ──
+        const SELF_URL = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
+        setInterval(async () => {
+            try {
+                const https = require('https');
+                const http = require('http');
+                const client = SELF_URL.startsWith('https') ? https : http;
+                client.get(`${SELF_URL}/api/wake`, (res) => {
+                    res.resume();
+                    console.log(`[Keep-Alive] ✅ Pinged ${SELF_URL}/api/wake at ${new Date().toISOString()}`);
+                }).on('error', (e) => {
+                    console.log(`[Keep-Alive] ⚠️ Ping failed: ${e.message}`);
+                });
+            } catch (e) {
+                console.log(`[Keep-Alive] ⚠️ Error: ${e.message}`);
+            }
+        }, 13 * 60 * 1000); // Every 13 minutes (Render sleeps after 15 min)
+        console.log(`🔄 Keep-Alive: Self-ping every 13 minutes to prevent sleep`);
     });
 };
 

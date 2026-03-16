@@ -194,6 +194,9 @@ async function tryCobaltDownload(url, options = {}) {
     'https://cobalt.canine.tools',
     'https://co.eepy.today',
     'https://cobalt.api.timelessnesses.me',
+    'https://api.savetofiles.com',
+    'https://cobalt.imput.net',
+    'https://cobalt-api.hyper.lol',
   ];
 
   const body = {
