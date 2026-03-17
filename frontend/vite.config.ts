@@ -41,8 +41,8 @@ export default defineConfig(({ mode }) => ({
           }
           // Particles
           if (id.includes("node_modules/@tsparticles/")) return "vendor-particles";
-          // Auth
-          if (id.includes("node_modules/@clerk/")) return "vendor-clerk";
+          // Auth — don't split Clerk into its own chunk (causes React useState crash)
+          // Clerk must stay in the main bundle to ensure React is available
           // UI components
           if (id.includes("node_modules/@radix-ui/")) return "vendor-radix";
           // PDF/document tools — very large, only needed on tool pages
