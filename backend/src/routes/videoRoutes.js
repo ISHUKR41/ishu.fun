@@ -189,7 +189,7 @@ function sanitizeFilename(name) {
 async function tryCobaltDownload(url, options = {}) {
   // Working Cobalt instances — community-maintained, shuffled for load balancing
   const ALL_INSTANCES = [
-    'https://api.cobalt.tools',
+    'https://api.cobalt.tools',         // Official Cobalt API — most reliable
     'https://cobalt.canine.tools',
     'https://co.eepy.today',
     'https://cobalt-api.ayo.tf',
@@ -204,7 +204,9 @@ async function tryCobaltDownload(url, options = {}) {
     'https://cobalt.siri.sh',
     'https://cobalt.rainn.dev',
   ];
-  const COBALT_INSTANCES = ALL_INSTANCES.sort(() => Math.random() - 0.5);
+  // Keep official instance first, shuffle the rest for load balancing
+  const [first, ...rest] = ALL_INSTANCES;
+  const COBALT_INSTANCES = [first, ...rest.sort(() => Math.random() - 0.5)];
 
   const body = {
     url,
@@ -359,8 +361,8 @@ async function downloadWithYtDlp(url, quality, outputPath, options = {}) {
     const subprocess = ytDlp.exec(args);
     const timeout = setTimeout(() => {
       try { subprocess.kill(); } catch {}
-      reject(new Error('Download timed out after 2 minutes'));
-    }, 120000);
+      reject(new Error('Download timed out after 5 minutes'));
+    }, 300000);
 
     subprocess.on('close', () => {
       clearTimeout(timeout);
@@ -1197,7 +1199,7 @@ router.post('/video-download', async (req, res) => {
             filesize: formatBytes(stat.size),
             platform,
           };
-          cache.set(cacheKey, response);
+          // Do not cache server-side streaming responses (temp files are deleted after 15 min)
           return res.json(response);
         }
       } catch (e) {
@@ -1248,7 +1250,7 @@ router.post('/video-download', async (req, res) => {
           filename: streamFilename,
           platform,
         };
-        cache.set(cacheKey, response);
+        // Do not cache server-side streaming responses (temp files are deleted after 15 min)
         return res.json(response);
       } catch (e) {
         console.error('[Video Download] ytdl-core error:', e.message);

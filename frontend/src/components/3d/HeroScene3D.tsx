@@ -1,16 +1,21 @@
 /**
  * HeroScene3D.tsx - 3D Scene for Home Page Hero
- * 
- * Renders animated 3D shapes (icosahedron, torus, spheres, particles) 
- * as a background decoration for the home page hero section.
- * Uses @react-three/fiber and @react-three/drei for 3D rendering.
+ *
+ * Renders animated 3D shapes as a background decoration for the hero section.
+ * Performance: Uses frameloop="demand" + IntersectionObserver to pause when offscreen.
+ * All sub-components wrapped in React.memo to prevent unnecessary re-renders.
  */
-import { useRef, useMemo } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { useRef, useMemo, Suspense, memo, useState, useEffect } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Float, MeshDistortMaterial, MeshWobbleMaterial, Sphere, Torus, Icosahedron, Octahedron, Box } from "@react-three/drei";
 import * as THREE from "three";
 
-function FloatingIcosahedron() {
+function useKeepAlive() {
+  const { invalidate } = useThree();
+  useFrame(() => invalidate());
+}
+
+const FloatingIcosahedron = memo(function FloatingIcosahedron() {
   const ref = useRef<THREE.Mesh>(null);
   useFrame((state) => {
     if (!ref.current) return;
@@ -20,20 +25,13 @@ function FloatingIcosahedron() {
   return (
     <Float speed={2} rotationIntensity={0.4} floatIntensity={1.5}>
       <Icosahedron ref={ref} args={[1.2, 1]} position={[2.5, 0.5, 0]}>
-        <MeshDistortMaterial
-          color="#3b82f6"
-          wireframe
-          distort={0.3}
-          speed={2}
-          transparent
-          opacity={0.4}
-        />
+        <MeshDistortMaterial color="#3b82f6" wireframe distort={0.3} speed={2} transparent opacity={0.4} />
       </Icosahedron>
     </Float>
   );
-}
+});
 
-function FloatingTorus() {
+const FloatingTorus = memo(function FloatingTorus() {
   const ref = useRef<THREE.Mesh>(null);
   useFrame((state) => {
     if (!ref.current) return;
@@ -43,20 +41,13 @@ function FloatingTorus() {
   return (
     <Float speed={1.5} rotationIntensity={0.6} floatIntensity={1}>
       <Torus ref={ref} args={[0.8, 0.25, 16, 32]} position={[-2.8, -0.5, -1]}>
-        <MeshWobbleMaterial
-          color="#8b5cf6"
-          wireframe
-          factor={0.4}
-          speed={1.5}
-          transparent
-          opacity={0.35}
-        />
+        <MeshWobbleMaterial color="#8b5cf6" wireframe factor={0.4} speed={1.5} transparent opacity={0.35} />
       </Torus>
     </Float>
   );
-}
+});
 
-function FloatingOctahedron() {
+const FloatingOctahedron = memo(function FloatingOctahedron() {
   const ref = useRef<THREE.Mesh>(null);
   useFrame((state) => {
     if (!ref.current) return;
@@ -66,20 +57,13 @@ function FloatingOctahedron() {
   return (
     <Float speed={2.5} rotationIntensity={0.5} floatIntensity={2}>
       <Octahedron ref={ref} args={[0.7]} position={[-1.5, 1.5, -0.5]}>
-        <MeshDistortMaterial
-          color="#06b6d4"
-          wireframe
-          distort={0.2}
-          speed={3}
-          transparent
-          opacity={0.3}
-        />
+        <MeshDistortMaterial color="#06b6d4" wireframe distort={0.2} speed={3} transparent opacity={0.3} />
       </Octahedron>
     </Float>
   );
-}
+});
 
-function GlowingSphere() {
+const GlowingSphere = memo(function GlowingSphere() {
   const ref = useRef<THREE.Mesh>(null);
   useFrame((state) => {
     if (!ref.current) return;
@@ -88,19 +72,13 @@ function GlowingSphere() {
   return (
     <Float speed={1} rotationIntensity={0.2} floatIntensity={0.8}>
       <Sphere ref={ref} args={[0.5, 32, 32]} position={[1.5, -1.5, 0.5]}>
-        <MeshDistortMaterial
-          color="#3b82f6"
-          distort={0.5}
-          speed={2}
-          transparent
-          opacity={0.2}
-        />
+        <MeshDistortMaterial color="#3b82f6" distort={0.5} speed={2} transparent opacity={0.2} />
       </Sphere>
     </Float>
   );
-}
+});
 
-function ParticleCloud() {
+const ParticleCloud = memo(function ParticleCloud() {
   const count = 200;
   const ref = useRef<THREE.Points>(null);
 
@@ -123,23 +101,14 @@ function ParticleCloud() {
   return (
     <points ref={ref}>
       <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          args={[positions, 3]}
-        />
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
-      <pointsMaterial
-        size={0.02}
-        color="#3b82f6"
-        transparent
-        opacity={0.6}
-        sizeAttenuation
-      />
+      <pointsMaterial size={0.02} color="#3b82f6" transparent opacity={0.6} sizeAttenuation />
     </points>
   );
-}
+});
 
-function FloatingBox() {
+const FloatingBox = memo(function FloatingBox() {
   const ref = useRef<THREE.Mesh>(null);
   useFrame((state) => {
     if (!ref.current) return;
@@ -149,43 +118,62 @@ function FloatingBox() {
   return (
     <Float speed={1.8} rotationIntensity={0.3} floatIntensity={1.2}>
       <Box ref={ref} args={[0.6, 0.6, 0.6]} position={[3, -1, -1]}>
-        <MeshWobbleMaterial
-          color="#10b981"
-          wireframe
-          factor={0.3}
-          speed={1}
-          transparent
-          opacity={0.25}
-        />
+        <MeshWobbleMaterial color="#10b981" wireframe factor={0.3} speed={1} transparent opacity={0.25} />
       </Box>
     </Float>
+  );
+});
+
+function SceneContent() {
+  useKeepAlive();
+  return (
+    <>
+      <ambientLight intensity={0.5} />
+      <directionalLight position={[5, 5, 5]} intensity={0.3} />
+      <pointLight position={[-3, 2, 2]} intensity={0.4} color="#3b82f6" />
+      <pointLight position={[3, -2, -2]} intensity={0.3} color="#8b5cf6" />
+      <FloatingIcosahedron />
+      <FloatingTorus />
+      <FloatingOctahedron />
+      <GlowingSphere />
+      <FloatingBox />
+      <ParticleCloud />
+    </>
   );
 }
 
 const HeroScene3D = () => {
-  return (
-    <div className="pointer-events-none absolute inset-0 z-[1]">
-      <Canvas
-        camera={{ position: [0, 0, 5], fov: 60 }}
-        dpr={[1, 1.5]}
-        gl={{ antialias: true, alpha: true }}
-        style={{ background: "transparent" }}
-      >
-        <ambientLight intensity={0.5} />
-        <directionalLight position={[5, 5, 5]} intensity={0.3} />
-        <pointLight position={[-3, 2, 2]} intensity={0.4} color="#3b82f6" />
-        <pointLight position={[3, -2, -2]} intensity={0.3} color="#8b5cf6" />
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(true);
 
-        <FloatingIcosahedron />
-        <FloatingTorus />
-        <FloatingOctahedron />
-        <GlowingSphere />
-        <FloatingBox />
-        <ParticleCloud />
-      </Canvas>
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsVisible(entry.isIntersecting),
+      { threshold: 0 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={containerRef} className="pointer-events-none absolute inset-0 z-[1]">
+      {isVisible && (
+        <Canvas
+          camera={{ position: [0, 0, 5], fov: 60 }}
+          frameloop="demand"
+          dpr={[1, 1.5]}
+          gl={{ antialias: false, alpha: true, powerPreference: "high-performance" }}
+          style={{ background: "transparent" }}
+        >
+          <Suspense fallback={null}>
+            <SceneContent />
+          </Suspense>
+        </Canvas>
+      )}
     </div>
   );
 };
 
-// Export the component
 export default HeroScene3D;

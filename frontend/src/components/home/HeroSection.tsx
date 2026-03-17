@@ -50,6 +50,8 @@ const HeroSection = () => {
   const statsBarRef = useRef<HTMLDivElement>(null);
   const featuresRef = useRef<HTMLDivElement>(null);
   const [particlesReady, setParticlesReady] = useState(false);
+  const prefersReducedMotion = useMemo(() =>
+    typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches, []);
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -83,7 +85,7 @@ const HeroSection = () => {
         { y: 0, opacity: 1, scale: 1, duration: 0.5, stagger: 0.1, delay: 1.8, ease: "power3.out", clearProps: "all" }
         );
       }
-    });
+    }, containerRef);
     return () => ctx.revert();
   }, []);
 
@@ -93,7 +95,7 @@ const HeroSection = () => {
     fullScreen: false,
     fpsLimit: 60,
     particles: {
-      number: { value: 60, density: { enable: true } },
+      number: { value: 30, density: { enable: true } },
       color: { value: ["#3b82f6", "#8b5cf6", "#06b6d4"] },
       shape: { type: "circle" },
       opacity: { value: { min: 0.1, max: 0.4 }, animation: { enable: true, speed: 0.8, sync: false } },
@@ -120,31 +122,21 @@ const HeroSection = () => {
       <div className="pointer-events-none absolute inset-0 scanlines opacity-30" />
 
       {/* tsParticles */}
-      {particlesReady &&
+      {particlesReady && !prefersReducedMotion &&
       <Particles id="hero-particles" className="pointer-events-none absolute inset-0 z-[1]" particlesLoaded={particlesLoaded} options={particlesOptions} />
       }
 
       <Suspense fallback={null}><HeroScene3D /></Suspense>
 
-      {/* Aurora gradient orbs - Enhanced */}
-      <motion.div animate={{ x: [0, 100, 0], y: [0, -80, 0], scale: [1, 1.4, 1] }} transition={{ repeat: Infinity, duration: 18, ease: "easeInOut" }}
-      className="pointer-events-none absolute left-1/4 top-1/4 h-[700px] w-[700px] rounded-full bg-primary/12 blur-[180px] morph-blob" />
-      <motion.div animate={{ x: [0, -80, 0], y: [0, 60, 0], scale: [1, 0.8, 1] }} transition={{ repeat: Infinity, duration: 14, ease: "easeInOut" }}
-      className="pointer-events-none absolute bottom-1/4 right-1/4 h-[600px] w-[600px] rounded-full bg-[hsl(260,100%,66%,0.10)] blur-[160px] morph-blob" />
-      <motion.div animate={{ x: [0, 50, 0], y: [0, -40, 0] }} transition={{ repeat: Infinity, duration: 12, ease: "easeInOut" }}
-      className="pointer-events-none absolute right-1/3 top-1/3 h-[500px] w-[500px] rounded-full bg-[hsl(170,100%,50%,0.06)] blur-[140px]" />
-      
-      {/* Additional accent orbs */}
-      <motion.div animate={{ opacity: [0.3, 0.6, 0.3], scale: [1, 1.3, 1] }} transition={{ repeat: Infinity, duration: 10, ease: "easeInOut" }}
-      className="pointer-events-none absolute left-[10%] bottom-[30%] h-[350px] w-[350px] rounded-full bg-[hsl(330,100%,60%,0.05)] blur-[120px]" />
-      <motion.div animate={{ opacity: [0.2, 0.5, 0.2] }} transition={{ repeat: Infinity, duration: 8, ease: "easeInOut" }}
-      className="pointer-events-none absolute right-[15%] top-[20%] h-[300px] w-[300px] rounded-full bg-[hsl(38,92%,50%,0.04)] blur-[100px]" />
-      
-      {/* Morphing blobs */}
-      <motion.div animate={{ scale: [1, 1.3, 1], rotate: [0, 120, 0] }} transition={{ repeat: Infinity, duration: 25, ease: "easeInOut" }}
-      className="pointer-events-none absolute left-[60%] top-[10%] h-[400px] w-[400px] morph-blob bg-primary/[0.06] blur-[100px]" />
-      <motion.div animate={{ scale: [1, 0.7, 1], rotate: [0, -80, 0] }} transition={{ repeat: Infinity, duration: 20, ease: "easeInOut" }}
-      className="pointer-events-none absolute right-[5%] bottom-[15%] h-[300px] w-[300px] morph-blob bg-[hsl(330,100%,60%,0.04)] blur-[80px]" />
+      {/* Aurora gradient orbs — reduced to 4 key ones for 60fps performance */}
+      <motion.div animate={prefersReducedMotion ? {} : { x: [0, 100, 0], y: [0, -80, 0], scale: [1, 1.4, 1] }} transition={{ repeat: Infinity, duration: 18, ease: "easeInOut" }}
+      className="pointer-events-none absolute left-1/4 top-1/4 h-[700px] w-[700px] rounded-full bg-primary/12 blur-[100px] morph-blob" style={{ willChange: "transform" }} />
+      <motion.div animate={prefersReducedMotion ? {} : { x: [0, -80, 0], y: [0, 60, 0], scale: [1, 0.8, 1] }} transition={{ repeat: Infinity, duration: 14, ease: "easeInOut" }}
+      className="pointer-events-none absolute bottom-1/4 right-1/4 h-[600px] w-[600px] rounded-full bg-[hsl(260,100%,66%,0.10)] blur-[90px] morph-blob" style={{ willChange: "transform" }} />
+      <motion.div animate={prefersReducedMotion ? {} : { x: [0, 50, 0], y: [0, -40, 0] }} transition={{ repeat: Infinity, duration: 12, ease: "easeInOut" }}
+      className="pointer-events-none absolute right-1/3 top-1/3 h-[500px] w-[500px] rounded-full bg-[hsl(170,100%,50%,0.06)] blur-[80px]" style={{ willChange: "transform" }} />
+      <motion.div animate={prefersReducedMotion ? {} : { scale: [1, 1.3, 1], rotate: [0, 120, 0] }} transition={{ repeat: Infinity, duration: 25, ease: "easeInOut" }}
+      className="pointer-events-none absolute left-[60%] top-[10%] h-[400px] w-[400px] morph-blob bg-primary/[0.06] blur-[80px]" style={{ willChange: "transform" }} />
 
       <motion.div className="container relative z-10" style={{ y: textY, opacity, scale }}>
         <div className="mx-auto max-w-4xl text-center">
@@ -209,7 +201,7 @@ const HeroSection = () => {
 
           {/* Stats bar with Tilt */}
           <div ref={statsBarRef} className="mt-16 inline-block">
-            <Tilt tiltMaxAngleX={5} tiltMaxAngleY={5} glareEnable glareMaxOpacity={0.06} glareBorderRadius="1rem" scale={1.01}>
+            <Tilt tiltMaxAngleX={prefersReducedMotion ? 0 : 5} tiltMaxAngleY={prefersReducedMotion ? 0 : 5} glareEnable={!prefersReducedMotion} glareMaxOpacity={0.06} glareBorderRadius="1rem" scale={prefersReducedMotion ? 1 : 1.01}>
               <div className="inline-flex items-center gap-6 rounded-2xl glass-strong px-8 py-5 animate-breathe border border-border">
                 {liveStats.map((stat, i) =>
                 <div key={stat.label} className={`stat-item flex items-center gap-3 text-center ${i > 0 ? "border-l border-border pl-6" : ""}`}>

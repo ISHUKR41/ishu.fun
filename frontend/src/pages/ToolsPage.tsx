@@ -39,6 +39,7 @@ gsap.registerPlugin(ScrollTrigger);
 // Lazy load 3D scene with error fallback to prevent blank screen on import failure
 const ToolsScene3D = lazy(() => import("@/components/3d/ToolsScene3D").catch(() => ({ default: () => null })));
 
+// Fuse instance is created at module level using the static allToolsData (never changes)
 const fuse = new Fuse(allToolsData, {
   keys: ["name", "desc", "category"],
   threshold: 0.35,
@@ -67,6 +68,8 @@ const ToolsPage = () => {
   const gridRef = useRef<HTMLDivElement>(null);
   const howRef = useRef<HTMLElement>(null);
   const trustRef = useRef<HTMLElement>(null);
+  // Disable tilt on touch/mobile devices for better performance
+  const isMobile = useMemo(() => typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches, []);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -90,14 +93,10 @@ const ToolsPage = () => {
       items = items.filter(t => t.category === activeCat);
     }
     if (search.trim()) {
-      const searchPool = activeCat !== "All" ? items : allToolsData;
-      const fuseInstance = new Fuse(searchPool, {
-        keys: ["name", "desc", "category"],
-        threshold: 0.35,
-        includeScore: true,
-      });
-      const results = fuseInstance.search(search.trim());
-      items = results.map(r => r.item);
+      // Use the module-level fuse for full search, then filter by category if needed
+      const results = fuse.search(search.trim());
+      const matchedItems = results.map(r => r.item);
+      items = activeCat !== "All" ? matchedItems.filter(t => t.category === activeCat) : matchedItems;
     }
     return items;
   }, [activeCat, search]);
@@ -256,7 +255,7 @@ const ToolsPage = () => {
             {popularFiltered.slice(0, 8).map((tool, i) => (
               <FadeInView key={tool.slug} delay={Math.min(i * 0.05, 0.3)}>
                 <Link to={`/tools/${tool.slug}`}>
-                  <Tilt tiltMaxAngleX={8} tiltMaxAngleY={8} glareEnable glareMaxOpacity={0.06} glareBorderRadius="1rem" scale={1.03}>
+                  <Tilt tiltMaxAngleX={isMobile ? 0 : 8} tiltMaxAngleY={isMobile ? 0 : 8} glareEnable={!isMobile} glareMaxOpacity={0.06} glareBorderRadius="1rem" scale={isMobile ? 1 : 1.03}>
                     <motion.div whileTap={{ scale: 0.97 }}
                       className="group spotlight-card relative overflow-hidden rounded-2xl border border-border glass-strong p-6 text-center transition-all hover:border-primary/20 hover:shadow-card">
                       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
@@ -345,7 +344,7 @@ const ToolsPage = () => {
 
           <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-4">
             {howItWorks.map((step, i) => (
-              <Tilt key={step.title} tiltMaxAngleX={10} tiltMaxAngleY={10} glareEnable glareMaxOpacity={0.08} glareBorderRadius="1rem" scale={1.03}>
+              <Tilt key={step.title} tiltMaxAngleX={isMobile ? 0 : 10} tiltMaxAngleY={isMobile ? 0 : 10} glareEnable={!isMobile} glareMaxOpacity={0.08} glareBorderRadius="1rem" scale={isMobile ? 1 : 1.03}>
                 <motion.div whileTap={{ scale: 0.98 }}
                   className="how-step group spotlight-card relative overflow-hidden rounded-2xl border border-border glass-strong p-8 text-center transition-all hover:border-primary/20 hover:shadow-card">
                   <div className={`absolute inset-0 bg-gradient-to-br ${step.color} opacity-0 transition-opacity group-hover:opacity-100`} />
@@ -388,7 +387,7 @@ const ToolsPage = () => {
               { value: 1000000, suffix: "+", label: "Happy Users", icon: Users },
               { value: 99, suffix: "%", label: "Accuracy Rate", icon: CheckCircle },
             ].map((s) => (
-              <Tilt key={s.label} tiltMaxAngleX={12} tiltMaxAngleY={12} glareEnable glareMaxOpacity={0.06} glareBorderRadius="1rem" scale={1.02}>
+              <Tilt key={s.label} tiltMaxAngleX={isMobile ? 0 : 12} tiltMaxAngleY={isMobile ? 0 : 12} glareEnable={!isMobile} glareMaxOpacity={0.06} glareBorderRadius="1rem" scale={isMobile ? 1 : 1.02}>
                 <div className="rounded-2xl border border-border glass-strong p-6 text-center transition-all hover:shadow-glow">
                   <s.icon size={24} className="mx-auto mb-3 text-primary" />
                   <div className="font-display text-3xl font-bold text-gradient md:text-4xl">
@@ -454,7 +453,7 @@ const ToolsPage = () => {
               { name: "Aditya Singh", role: "Bank PO Candidate", text: "Compressed my 50MB question papers to 5MB without losing quality. Amazing tool for students!", rating: 5 },
             ].map((t, i) => (
               <FadeInView key={i} delay={i * 0.1}>
-                <Tilt tiltMaxAngleX={6} tiltMaxAngleY={6} glareEnable glareMaxOpacity={0.06} glareBorderRadius="1rem" scale={1.02}>
+                <Tilt tiltMaxAngleX={isMobile ? 0 : 6} tiltMaxAngleY={isMobile ? 0 : 6} glareEnable={!isMobile} glareMaxOpacity={0.06} glareBorderRadius="1rem" scale={isMobile ? 1 : 1.02}>
                   <div className="rounded-2xl border border-border glass-strong p-6 transition-all hover:border-primary/20 hover:shadow-card">
                     <div className="flex gap-0.5 mb-3">
                       {Array.from({ length: t.rating }).map((_, j) => (

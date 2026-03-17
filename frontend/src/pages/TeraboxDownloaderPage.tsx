@@ -10,7 +10,7 @@ import FadeInView from "@/components/animations/FadeInView";
 import GradientMesh from "@/components/animations/GradientMesh";
 import MorphingBlob from "@/components/animations/MorphingBlob";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   ArrowLeft, Search, Loader2, Download, Play,
   Cloud, Clipboard, AlertCircle, CheckCircle,
@@ -41,6 +41,7 @@ const TeraboxDownloaderPage = () => {
   const [downloadReady, setDownloadReady] = useState<{url: string; filename: string} | null>(null);
 
   const [backendReady, setBackendReady] = useState(false);
+  const downloadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handlePaste = async () => {
     try { const text = await navigator.clipboard.readText(); setUrl(text); } catch {}
@@ -50,7 +51,7 @@ const TeraboxDownloaderPage = () => {
     for (let i = 0; i <= retries; i++) {
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), i === 0 ? 90000 : 120000);
+        const timeoutId = setTimeout(() => controller.abort(), i === 0 ? 120000 : Math.max(30000, 90000 - i * 30000));
         const res = await fetch(fetchUrl, { ...options, signal: controller.signal });
         clearTimeout(timeoutId);
         return res;
@@ -81,7 +82,7 @@ const TeraboxDownloaderPage = () => {
       });
 
       const data = await res.json();
-      if (!data.success) { setError(data.error || "Failed to fetch file info."); return; }
+      if (!data.success || !data.file) { setError(data.error || "Failed to fetch file info."); return; }
       setFileInfo(data.file);
     } catch (err: any) {
       if (err?.name === "AbortError") {
@@ -111,7 +112,8 @@ const TeraboxDownloaderPage = () => {
       a.click();
       document.body.removeChild(a);
       setDownloadReady({ url: fileInfo.downloadLink, filename: fileInfo.name });
-      setTimeout(() => setDownloading(false), 3000);
+      if (downloadTimerRef.current) clearTimeout(downloadTimerRef.current);
+      downloadTimerRef.current = setTimeout(() => setDownloading(false), 3000);
       return;
     }
 
@@ -419,3 +421,5 @@ const TeraboxDownloaderPage = () => {
 };
 
 export default TeraboxDownloaderPage;
+
+

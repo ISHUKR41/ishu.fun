@@ -6,7 +6,7 @@ services:
     region: singapore
     plan: free
     rootDir: backend
-    buildCommand: npm install
+    buildCommand: apt-get install -y libreoffice ghostscript && curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && chmod a+rx /usr/local/bin/yt-dlp && npm install
     startCommand: node server.js
     envVars:
       - key: NODE_ENV

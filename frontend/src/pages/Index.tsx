@@ -23,30 +23,37 @@
  * SEO: Includes WebsiteSchema and OrganizationSchema for Google
  */
 
+import { lazy, Suspense } from "react";
 import Layout from "@/components/layout/Layout";
+// Above-fold sections — loaded eagerly for fast initial paint
 import HeroSection from "@/components/home/HeroSection";
-import StatsSection from "@/components/home/StatsSection";
-import PlatformOverview from "@/components/home/PlatformOverview";
-import HowItWorksSection from "@/components/home/HowItWorksSection";
-import FeaturesSection from "@/components/home/FeaturesSection";
-import ExamCategoriesSection from "@/components/home/ExamCategoriesSection";
-import ResultsPreview from "@/components/home/ResultsPreview";
-import StatesMapSection from "@/components/home/StatesMapSection";
-import ToolsPreview from "@/components/home/ToolsPreview";
-import NewsPreview from "@/components/home/NewsPreview";
-import WhatsAppCTA from "@/components/home/WhatsAppCTA";
-import BlogPreview from "@/components/home/BlogPreview";
-import TestimonialsSection from "@/components/home/TestimonialsSection";
-import WhyChooseUs from "@/components/home/WhyChooseUs";
 import TrustedBySection from "@/components/home/TrustedBySection";
-import FAQSection from "@/components/home/FAQSection";
-import AchievementsSection from "@/components/home/AchievementsSection";
-import TechStackSection from "@/components/home/TechStackSection";
-import CallToActionSection from "@/components/home/CallToActionSection";
-import ImmersiveExperienceSection from "@/components/home/ImmersiveExperienceSection";
-import InnovationMatrixSection from "@/components/home/InnovationMatrixSection";
-import LivePulseSection from "@/components/home/LivePulseSection";
+import StatsSection from "@/components/home/StatsSection";
 import { WebsiteSchema, OrganizationSchema } from "@/components/seo/JsonLd";
+
+// Below-fold sections — lazy loaded for better performance
+const PlatformOverview = lazy(() => import("@/components/home/PlatformOverview"));
+const HowItWorksSection = lazy(() => import("@/components/home/HowItWorksSection"));
+const ImmersiveExperienceSection = lazy(() => import("@/components/home/ImmersiveExperienceSection"));
+const InnovationMatrixSection = lazy(() => import("@/components/home/InnovationMatrixSection"));
+const FeaturesSection = lazy(() => import("@/components/home/FeaturesSection"));
+const ExamCategoriesSection = lazy(() => import("@/components/home/ExamCategoriesSection"));
+const ResultsPreview = lazy(() => import("@/components/home/ResultsPreview"));
+const StatesMapSection = lazy(() => import("@/components/home/StatesMapSection"));
+const ToolsPreview = lazy(() => import("@/components/home/ToolsPreview"));
+const NewsPreview = lazy(() => import("@/components/home/NewsPreview"));
+const WhyChooseUs = lazy(() => import("@/components/home/WhyChooseUs"));
+const TechStackSection = lazy(() => import("@/components/home/TechStackSection"));
+const WhatsAppCTA = lazy(() => import("@/components/home/WhatsAppCTA"));
+const BlogPreview = lazy(() => import("@/components/home/BlogPreview"));
+const TestimonialsSection = lazy(() => import("@/components/home/TestimonialsSection"));
+const AchievementsSection = lazy(() => import("@/components/home/AchievementsSection"));
+const LivePulseSection = lazy(() => import("@/components/home/LivePulseSection"));
+const CallToActionSection = lazy(() => import("@/components/home/CallToActionSection"));
+const FAQSection = lazy(() => import("@/components/home/FAQSection"));
+
+// Minimal fallback to prevent layout shift while sections load
+const SectionFallback = () => <div style={{ minHeight: "200px" }} aria-hidden="true" />;
 
 const Index = () => {
   return (
@@ -55,29 +62,38 @@ const Index = () => {
       <WebsiteSchema />
       <OrganizationSchema />
       
-      {/* All home page sections rendered in order */}
+      {/* Above-fold sections rendered immediately */}
       <HeroSection />
       <TrustedBySection />
       <StatsSection />
-      <PlatformOverview />
-      <HowItWorksSection />
-      <ImmersiveExperienceSection />
-      <InnovationMatrixSection />
-      <FeaturesSection />
-      <ExamCategoriesSection />
-      <ResultsPreview />
-      <StatesMapSection />
-      <ToolsPreview />
-      <NewsPreview />
-      <WhyChooseUs />
-      <TechStackSection />
-      <WhatsAppCTA />
-      <BlogPreview />
-      <TestimonialsSection />
-      <AchievementsSection />
-      <LivePulseSection />
-      <CallToActionSection />
-      <FAQSection />
+
+      {/* All home page sections lazy loaded below the fold */}
+      <Suspense fallback={<SectionFallback />}>
+        <PlatformOverview />
+        <HowItWorksSection />
+        <ImmersiveExperienceSection />
+        <InnovationMatrixSection />
+        <FeaturesSection />
+        <ExamCategoriesSection />
+        <ResultsPreview />
+        <StatesMapSection />
+        <ToolsPreview />
+        <NewsPreview />
+        <WhyChooseUs />
+        <TechStackSection />
+        <WhatsAppCTA />
+        <BlogPreview />
+        <TestimonialsSection />
+        <AchievementsSection />
+        <LivePulseSection />
+        <CallToActionSection />
+        <FAQSection />
+      </Suspense>
+    </Layout>
+  );
+};
+
+export default Index;
     </Layout>
   );
 };

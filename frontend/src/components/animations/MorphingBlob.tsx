@@ -2,8 +2,12 @@
  * MorphingBlob.tsx - Animated Shape-Shifting Blob
  * 
  * A decorative background element that continuously changes shape.
- * It rotates, scales, and morphs between organic blob shapes.
+ * It rotates and scales with a static organic border-radius.
  * Highly blurred so it creates a soft ambient glow effect.
+ *
+ * Performance: Only animates GPU-accelerated transform properties
+ * (scale, rotate). The 80px blur is composited by GPU since only
+ * transform changes - no layout/repaint per frame.
  * 
  * Props:
  * - color: CSS color value (default: blue at 8% opacity)
@@ -35,12 +39,6 @@ const MorphingBlob = ({
       animate={{
         scale: [1, 1.2, 0.9, 1.1, 1],                    // Breathing effect
         rotate: [0, 90, 180, 270, 360],                    // Full rotation
-        borderRadius: [                                     // Shape morphing
-          "40% 60% 70% 30% / 40% 50% 60% 50%",
-          "60% 40% 30% 70% / 60% 30% 70% 40%",
-          "50% 60% 50% 40% / 40% 60% 50% 50%",
-          "40% 60% 70% 30% / 40% 50% 60% 50%",
-        ],
       }}
       transition={{
         repeat: Infinity,
@@ -53,6 +51,8 @@ const MorphingBlob = ({
         height: size,
         background: color,
         filter: "blur(80px)",  // Heavy blur for soft glow
+        borderRadius: "40% 60% 70% 30% / 40% 50% 60% 50%", // Static organic shape (blur hides the edges anyway)
+        willChange: "transform", // GPU-accelerated compositing - only transform changes per frame
       }}
     />
   );

@@ -17,14 +17,14 @@ import { ArrowRight, BookOpen, Building2, Train, Shield, GraduationCap, Landmark
 gsap.registerPlugin(ScrollTrigger);
 
 const categories = [
-  { name: "UPSC", exams: "IAS, IPS, IFS, CDS, NDA, CAPF", count: 120, color: "from-blue-500 to-blue-700", icon: Landmark, iconBg: "bg-blue-500/10", iconColor: "text-blue-400", applicants: "12L+" },
-  { name: "SSC", exams: "CGL, CHSL, MTS, GD, CPO", count: 95, color: "from-emerald-500 to-emerald-700", icon: Building2, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-400", applicants: "25L+" },
-  { name: "Banking", exams: "IBPS PO, SBI, RBI, Clerk, RRB", count: 80, color: "from-amber-500 to-amber-700", icon: Briefcase, iconBg: "bg-amber-500/10", iconColor: "text-amber-400", applicants: "18L+" },
-  { name: "Railways", exams: "RRB NTPC, Group D, ALP, JE", count: 70, color: "from-rose-500 to-rose-700", icon: Train, iconBg: "bg-rose-500/10", iconColor: "text-rose-400", applicants: "30L+" },
-  { name: "NTA", exams: "JEE Main, NEET UG, CUET, NET", count: 110, color: "from-violet-500 to-violet-700", icon: GraduationCap, iconBg: "bg-violet-500/10", iconColor: "text-violet-400", applicants: "40L+" },
-  { name: "Defence", exams: "Army, Navy, Air Force, Agniveer", count: 55, color: "from-cyan-500 to-cyan-700", icon: Shield, iconBg: "bg-cyan-500/10", iconColor: "text-cyan-400", applicants: "15L+" },
-  { name: "Teaching", exams: "CTET, KVS, NVS, State TET", count: 45, color: "from-pink-500 to-pink-700", icon: BookOpen, iconBg: "bg-pink-500/10", iconColor: "text-pink-400", applicants: "20L+" },
-  { name: "PSU", exams: "ONGC, BHEL, SAIL, NTPC, IOCL", count: 40, color: "from-teal-500 to-teal-700", icon: Award, iconBg: "bg-teal-500/10", iconColor: "text-teal-400", applicants: "8L+" },
+  { name: "UPSC", exams: "IAS, IPS, IFS, CDS, NDA, CAPF", count: 120, color: "from-blue-500 to-blue-700", icon: Landmark, iconBg: "bg-blue-500/10", iconColor: "text-blue-400", applicants: "12L+", hoverGrad: "from-blue-500/10 to-blue-700/5" },
+  { name: "SSC", exams: "CGL, CHSL, MTS, GD, CPO", count: 95, color: "from-emerald-500 to-emerald-700", icon: Building2, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-400", applicants: "25L+", hoverGrad: "from-emerald-500/10 to-emerald-700/5" },
+  { name: "Banking", exams: "IBPS PO, SBI, RBI, Clerk, RRB", count: 80, color: "from-amber-500 to-amber-700", icon: Briefcase, iconBg: "bg-amber-500/10", iconColor: "text-amber-400", applicants: "18L+", hoverGrad: "from-amber-500/10 to-amber-700/5" },
+  { name: "Railways", exams: "RRB NTPC, Group D, ALP, JE", count: 70, color: "from-rose-500 to-rose-700", icon: Train, iconBg: "bg-rose-500/10", iconColor: "text-rose-400", applicants: "30L+", hoverGrad: "from-rose-500/10 to-rose-700/5" },
+  { name: "NTA", exams: "JEE Main, NEET UG, CUET, NET", count: 110, color: "from-violet-500 to-violet-700", icon: GraduationCap, iconBg: "bg-violet-500/10", iconColor: "text-violet-400", applicants: "40L+", hoverGrad: "from-violet-500/10 to-violet-700/5" },
+  { name: "Defence", exams: "Army, Navy, Air Force, Agniveer", count: 55, color: "from-cyan-500 to-cyan-700", icon: Shield, iconBg: "bg-cyan-500/10", iconColor: "text-cyan-400", applicants: "15L+", hoverGrad: "from-cyan-500/10 to-cyan-700/5" },
+  { name: "Teaching", exams: "CTET, KVS, NVS, State TET", count: 45, color: "from-pink-500 to-pink-700", icon: BookOpen, iconBg: "bg-pink-500/10", iconColor: "text-pink-400", applicants: "20L+", hoverGrad: "from-pink-500/10 to-pink-700/5" },
+  { name: "PSU", exams: "ONGC, BHEL, SAIL, NTPC, IOCL", count: 40, color: "from-teal-500 to-teal-700", icon: Award, iconBg: "bg-teal-500/10", iconColor: "text-teal-400", applicants: "8L+", hoverGrad: "from-teal-500/10 to-teal-700/5" },
 ];
 
 const ExamCategoriesSection = () => {
@@ -112,7 +112,7 @@ const ExamCategoriesSection = () => {
                 className="exam-card group spotlight-card cursor-pointer overflow-hidden rounded-2xl border border-border glass-strong transition-all hover:border-primary/20 hover:shadow-card">
                 <div className={`h-1.5 bg-gradient-to-r ${cat.color}`} />
                 <div className="p-5 relative">
-                  <div className={`absolute inset-0 bg-gradient-to-br ${cat.color.split(' ')[0]}/10 ${cat.color.split(' ')[1]}/5 opacity-0 transition-opacity group-hover:opacity-100`} />
+                  <div className={`absolute inset-0 bg-gradient-to-br ${cat.hoverGrad} opacity-0 transition-opacity group-hover:opacity-100`} />
                   <div className="relative">
                     <motion.div whileHover={{ scale: 1.15, rotate: 5 }}
                       className={`mb-3 inline-flex rounded-xl ${cat.iconBg} p-2.5 ${cat.iconColor}`}>

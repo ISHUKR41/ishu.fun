@@ -4,19 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "cd frontend && npm run dev",
-    "build": "cd frontend && npm run build",
+    "dev": "cd frontend && npm install && npm run dev",
+    "build": "cd frontend && npm install && npm run build",
     "preview": "cd frontend && npm run preview",
     "lint": "cd frontend && npm run lint"
-  },
-  "dependencies": {
-    "@clerk/clerk-react": "^5.61.3",
-    "@tanstack/react-query": "^5.90.21",
-    "@vitejs/plugin-react-swc": "^4.2.3",
-    "lovable-tagger": "^1.1.13",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
-    "react-router-dom": "^7.13.1",
-    "vite": "^7.3.1"
   }
 }

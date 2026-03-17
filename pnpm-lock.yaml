@@ -7,31 +7,7 @@ settings:
 importers:
 
   .:
-    dependencies:
-      '@clerk/clerk-react':
-        specifier: ^5.61.3
-        version: 5.61.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      '@tanstack/react-query':
-        specifier: ^5.90.21
-        version: 5.90.21(react@19.2.4)
-      '@vitejs/plugin-react-swc':
-        specifier: ^4.2.3
-        version: 4.2.3(vite@7.3.1(jiti@1.21.7))
-      lovable-tagger:
-        specifier: ^1.1.13
-        version: 1.1.13(vite@7.3.1(jiti@1.21.7))
-      react:
-        specifier: ^19.2.4
-        version: 19.2.4
-      react-dom:
-        specifier: ^19.2.4
-        version: 19.2.4(react@19.2.4)
-      react-router-dom:
-        specifier: ^7.13.1
-        version: 7.13.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      vite:
-        specifier: ^7.3.1
-        version: 7.3.1(jiti@1.21.7)
+    dependencies: {}
 
 packages:
 

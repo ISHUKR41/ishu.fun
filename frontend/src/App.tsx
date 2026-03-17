@@ -23,7 +23,28 @@ import { ClerkProvider } from "@clerk/clerk-react";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { useDynamicFavicon } from "@/hooks/useDynamicFavicon";
-import { Component, ErrorInfo, ReactNode } from "react";
+import { Component, ErrorInfo, ReactNode, lazy, Suspense } from "react";
+
+// ─── Page Loading Spinner ─────────────────────────────────────────────────────
+const PageLoader = () => (
+  <div style={{
+    minHeight: "100vh",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    background: "hsl(225, 50%, 4%)",
+  }}>
+    <div style={{
+      width: 40,
+      height: 40,
+      border: "3px solid rgba(255,255,255,0.1)",
+      borderTopColor: "hsl(210 100% 56%)",
+      borderRadius: "50%",
+      animation: "spin 0.8s linear infinite",
+    }} />
+    <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+  </div>
+);
 
 // Error Boundary Component
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; error: Error | null }> {
@@ -83,49 +104,57 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
   }
 }
 
-// Page imports - each page is a separate component
-import Index from "./pages/Index";
-import ResultsPage from "./pages/ResultsPage";
-import ToolsPage from "./pages/ToolsPage";
-import ToolPage from "./pages/ToolPage";
-import NewsPage from "./pages/NewsPage";
-import BlogPage from "./pages/BlogPage";
-import ContactPage from "./pages/ContactPage";
-import TestPage from "./pages/TestPage";
-import AboutPage from "./pages/AboutPage";
-import SignInPage from "./pages/SignInPage";
-import SignUpPage from "./pages/SignUpPage";
-import AdminPanel from "./pages/AdminPanel";
-import StateResultPage from "./pages/StateResultPage";
-import NotFound from "./pages/NotFound";
-import BlogPostPage from "./pages/BlogPostPage";
-import NewsArticlePage from "./pages/NewsArticlePage";
-import PrivacyPage from "./pages/PrivacyPage";
-import TermsPage from "./pages/TermsPage";
-import DashboardPage from "./pages/DashboardPage";
-import ProfilePage from "./pages/ProfilePage";
-import SettingsPage from "./pages/SettingsPage";
-import NotificationsPage from "./pages/NotificationsPage";
-import BookmarksPage from "./pages/BookmarksPage";
-import ExamTrackerPage from "./pages/ExamTrackerPage";
-import ActivityPage from "./pages/ActivityPage";
-import ToolHistoryPage from "./pages/ToolHistoryPage";
-import YouTubeDownloaderPage from "./pages/YouTubeDownloaderPage";
-import TeraboxDownloaderPage from "./pages/TeraboxDownloaderPage";
-import UniversalVideoDownloaderPage from "./pages/UniversalVideoDownloaderPage";
-import TVPage from "./pages/TVPage";
-import CVPage from "./pages/CVPage";
-import ResumePage from "./pages/ResumePage";
-import BioDataPage from "./pages/BioDataPage";
-import DashboardLayout from "./components/dashboard/DashboardLayout";
+// Page imports - lazy loaded for performance (code splitting)
+const Index = lazy(() => import("./pages/Index"));
+const ResultsPage = lazy(() => import("./pages/ResultsPage"));
+const ToolsPage = lazy(() => import("./pages/ToolsPage"));
+const ToolPage = lazy(() => import("./pages/ToolPage"));
+const NewsPage = lazy(() => import("./pages/NewsPage"));
+const BlogPage = lazy(() => import("./pages/BlogPage"));
+const ContactPage = lazy(() => import("./pages/ContactPage"));
+const TestPage = lazy(() => import("./pages/TestPage"));
+const AboutPage = lazy(() => import("./pages/AboutPage"));
+const SignInPage = lazy(() => import("./pages/SignInPage"));
+const SignUpPage = lazy(() => import("./pages/SignUpPage"));
+const AdminPanel = lazy(() => import("./pages/AdminPanel"));
+const StateResultPage = lazy(() => import("./pages/StateResultPage"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const BlogPostPage = lazy(() => import("./pages/BlogPostPage"));
+const NewsArticlePage = lazy(() => import("./pages/NewsArticlePage"));
+const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
+const TermsPage = lazy(() => import("./pages/TermsPage"));
+const DashboardPage = lazy(() => import("./pages/DashboardPage"));
+const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
+const BookmarksPage = lazy(() => import("./pages/BookmarksPage"));
+const ExamTrackerPage = lazy(() => import("./pages/ExamTrackerPage"));
+const ActivityPage = lazy(() => import("./pages/ActivityPage"));
+const ToolHistoryPage = lazy(() => import("./pages/ToolHistoryPage"));
+const YouTubeDownloaderPage = lazy(() => import("./pages/YouTubeDownloaderPage"));
+const TeraboxDownloaderPage = lazy(() => import("./pages/TeraboxDownloaderPage"));
+const UniversalVideoDownloaderPage = lazy(() => import("./pages/UniversalVideoDownloaderPage"));
+const TVPage = lazy(() => import("./pages/TVPage"));
+const CVPage = lazy(() => import("./pages/CVPage"));
+const ResumePage = lazy(() => import("./pages/ResumePage"));
+const BioDataPage = lazy(() => import("./pages/BioDataPage"));
+const DashboardLayout = lazy(() => import("./components/dashboard/DashboardLayout"));
 
 // Clerk publishable key from environment
 const CLERK_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 console.log("[v0] CLERK_KEY present:", !!CLERK_KEY);
 
-// Create a React Query client for caching API responses
-const queryClient = new QueryClient();
+// Create a React Query client with sensible cache defaults to reduce redundant API calls
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,  // Data stays "fresh" for 5 minutes
+      gcTime: 10 * 60 * 1000,    // Unused cache held for 10 minutes
+      retry: 1,                   // Only retry failed requests once
+    },
+  },
+});
 
 /**
  * MissingEnvFallback - Shown when Clerk key is not configured.
@@ -181,7 +210,8 @@ const AppContent = () => {
   useDynamicFavicon();
 
   return (
-    <Routes>
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
       {/* Public pages - accessible to everyone */}
       <Route path="/" element={<Index />} />
       <Route path="/results" element={<ResultsPage />} />
@@ -226,6 +256,7 @@ const AppContent = () => {
       {/* 404 - catches all unmatched routes */}
       <Route path="*" element={<NotFound />} />
     </Routes>
+    </Suspense>
   );
 };
 

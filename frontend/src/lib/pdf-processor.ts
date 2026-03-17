@@ -27,6 +27,8 @@ import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
 import { supabase } from '@/integrations/supabase/client';
 
+const API_URL = import.meta.env.VITE_API_URL || "https://ishu-site.onrender.com";
+
 export interface ProcessResult {
   blob: Blob;
   filename: string;
@@ -105,6 +107,131 @@ function validateInputFiles(toolSlug: string, files: File[]) {
   for (const file of files) {
     if (file.size > maxSize) throw new Error(`"${file.name}" is larger than 50MB.`);
     if (!isAcceptedFileType(file, acceptTypes)) throw new Error(`"${file.name}" is not a supported file type for this tool.`);
+  }
+}
+
+// ===== BACKEND FALLBACK =====
+/**
+ * Process a tool via the backend API.
+ * Sends file(s) and options as FormData to POST /api/tools/{toolSlug}.
+ * Returns { blob, filename } just like client-side processors.
+ */
+async function processViaBackend(
+  toolSlug: string,
+  files: File[],
+  options: ToolOptions = {}
+): Promise<ProcessResult> {
+  const formData = new FormData();
+
+  // Append file(s)
+  for (const file of files) {
+    formData.append('files', file, file.name);
+  }
+
+  // Append options as JSON string
+  if (Object.keys(options).length > 0) {
+    formData.append('options', JSON.stringify(options));
+  }
+
+  const response = await fetch(`${API_URL}/api/tools/${toolSlug}`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => 'Unknown error');
+    throw new Error(`Backend processing failed (${response.status}): ${errorText}`);
+  }
+
+  const contentType = response.headers.get('content-type') || '';
+
+  // If the response is JSON, it may contain a downloadUrl
+  if (contentType.includes('application/json')) {
+    const data = await response.json();
+
+    if (data.downloadUrl) {
+      // Fetch the actual file from the download URL
+      const fileResponse = await fetch(data.downloadUrl);
+      if (!fileResponse.ok) {
+        throw new Error(`Failed to download result file from backend.`);
+      }
+      const blob = await fileResponse.blob();
+      const filename = data.filename || `${toolSlug}-result`;
+      return { blob, filename };
+    }
+
+    // If there's base64 file data in the response
+    if (data.fileData) {
+      const binaryStr = atob(data.fileData);
+      const bytes = new Uint8Array(binaryStr.length);
+      for (let i = 0; i < binaryStr.length; i++) {
+        bytes[i] = binaryStr.charCodeAt(i);
+      }
+      const blob = new Blob([bytes], { type: data.mimeType || 'application/octet-stream' });
+      return { blob, filename: data.filename || `${toolSlug}-result` };
+    }
+
+    throw new Error('Backend returned JSON but no downloadUrl or fileData.');
+  }
+
+  // Response is the file directly (binary)
+  const blob = await response.blob();
+  // Try to get filename from Content-Disposition header
+  const disposition = response.headers.get('content-disposition') || '';
+  const filenameMatch = disposition.match(/filename[^;=\n]*=["']?([^"';\n]*)["']?/);
+  const filename = filenameMatch?.[1] || `${toolSlug}-result`;
+  return { blob, filename };
+}
+
+/**
+ * Try client-side processing first; if it fails, fall back to backend.
+ */
+async function tryClientThenBackend(
+  clientFn: () => Promise<ProcessResult>,
+  toolSlug: string,
+  files: File[],
+  options: ToolOptions = {}
+): Promise<ProcessResult> {
+  try {
+    return await clientFn();
+  } catch (clientError) {
+    console.warn(`Client-side processing failed for ${toolSlug}, trying backend...`, clientError);
+    try {
+      return await processViaBackend(toolSlug, files, options);
+    } catch (backendError) {
+      console.error(`Backend also failed for ${toolSlug}:`, backendError);
+      throw new Error(
+        `Could not process with "${toolSlug}". ` +
+        `Client error: ${clientError instanceof Error ? clientError.message : clientError}. ` +
+        `Backend error: ${backendError instanceof Error ? backendError.message : backendError}.`
+      );
+    }
+  }
+}
+
+/**
+ * Try backend processing first; if it fails, fall back to client-side.
+ */
+async function tryBackendThenClient(
+  backendSlug: string,
+  files: File[],
+  options: ToolOptions,
+  clientFn: () => Promise<ProcessResult>
+): Promise<ProcessResult> {
+  try {
+    return await processViaBackend(backendSlug, files, options);
+  } catch (backendError) {
+    console.warn(`Backend processing failed for ${backendSlug}, trying client-side fallback...`, backendError);
+    try {
+      return await clientFn();
+    } catch (clientError) {
+      console.error(`Client-side fallback also failed for ${backendSlug}:`, clientError);
+      throw new Error(
+        `Could not process with "${backendSlug}". ` +
+        `Backend error: ${backendError instanceof Error ? backendError.message : backendError}. ` +
+        `Client error: ${clientError instanceof Error ? clientError.message : clientError}.`
+      );
+    }
   }
 }
 
@@ -390,14 +517,14 @@ async function whiteoutPdf(file: File, opts: ToolOptions): Promise<ProcessResult
 
 async function createPdf(opts: ToolOptions): Promise<ProcessResult> {
   const doc = await PDFDocument.create();
-  const page = doc.addPage();
+  let currentPage = doc.addPage();
   const font = await doc.embedFont(StandardFonts.Helvetica);
   const text = opts.text || 'New PDF Document';
   const lines = text.split('\n');
-  let y = page.getSize().height - 50;
+  let y = currentPage.getSize().height - 50;
   for (const line of lines) {
-    if (y < 50) { const np = doc.addPage(); y = np.getSize().height - 50; }
-    page.drawText(line, { x: 50, y, size: 14, font, color: rgb(0, 0, 0) });
+    if (y < 50) { currentPage = doc.addPage(); y = currentPage.getSize().height - 50; }
+    currentPage.drawText(line, { x: 50, y, size: 14, font, color: rgb(0, 0, 0) });
     y -= 20;
   }
   return { blob: pdfBlob(await doc.save()), filename: 'new_document.pdf' };
@@ -640,7 +767,7 @@ async function pdfToText(file: File): Promise<ProcessResult> {
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
     const content = await page.getTextContent();
-    fullText += `--- Page ${i} ---\n${content.items.map((item: any) => item.str).join(' ')}\n\n`;
+    fullText += `--- Page ${i} ---\n${(content.items || []).map((item: any) => item.str).join(' ')}\n\n`;
   }
   return { blob: new Blob([fullText], { type: 'text/plain' }), filename: `${baseName(file.name)}.txt` };
 }
@@ -652,7 +779,7 @@ async function pdfToHtml(file: File): Promise<ProcessResult> {
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
     const content = await page.getTextContent();
-    html += `<div class="page"><h3>Page ${i}</h3><p>${content.items.map((item: any) => item.str).join(' ')}</p></div>`;
+    html += `<div class="page"><h3>Page ${i}</h3><p>${(content.items || []).map((item: any) => item.str).join(' ')}</p></div>`;
   }
   html += '</body></html>';
   return { blob: new Blob([html], { type: 'text/html' }), filename: `${baseName(file.name)}.html` };
@@ -665,7 +792,7 @@ async function pdfToCsv(file: File): Promise<ProcessResult> {
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
     const content = await page.getTextContent();
-    csv += content.items.map((item: any) => `"${item.str.replace(/"/g, '""')}"`).join(',') + '\n';
+    csv += (content.items || []).map((item: any) => `"${item.str.replace(/"/g, '""')}"`).join(',') + '\n';
   }
   return { blob: new Blob([csv], { type: 'text/csv' }), filename: `${baseName(file.name)}.csv` };
 }
@@ -681,7 +808,7 @@ async function pdfToWord(file: File): Promise<ProcessResult> {
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
     const content = await page.getTextContent();
-    const pageText = content.items.map((item: any) => item.str).join(' ').trim();
+    const pageText = (content.items || []).map((item: any) => item.str).join(' ').trim();
 
     paragraphs.push(
       new Paragraph({
@@ -717,7 +844,7 @@ async function pdfToExcel(file: File): Promise<ProcessResult> {
 
       // Group text items by Y position to form rows
       const lineMap = new Map<number, string[]>();
-      for (const item of content.items as any[]) {
+      for (const item of (content.items || []) as any[]) {
         const y = Math.round(item.transform[5]);
         if (!lineMap.has(y)) lineMap.set(y, []);
         lineMap.get(y)!.push(item.str);
@@ -808,7 +935,7 @@ async function pdfToDocFormat(file: File, ext: string): Promise<ProcessResult> {
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
     const content = await page.getTextContent();
-    fullText += content.items.map((item: any) => item.str).join(' ') + '\n\n';
+    fullText += (content.items || []).map((item: any) => item.str).join(' ') + '\n\n';
   }
 
   // For RTF, wrap in RTF header
@@ -861,7 +988,7 @@ async function comparePdf(files: File[]): Promise<ProcessResult> {
     for (let i = 1; i <= pdf.numPages; i++) {
       const page = await pdf.getPage(i);
       const content = await page.getTextContent();
-      text += content.items.map((item: any) => item.str).join(' ') + '\n';
+      text += (content.items || []).map((item: any) => item.str).join(' ') + '\n';
     }
     texts.push(text);
   }
@@ -953,7 +1080,7 @@ async function extractPdfText(file: File): Promise<string> {
   for (let i = 1; i <= Math.min(pdf.numPages, 30); i++) {
     const page = await pdf.getPage(i);
     const content = await page.getTextContent();
-    fullText += content.items.map((item: any) => item.str).join(' ') + '\n';
+    fullText += (content.items || []).map((item: any) => item.str).join(' ') + '\n';
   }
   return fullText;
 }
@@ -1025,9 +1152,9 @@ export async function processFiles(toolSlug: string, files: File[], options: Too
     case 'annotate-pdf':
     case 'highlight-pdf':
     case 'pdf-filler': return addTextToPdf(file, options);
-    case 'protect-pdf': return protectPdf(file, options);
-    case 'unlock-pdf': return unlockPdf(file);
-    case 'redact-pdf': return redactPdf(file, options);
+    case 'protect-pdf': return tryClientThenBackend(() => protectPdf(file, options), 'protect', files, options);
+    case 'unlock-pdf': return tryClientThenBackend(() => unlockPdf(file), 'unlock', files, options);
+    case 'redact-pdf': return tryClientThenBackend(() => redactPdf(file, options), 'redact', files, options);
 
     // Image → PDF
     case 'jpg-to-pdf':
@@ -1052,16 +1179,16 @@ export async function processFiles(toolSlug: string, files: File[], options: Too
     case 'word-to-pdf':
     case 'docx-to-pdf': return docxToPdf(file);
     case 'excel-to-pdf': return excelToPdf(file);
-    case 'url-to-pdf': return urlToPdf(options);
+    case 'url-to-pdf': return tryBackendThenClient('url-to-pdf', files, options, () => urlToPdf(options));
 
     // PDF → Image
     case 'pdf-to-jpg': return pdfToImage(file, 'jpeg');
     case 'pdf-to-png': return pdfToImage(file, 'png');
     case 'pdf-to-image': return pdfToImage(file, 'png');
-    case 'pdf-to-bmp': return pdfToImage(file, 'png');
-    case 'pdf-to-tiff': return pdfToImage(file, 'png');
-    case 'pdf-to-gif': return pdfToImage(file, 'png');
-    case 'pdf-to-svg': return pdfToImage(file, 'png');
+    case 'pdf-to-bmp': return tryBackendThenClient('pdf-to-bmp', files, options, () => pdfToImage(file, 'png'));
+    case 'pdf-to-tiff': return tryBackendThenClient('pdf-to-tiff', files, options, () => pdfToImage(file, 'png'));
+    case 'pdf-to-gif': return tryBackendThenClient('pdf-to-gif', files, options, () => pdfToImage(file, 'png'));
+    case 'pdf-to-svg': return tryBackendThenClient('pdf-to-svg', files, options, () => pdfToImage(file, 'png'));
 
     // PDF → Text/Doc
     case 'pdf-to-txt':
@@ -1086,28 +1213,28 @@ export async function processFiles(toolSlug: string, files: File[], options: Too
     case 'scan-to-pdf': return imagesToPdf(files);
     case 'pdf-converter': return compressPdf(file);
 
-    // Exotic format conversions → PDF
+    // Exotic format conversions → PDF (try backend, fall back to generic client-side)
     case 'powerpoint-to-pdf':
-    case 'pptx-to-pdf':
-    case 'odt-to-pdf':
-    case 'epub-to-pdf':
-    case 'djvu-to-pdf':
-    case 'pages-to-pdf':
-    case 'mobi-to-pdf':
-    case 'ebook-to-pdf':
-    case 'fb2-to-pdf':
-    case 'wps-to-pdf':
-    case 'eml-to-pdf':
-    case 'cbz-to-pdf':
-    case 'cbr-to-pdf':
-    case 'pub-to-pdf':
-    case 'xps-to-pdf':
-    case 'hwp-to-pdf':
-    case 'chm-to-pdf':
-    case 'ai-to-pdf':
-    case 'dwg-to-pdf':
-    case 'dxf-to-pdf':
-    case 'zip-to-pdf': return genericToPdf(file);
+    case 'pptx-to-pdf': return tryBackendThenClient('pptx-to-pdf', files, options, () => genericToPdf(file));
+    case 'odt-to-pdf': return tryBackendThenClient('odt-to-pdf', files, options, () => genericToPdf(file));
+    case 'epub-to-pdf': return tryBackendThenClient('epub-to-pdf', files, options, () => genericToPdf(file));
+    case 'djvu-to-pdf': return tryBackendThenClient('djvu-to-pdf', files, options, () => genericToPdf(file));
+    case 'pages-to-pdf': return tryBackendThenClient('pages-to-pdf', files, options, () => genericToPdf(file));
+    case 'mobi-to-pdf': return tryBackendThenClient('mobi-to-pdf', files, options, () => genericToPdf(file));
+    case 'ebook-to-pdf': return tryBackendThenClient('ebook-to-pdf', files, options, () => genericToPdf(file));
+    case 'fb2-to-pdf': return tryBackendThenClient('fb2-to-pdf', files, options, () => genericToPdf(file));
+    case 'wps-to-pdf': return tryBackendThenClient('wps-to-pdf', files, options, () => genericToPdf(file));
+    case 'eml-to-pdf': return tryBackendThenClient('eml-to-pdf', files, options, () => genericToPdf(file));
+    case 'cbz-to-pdf': return tryBackendThenClient('cbz-to-pdf', files, options, () => genericToPdf(file));
+    case 'cbr-to-pdf': return tryBackendThenClient('cbr-to-pdf', files, options, () => genericToPdf(file));
+    case 'pub-to-pdf': return tryBackendThenClient('pub-to-pdf', files, options, () => genericToPdf(file));
+    case 'xps-to-pdf': return tryBackendThenClient('xps-to-pdf', files, options, () => genericToPdf(file));
+    case 'hwp-to-pdf': return tryBackendThenClient('hwp-to-pdf', files, options, () => genericToPdf(file));
+    case 'chm-to-pdf': return tryBackendThenClient('chm-to-pdf', files, options, () => genericToPdf(file));
+    case 'ai-to-pdf': return tryBackendThenClient('ai-to-pdf', files, options, () => genericToPdf(file));
+    case 'dwg-to-pdf': return tryBackendThenClient('dwg-to-pdf', files, options, () => genericToPdf(file));
+    case 'dxf-to-pdf': return tryBackendThenClient('dxf-to-pdf', files, options, () => genericToPdf(file));
+    case 'zip-to-pdf': return tryBackendThenClient('zip-to-pdf', files, options, () => genericToPdf(file));
 
     // AI-powered tools
     case 'ocr-pdf': return ocrPdf(file);
@@ -1115,7 +1242,7 @@ export async function processFiles(toolSlug: string, files: File[], options: Too
     case 'chat-with-pdf': return aiProcessPdf(file, 'chat');
     case 'summarize': return aiProcessPdf(file, 'summarize');
 
-    default: return genericToPdf(file);
+    default: return tryBackendThenClient(toolSlug, files, options, () => genericToPdf(file));
   }
 }
 

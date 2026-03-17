@@ -1,38 +1,33 @@
 /**
  * CursorSpotlight.tsx - Mouse-Following Glow Effect
- * 
+ *
  * Creates a subtle glowing circle that follows the cursor around the page.
  * Hidden on mobile devices (only shows on screens with mouse/trackpad).
- * 
- * How it works:
- * - Tracks mouse position via mousemove event
- * - Renders two radial gradients centered on cursor:
- *   1. Large (600px) outer glow - very subtle blue
- *   2. Small (100px) inner glow - slightly brighter
- * - Fades out when mouse leaves the browser window
- * - Uses pointer-events: none so it doesn't block clicks
- * - Fixed position, z-index 9999 so it's always on top
+ *
+ * Performance: Uses GPU-accelerated transform instead of left/top to avoid
+ * layout thrashing on every mouse move. Single parent container positioned
+ * via transform with both glows as children.
  */
 
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useRef } from "react";
+import { motion, useMotionValue, useSpring } from "framer-motion";
 
 const CursorSpotlight = () => {
-  const [pos, setPos] = useState({ x: -100, y: -100 });  // Start off-screen
-  const [visible, setVisible] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const opacity = useMotionValue(0);
+  const springOpacity = useSpring(opacity, { stiffness: 100, damping: 20 });
 
   useEffect(() => {
-    // Update spotlight position on mouse move
     const move = (e: MouseEvent) => {
-      setPos({ x: e.clientX, y: e.clientY });
-      setVisible(true);
+      if (containerRef.current) {
+        containerRef.current.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
+      }
+      opacity.set(1);
     };
-    // Hide when mouse leaves the window
-    const leave = () => setVisible(false);
-    // Show when mouse enters the window
-    const enter = () => setVisible(true);
+    const leave = () => opacity.set(0);
+    const enter = () => opacity.set(1);
 
-    window.addEventListener("mousemove", move);
+    window.addEventListener("mousemove", move, { passive: true });
     document.addEventListener("mouseleave", leave);
     document.addEventListener("mouseenter", enter);
     return () => {
@@ -40,32 +35,46 @@ const CursorSpotlight = () => {
       document.removeEventListener("mouseleave", leave);
       document.removeEventListener("mouseenter", enter);
     };
-  }, []);
+  }, [opacity]);
 
   return (
     <motion.div
-      className="pointer-events-none fixed inset-0 z-[9999] hidden md:block"
-      animate={{ opacity: visible ? 1 : 0 }}
-      transition={{ duration: 0.3 }}
+      className="pointer-events-none fixed inset-0 z-[50] hidden md:block"
+      style={{ opacity: springOpacity }}
     >
-      {/* Large outer glow */}
       <div
-        className="absolute h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full"
+        ref={containerRef}
         style={{
-          left: pos.x,
-          top: pos.y,
-          background: "radial-gradient(circle, hsl(210 100% 56% / 0.04) 0%, transparent 70%)",
+          position: "absolute",
+          left: 0,
+          top: 0,
+          transform: "translate3d(-9999px, -9999px, 0)",
+          willChange: "transform",
         }}
-      />
-      {/* Small inner glow - brighter center point */}
-      <div
-        className="absolute h-[100px] w-[100px] -translate-x-1/2 -translate-y-1/2 rounded-full"
-        style={{
-          left: pos.x,
-          top: pos.y,
-          background: "radial-gradient(circle, hsl(210 100% 70% / 0.08) 0%, transparent 70%)",
-        }}
-      />
+      >
+        {/* Large outer glow */}
+        <div
+          className="absolute rounded-full"
+          style={{
+            width: 600,
+            height: 600,
+            left: -300,
+            top: -300,
+            background: "radial-gradient(circle, hsl(210 100% 56% / 0.04) 0%, transparent 70%)",
+          }}
+        />
+        {/* Small inner glow - brighter center point */}
+        <div
+          className="absolute rounded-full"
+          style={{
+            width: 100,
+            height: 100,
+            left: -50,
+            top: -50,
+            background: "radial-gradient(circle, hsl(210 100% 70% / 0.08) 0%, transparent 70%)",
+          }}
+        />
+      </div>
     </motion.div>
   );
 };

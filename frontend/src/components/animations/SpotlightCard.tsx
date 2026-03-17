@@ -38,6 +38,13 @@ const SpotlightCard = ({
   const spotlightX = useSpring(mouseX, springConfig);
   const spotlightY = useSpring(mouseY, springConfig);
 
+  // Hoisted from JSX to respect rules of hooks
+  const spotlightBg = useTransform(
+    [spotlightX, spotlightY],
+    ([x, y]) =>
+      `radial-gradient(400px circle at ${x}px ${y}px, ${spotlightColor}, transparent 60%)`
+  );
+
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!ref.current) return;
     const rect = ref.current.getBoundingClientRect();
@@ -57,11 +64,7 @@ const SpotlightCard = ({
       <motion.div
         className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 transition-opacity duration-500"
         style={{
-          background: useTransform(
-            [spotlightX, spotlightY],
-            ([x, y]) =>
-              `radial-gradient(400px circle at ${x}px ${y}px, ${spotlightColor}, transparent 60%)`
-          ),
+          background: spotlightBg,
           opacity: hovered ? 1 : 0,
         }}
       />

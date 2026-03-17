@@ -15,7 +15,7 @@
  * Uses @react-three/fiber for 3D rendering and @react-three/drei for helpers.
  */
 
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, Suspense } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Float, MeshDistortMaterial, Sphere, Torus } from "@react-three/drei";
 import * as THREE from "three";
@@ -122,26 +122,26 @@ const GlobeScene3D = () => {
     <div className="h-[400px] w-full md:h-[500px]">
       <Canvas
         camera={{ position: [0, 0, 5], fov: 45 }}
-        dpr={[1, 1.5]}                    // Device pixel ratio range for performance
-        gl={{ antialias: true, alpha: true }}  // Transparent background
+        dpr={[1, 1]}
+        gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
         style={{ background: "transparent" }}
       >
-        {/* Lighting setup */}
-        <ambientLight intensity={0.3} />
-        <pointLight position={[5, 5, 5]} intensity={0.5} color="#3b82f6" />
-        <pointLight position={[-5, -5, 5]} intensity={0.3} color="#8b5cf6" />
+        <Suspense fallback={null}>
+          <ambientLight intensity={0.3} />
+          <pointLight position={[5, 5, 5]} intensity={0.5} color="#3b82f6" />
+          <pointLight position={[-5, -5, 5]} intensity={0.3} color="#8b5cf6" />
 
-        {/* Float wrapper adds gentle floating motion to entire globe group */}
-        <Float speed={0.5} rotationIntensity={0.1} floatIntensity={0.3}>
-          <group>
-            <GlobeWireframe />
-            <GlobeGlow />
-            <StateDots />
-            <PulsingCore />
-            <OrbitalRing radius={2.5} speed={0.15} color="#3b82f6" />
-            <OrbitalRing radius={2.8} speed={-0.1} color="#8b5cf6" />
-          </group>
-        </Float>
+          <Float speed={0.5} rotationIntensity={0.1} floatIntensity={0.3}>
+            <group>
+              <GlobeWireframe />
+              <GlobeGlow />
+              <StateDots />
+              <PulsingCore />
+              <OrbitalRing radius={2.5} speed={0.15} color="#3b82f6" />
+              <OrbitalRing radius={2.8} speed={-0.1} color="#8b5cf6" />
+            </group>
+          </Float>
+        </Suspense>
       </Canvas>
     </div>
   );

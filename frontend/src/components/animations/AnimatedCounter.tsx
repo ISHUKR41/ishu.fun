@@ -31,22 +31,29 @@ const AnimatedCounter = ({ target, suffix = "", prefix = "", duration = 2 }: Ani
 
   useEffect(() => {
     if (!isInView) return;
-    
-    let start = 0;
-    const increment = target / (duration * 60);  // 60 FPS
-    
-    // Update the counter 60 times per second until target is reached
-    const timer = setInterval(() => {
-      start += increment;
-      if (start >= target) {
-        setCount(target);       // Snap to exact target
-        clearInterval(timer);   // Stop the interval
+
+    const startTime = performance.now();
+    const durationMs = duration * 1000;
+    let animId: number;
+
+    // Use requestAnimationFrame instead of setInterval for smoother animation
+    const animate = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / durationMs, 1);
+      // Ease-out cubic for smooth deceleration
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = Math.floor(eased * target);
+
+      if (progress >= 1) {
+        setCount(target);
       } else {
-        setCount(Math.floor(start));  // Round down to integer
+        setCount(current);
+        animId = requestAnimationFrame(animate);
       }
-    }, 1000 / 60);
-    
-    return () => clearInterval(timer);  // Cleanup on unmount
+    };
+
+    animId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animId);
   }, [isInView, target, duration]);
 
   return (

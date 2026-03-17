@@ -16,7 +16,7 @@
  */
 
 import { motion, useInView } from "framer-motion";
-import { useRef } from "react";
+import { useRef, useMemo } from "react";
 
 interface TextRevealProps {
   text: string;
@@ -28,7 +28,7 @@ interface TextRevealProps {
 const TextReveal = ({ text, className = "", delay = 0, staggerDelay = 0.03 }: TextRevealProps) => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-50px" });
-  const words = text.split(" ");
+  const words = useMemo(() => text.split(" "), [text]);
 
   return (
     <span ref={ref} className={className}>

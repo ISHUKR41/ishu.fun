@@ -79,7 +79,7 @@ const UniversalVideoDownloaderPage = () => {
     for (let i = 0; i <= retries; i++) {
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), i === 0 ? 90000 : 120000);
+        const timeoutId = setTimeout(() => controller.abort(), i === 0 ? 120000 : Math.max(30000, 90000 - i * 30000));
         const res = await fetch(fetchUrl, { ...options, signal: controller.signal });
         clearTimeout(timeoutId);
         return res;
@@ -112,7 +112,7 @@ const UniversalVideoDownloaderPage = () => {
       });
 
       const data = await res.json();
-      if (!data.success) { setError(data.error || "Download failed."); return; }
+      if (!res.ok || !data.success) { setError(data.error || `Download failed (HTTP ${res.status}).`); return; }
 
       // Fix download URL: prepend API_URL for relative backend paths
       if (data.downloadUrl && !data.downloadUrl.startsWith("http")) {
@@ -135,9 +135,11 @@ const UniversalVideoDownloaderPage = () => {
       }
     } catch (err: any) {
       if (err?.name === "AbortError") {
-        setError("Request timed out. The server might be starting up — please wait 30 seconds and try again.");
+        setError("Request timed out. The video may be too large or the server is busy — please try again.");
+      } else if (err?.message?.includes("fetch") || err?.message?.includes("Failed to fetch")) {
+        setError("Could not connect to the server. Backend may be waking up (~30s). Try again.");
       } else {
-        setError("Could not connect to the server. The backend may be waking up (free tier takes ~30s). Please try again in a moment.");
+        setError(`Download error: ${err?.message || "Unknown error. Please try again."}`);
       }
     } finally {
       setLoading(false);

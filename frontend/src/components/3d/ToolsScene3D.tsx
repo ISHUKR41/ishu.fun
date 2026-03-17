@@ -12,7 +12,7 @@
  * - ConnectorLines: Scattered particles creating a network effect
  */
 
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, Suspense } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Float, MeshDistortMaterial, Icosahedron, Box, Torus } from "@react-three/drei";
 import * as THREE from "three";
@@ -81,7 +81,7 @@ function CentralOrb() {
 /** Scattered particles that slowly rotate - creates a network/constellation effect */
 function ConnectorLines() {
   const ref = useRef<THREE.Points>(null);
-  const count = 100;
+  const count = 30;
   
   // Generate random positions in a 6x4x3 box
   const positions = useMemo(() => {
@@ -115,24 +115,23 @@ const ToolsScene3D = () => {
     <div className="pointer-events-none absolute inset-0 z-0">
       <Canvas
         camera={{ position: [0, 0, 4], fov: 50 }}
-        dpr={[1, 1.5]}
-        gl={{ antialias: true, alpha: true }}
+        dpr={[1, 1]}
+        gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
         style={{ background: "transparent" }}
       >
-        {/* Lighting */}
-        <ambientLight intensity={0.4} />
-        <pointLight position={[3, 3, 3]} intensity={0.4} color="#3b82f6" />
-        <pointLight position={[-3, -2, 2]} intensity={0.3} color="#8b5cf6" />
+        <Suspense fallback={null}>
+          <ambientLight intensity={0.4} />
+          <pointLight position={[3, 3, 3]} intensity={0.4} color="#3b82f6" />
+          <pointLight position={[-3, -2, 2]} intensity={0.3} color="#8b5cf6" />
 
-        {/* 3D elements */}
-        <ToolGear />
-        <CentralOrb />
-        {/* Four floating documents at different positions and colors */}
-        <FloatingDoc position={[-2, 1, -0.5]} color="#3b82f6" />
-        <FloatingDoc position={[2.2, -0.8, 0]} color="#8b5cf6" />
-        <FloatingDoc position={[-1.5, -1.2, 0.5]} color="#06b6d4" />
-        <FloatingDoc position={[1.8, 1.2, -0.3]} color="#10b981" />
-        <ConnectorLines />
+          <ToolGear />
+          <CentralOrb />
+          <FloatingDoc position={[-2, 1, -0.5]} color="#3b82f6" />
+          <FloatingDoc position={[2.2, -0.8, 0]} color="#8b5cf6" />
+          <FloatingDoc position={[-1.5, -1.2, 0.5]} color="#06b6d4" />
+          <FloatingDoc position={[1.8, 1.2, -0.3]} color="#10b981" />
+          <ConnectorLines />
+        </Suspense>
       </Canvas>
     </div>
   );
