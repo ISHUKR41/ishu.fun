@@ -10,6 +10,8 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Float, MeshDistortMaterial, Sphere, Torus } from "@react-three/drei";
 import * as THREE from "three";
 
+const IS_MOBILE = typeof window !== "undefined" && (window.innerWidth < 768 || /Mobi|Android/i.test(navigator.userAgent));
+
 function useKeepAlive() {
   const { invalidate } = useThree();
   useFrame(() => invalidate());
@@ -22,7 +24,7 @@ const GlobeWireframe = memo(function GlobeWireframe() {
     ref.current.rotation.y = state.clock.elapsedTime * 0.1;
   });
   return (
-    <Sphere ref={ref} args={[1.8, 32, 32]}>
+    <Sphere ref={ref} args={[1.8, IS_MOBILE ? 16 : 32, IS_MOBILE ? 16 : 32]}>
       <meshBasicMaterial color="#3b82f6" wireframe transparent opacity={0.08} />
     </Sphere>
   );
@@ -30,7 +32,7 @@ const GlobeWireframe = memo(function GlobeWireframe() {
 
 const GlobeGlow = memo(function GlobeGlow() {
   return (
-    <Sphere args={[1.85, 32, 32]}>
+    <Sphere args={[1.85, IS_MOBILE ? 16 : 32, IS_MOBILE ? 16 : 32]}>
       <MeshDistortMaterial color="#3b82f6" distort={0.15} speed={1.5} transparent opacity={0.05} />
     </Sphere>
   );
@@ -44,14 +46,14 @@ const OrbitalRing = memo(function OrbitalRing({ radius, speed, color }: { radius
     ref.current.rotation.x = Math.PI / 3;
   });
   return (
-    <Torus ref={ref} args={[radius, 0.01, 8, 64]}>
+    <Torus ref={ref} args={[radius, 0.01, 8, IS_MOBILE ? 32 : 64]}>
       <meshBasicMaterial color={color} transparent opacity={0.2} />
     </Torus>
   );
 });
 
 const StateDots = memo(function StateDots() {
-  const count = 36;
+  const count = IS_MOBILE ? 18 : 36;
   const ref = useRef<THREE.Points>(null);
 
   const positions = useMemo(() => {
@@ -138,7 +140,8 @@ const GlobeScene3D = () => {
         <Canvas
           camera={{ position: [0, 0, 5], fov: 45 }}
           frameloop="demand"
-          dpr={[1, 1.5]}
+          dpr={[1, IS_MOBILE ? 1 : 1.5]}
+          performance={{ min: 0.5 }}
           gl={{ antialias: false, alpha: true, powerPreference: "high-performance" }}
           style={{ background: "transparent" }}
         >

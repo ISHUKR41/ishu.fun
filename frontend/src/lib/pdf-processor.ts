@@ -1152,9 +1152,9 @@ export async function processFiles(toolSlug: string, files: File[], options: Too
     case 'annotate-pdf':
     case 'highlight-pdf':
     case 'pdf-filler': return addTextToPdf(file, options);
-    case 'protect-pdf': return tryClientThenBackend(() => protectPdf(file, options), 'protect', files, options);
-    case 'unlock-pdf': return tryClientThenBackend(() => unlockPdf(file), 'unlock', files, options);
-    case 'redact-pdf': return tryClientThenBackend(() => redactPdf(file, options), 'redact', files, options);
+    case 'protect-pdf': return tryClientThenBackend(() => protectPdf(file, options), 'protect-pdf', files, options);
+    case 'unlock-pdf': return tryClientThenBackend(() => unlockPdf(file), 'unlock-pdf', files, options);
+    case 'redact-pdf': return tryClientThenBackend(() => redactPdf(file, options), 'redact-pdf', files, options);
 
     // Image → PDF
     case 'jpg-to-pdf':
@@ -1282,6 +1282,26 @@ export function getAcceptedTypes(toolSlug: string): string {
   if (toolSlug === 'odt-to-pdf') return '.odt';
   if (toolSlug === 'epub-to-pdf') return '.epub';
   if (toolSlug === 'add-image-to-pdf') return '.pdf,.jpg,.jpeg,.png';
+
+  // Exotic format → PDF conversions
+  if (toolSlug === 'djvu-to-pdf') return '.djvu';
+  if (toolSlug === 'pages-to-pdf') return '.pages';
+  if (toolSlug === 'mobi-to-pdf') return '.mobi';
+  if (toolSlug === 'ebook-to-pdf') return '.epub,.mobi,.fb2,.azw,.azw3,.lit';
+  if (toolSlug === 'fb2-to-pdf') return '.fb2';
+  if (toolSlug === 'wps-to-pdf') return '.wps';
+  if (toolSlug === 'eml-to-pdf') return '.eml';
+  if (toolSlug === 'zip-to-pdf') return '.zip';
+  if (toolSlug === 'cbz-to-pdf') return '.cbz';
+  if (toolSlug === 'cbr-to-pdf') return '.cbr';
+  if (toolSlug === 'pub-to-pdf') return '.pub';
+  if (toolSlug === 'xps-to-pdf') return '.xps,.oxps';
+  if (toolSlug === 'hwp-to-pdf') return '.hwp';
+  if (toolSlug === 'chm-to-pdf') return '.chm';
+  if (toolSlug === 'ai-to-pdf') return '.ai';
+  if (toolSlug === 'dwg-to-pdf') return '.dwg';
+  if (toolSlug === 'dxf-to-pdf') return '.dxf';
+
   return '*';
 }
 

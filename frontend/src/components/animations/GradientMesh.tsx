@@ -43,10 +43,8 @@ const GRADIENT_COLORS = {
     { bg: "bg-[hsl(217,91%,60%,0.05)]", pos: "right-[10%] bottom-[25%]", size: 420, dur: 17 },
   ],
   aurora: [
-    { bg: "bg-[hsl(280,67%,50%,0.05)]", pos: "left-[5%] top-[10%]", size: 550, dur: 22 },
-    { bg: "bg-[hsl(160,84%,39%,0.04)]", pos: "right-[10%] top-[30%]", size: 480, dur: 18 },
-    { bg: "bg-[hsl(199,89%,48%,0.04)]", pos: "left-[30%] bottom-[10%]", size: 400, dur: 16 },
-    { bg: "bg-[hsl(340,82%,52%,0.03)]", pos: "right-[25%] bottom-[25%]", size: 350, dur: 20 },
+    { bg: "bg-[hsl(280,67%,50%,0.05)]", pos: "left-[5%] top-[10%]", size: 550, dur: 44 },
+    { bg: "bg-[hsl(160,84%,39%,0.04)]", pos: "right-[10%] top-[30%]", size: 480, dur: 36 },
   ],
 } as const;
 

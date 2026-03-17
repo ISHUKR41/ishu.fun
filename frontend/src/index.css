@@ -1686,6 +1686,12 @@ img, video, iframe, embed, object {
   contain: layout style paint;
 }
 
+/* Optimized rendering for large card grids */
+.contain-layout > * {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 180px;
+}
+
 /* Optimized image rendering */
 img[loading="lazy"] {
   content-visibility: auto;

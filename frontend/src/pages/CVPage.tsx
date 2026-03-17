@@ -1,13 +1,19 @@
 import Layout from "@/components/layout/Layout";
 import FadeInView from "@/components/animations/FadeInView";
 import ParallaxSection from "@/components/animations/ParallaxSection";
-import { motion, useScroll, useTransform } from "framer-motion";
-import { useRef } from "react";
+import AnimatedCounter from "@/components/animations/AnimatedCounter";
+import ShimmerText from "@/components/animations/ShimmerText";
+import GradientMesh from "@/components/animations/GradientMesh";
+import MorphingBlob from "@/components/animations/MorphingBlob";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import { useRef, useState, useEffect } from "react";
 import {
   FileText, UserCircle, ArrowRight, Download, Shield, Zap,
   CheckCircle, PenTool, Eye, Layers, Heart, Palette,
   Lock, Cpu, Globe, Clock, ChevronRight, ArrowUpRight,
-  Sparkles, Monitor, Printer
+  Sparkles, Monitor, Printer, Star, Quote, X, Check,
+  HelpCircle, MessageSquare, Users, Award, TrendingUp
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { BreadcrumbSchema } from "@/components/seo/JsonLd";
@@ -35,6 +41,47 @@ const stats = [
   { value: "ATS", label: "Optimized", icon: CheckCircle },
 ];
 
+// ─── Comparison Table Data ──────────────────────────────────────────────────────
+const comparisonFeatures = [
+  { feature: "Purpose", resume: "Job applications", biodata: "Personal / Matrimonial" },
+  { feature: "Photo Upload", resume: false, biodata: true },
+  { feature: "Work Experience", resume: true, biodata: false },
+  { feature: "Skills Section", resume: true, biodata: false },
+  { feature: "Family Details", resume: false, biodata: true },
+  { feature: "Personal Info", resume: "Basic", biodata: "Detailed" },
+  { feature: "PDF Export", resume: true, biodata: true },
+  { feature: "Color Themes", resume: true, biodata: true },
+  { feature: "ATS Optimized", resume: true, biodata: false },
+  { feature: "Live Preview", resume: true, biodata: true },
+];
+
+// ─── FAQ Data ───────────────────────────────────────────────────────────────────
+const faqItems = [
+  { q: "Is my data stored on any server?", a: "No. Everything runs entirely in your browser. Your personal information never leaves your device — no server uploads, no tracking, no cookies collecting your form data." },
+  { q: "What's the difference between a resume and bio-data?", a: "A resume focuses on professional experience, skills, and education for job applications. A bio-data includes personal details like family background, physical attributes, and is commonly used for matrimonial or official purposes in South Asia." },
+  { q: "Can I use this on my phone?", a: "Yes! The builder is fully responsive and works on mobile devices, tablets, and desktops. The PDF export works on all modern browsers." },
+  { q: "Is there a limit on how many documents I can create?", a: "No limits at all. Create as many resumes and bio-data documents as you need. It's completely free with no signup required." },
+  { q: "Will my resume pass ATS screening?", a: "Yes. Our resume layouts are engineered with clean formatting, proper heading hierarchy, and standard sections that automated tracking systems can parse correctly." },
+  { q: "Can I customize the colors and layout?", a: "Absolutely! Both the resume and bio-data builders offer multiple color themes. You can pick the one that best matches your style and switch anytime before exporting." },
+];
+
+// ─── Testimonials Data ──────────────────────────────────────────────────────────
+const testimonials = [
+  { name: "Ananya R.", role: "Software Engineer", text: "Created my resume in under 5 minutes. The ATS-friendly format helped me get callbacks from 3 companies within a week!", avatar: "AR", color: "from-blue-500 to-cyan-500" },
+  { name: "Vikram S.", role: "MBA Student", text: "The bio-data builder was perfect for my family's needs. Clean layout, easy to fill, and the PDF looked very professional.", avatar: "VS", color: "from-violet-500 to-purple-500" },
+  { name: "Priya M.", role: "Fresher", text: "As a fresher, I was struggling with resume formatting. This tool made it incredibly simple. Love the live preview feature!", avatar: "PM", color: "from-emerald-500 to-teal-500" },
+  { name: "Rahul K.", role: "HR Manager", text: "I recommend this tool to all candidates. The resumes are clean, well-structured, and pass our ATS system perfectly.", avatar: "RK", color: "from-amber-500 to-orange-500" },
+  { name: "Sneha D.", role: "Data Analyst", text: "The privacy-first approach is what sold me. No sign-up, no data collection. Built my resume and downloaded it in seconds.", avatar: "SD", color: "from-rose-500 to-pink-500" },
+];
+
+// ─── Animated Stats Data ────────────────────────────────────────────────────────
+const animatedStats = [
+  { value: 10000, suffix: "+", label: "Documents Created", icon: FileText },
+  { value: 100, suffix: "%", label: "Free Forever", icon: Heart },
+  { value: 0, suffix: "", label: "Data Stored", icon: Lock, displayValue: "Zero" },
+  { value: 5, suffix: " min", label: "Average Build Time", icon: Clock },
+];
+
 const CVPage = () => {
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
@@ -43,6 +90,15 @@ const CVPage = () => {
   });
   const heroImgY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
+
+  // Testimonial auto-rotation
+  const [testimonialIdx, setTestimonialIdx] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTestimonialIdx((prev) => (prev + 1) % testimonials.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, []);
 
   return (
     <Layout>
@@ -71,6 +127,13 @@ const CVPage = () => {
           <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/40 to-background/90" />
         </motion.div>
 
+        {/* 3D decorative elements */}
+        <GradientMesh className="opacity-10" />
+        <MorphingBlob className="absolute -top-32 -right-32 h-[400px] w-[400px] opacity-[0.07]" color="blue" />
+        <MorphingBlob className="absolute -bottom-32 -left-32 h-[350px] w-[350px] opacity-[0.06]" color="violet" />
+        <div className="pointer-events-none absolute inset-0 opacity-[0.015]"
+          style={{ backgroundImage:"linear-gradient(rgba(59,130,246,0.8) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,0.8) 1px,transparent 1px)", backgroundSize:"60px 60px" }}/>
+
         <motion.div className="container relative z-10 py-20" style={{ opacity: heroOpacity }}>
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Left content */}
@@ -88,7 +151,7 @@ const CVPage = () => {
                   <br />
                   that get you
                   <span className="relative ml-3">
-                    <span className="relative z-10 text-primary">noticed</span>
+                    <ShimmerText className="relative z-10 text-primary">noticed</ShimmerText>
                     <motion.span
                       className="absolute -bottom-1 left-0 right-0 h-3 bg-primary/15 rounded-sm -z-0"
                       initial={{ scaleX: 0 }}
@@ -475,6 +538,250 @@ const CVPage = () => {
               </FadeInView>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ── Animated Stats Section ── */}
+      <section className="py-20 md:py-28 relative overflow-hidden">
+        <div className="absolute inset-0 -z-10 border-y border-border/30" />
+        <MorphingBlob className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] opacity-[0.04]" color="blue" />
+        <div className="container">
+          <FadeInView>
+            <div className="mx-auto max-w-2xl text-center mb-14">
+              <span className="text-xs font-semibold uppercase tracking-widest text-primary/70 mb-3 block">By the numbers</span>
+              <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+                Trusted by thousands
+              </h2>
+              <p className="mt-3 text-muted-foreground">Built for privacy, speed, and simplicity.</p>
+            </div>
+          </FadeInView>
+          <div className="mx-auto max-w-4xl grid grid-cols-2 md:grid-cols-4 gap-6">
+            {animatedStats.map((s, i) => (
+              <FadeInView key={s.label} delay={i * 0.08}>
+                <motion.div
+                  whileHover={{ y: -4, boxShadow: "0 12px 40px rgba(0,0,0,0.1)" }}
+                  className="relative text-center rounded-2xl border border-border/50 bg-card/60 backdrop-blur-sm p-6 transition-all"
+                >
+                  <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/8 border border-primary/10">
+                    <s.icon className="h-6 w-6 text-primary/70" />
+                  </div>
+                  <div className="text-2xl sm:text-3xl font-black text-foreground leading-none mb-1">
+                    {s.displayValue ? s.displayValue : <AnimatedCounter target={s.value} suffix={s.suffix} />}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">{s.label}</div>
+                </motion.div>
+              </FadeInView>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Comparison Table: Resume vs Bio-Data ── */}
+      <section className="py-20 md:py-28 relative overflow-hidden">
+        <div
+          className="absolute inset-0 -z-10 opacity-[0.025]"
+          style={{
+            backgroundImage: "url('https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&w=2070&q=80')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundAttachment: "fixed",
+          }}
+        />
+        <div className="container">
+          <FadeInView>
+            <div className="mx-auto max-w-2xl text-center mb-14">
+              <span className="text-xs font-semibold uppercase tracking-widest text-primary/70 mb-3 block">Compare formats</span>
+              <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+                Resume vs Bio-Data
+              </h2>
+              <p className="mt-3 text-muted-foreground">Not sure which one you need? Here's a side-by-side comparison.</p>
+            </div>
+          </FadeInView>
+          <FadeInView delay={0.1}>
+            <div className="mx-auto max-w-3xl">
+              <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-xl overflow-hidden shadow-2xl shadow-black/10">
+                {/* Table header */}
+                <div className="grid grid-cols-3 bg-gradient-to-r from-primary/8 via-primary/5 to-violet-500/8 border-b border-border/40">
+                  <div className="p-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Feature</div>
+                  <div className="p-4 text-center">
+                    <div className="inline-flex items-center gap-1.5">
+                      <FileText className="h-4 w-4 text-primary" />
+                      <span className="text-xs font-bold text-primary uppercase tracking-wider">Resume</span>
+                    </div>
+                  </div>
+                  <div className="p-4 text-center">
+                    <div className="inline-flex items-center gap-1.5">
+                      <UserCircle className="h-4 w-4 text-violet-500" />
+                      <span className="text-xs font-bold text-violet-500 uppercase tracking-wider">Bio-Data</span>
+                    </div>
+                  </div>
+                </div>
+                {/* Table rows */}
+                {comparisonFeatures.map((row, i) => (
+                  <motion.div
+                    key={row.feature}
+                    initial={{ opacity: 0, x: -10 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.04 }}
+                    className={`grid grid-cols-3 border-b border-border/20 last:border-0 ${i % 2 === 0 ? "bg-transparent" : "bg-muted/20"} hover:bg-primary/[0.03] transition-colors`}
+                  >
+                    <div className="p-3.5 text-sm font-medium text-foreground">{row.feature}</div>
+                    <div className="p-3.5 text-center flex items-center justify-center">
+                      {typeof row.resume === "boolean" ? (
+                        row.resume ? <Check className="h-4 w-4 text-emerald-500" /> : <X className="h-4 w-4 text-muted-foreground/30" />
+                      ) : (
+                        <span className="text-sm text-muted-foreground">{row.resume}</span>
+                      )}
+                    </div>
+                    <div className="p-3.5 text-center flex items-center justify-center">
+                      {typeof row.biodata === "boolean" ? (
+                        row.biodata ? <Check className="h-4 w-4 text-emerald-500" /> : <X className="h-4 w-4 text-muted-foreground/30" />
+                      ) : (
+                        <span className="text-sm text-muted-foreground">{row.biodata}</span>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </FadeInView>
+        </div>
+      </section>
+
+      {/* ── Testimonials Section ── */}
+      <section className="py-20 md:py-28 relative overflow-hidden">
+        <div className="absolute inset-0 -z-10 border-y border-border/30" />
+        <GradientMesh className="opacity-[0.06]" variant="cool" />
+        <div className="container">
+          <FadeInView>
+            <div className="mx-auto max-w-2xl text-center mb-14">
+              <span className="text-xs font-semibold uppercase tracking-widest text-primary/70 mb-3 block">What people say</span>
+              <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+                Loved by users
+              </h2>
+              <p className="mt-3 text-muted-foreground">Real feedback from people who built their documents here.</p>
+            </div>
+          </FadeInView>
+
+          {/* Auto-rotating testimonial spotlight */}
+          <FadeInView delay={0.1}>
+            <div className="mx-auto max-w-2xl mb-12">
+              <div className="relative rounded-2xl border border-border/60 bg-card/80 backdrop-blur-xl p-8 shadow-2xl shadow-black/10 overflow-hidden min-h-[200px]">
+                <Quote className="absolute top-4 right-4 h-10 w-10 text-primary/[0.06]" />
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={testimonialIdx}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.4 }}
+                  >
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className={`h-10 w-10 rounded-full bg-gradient-to-br ${testimonials[testimonialIdx].color} flex items-center justify-center text-white text-xs font-bold shadow-lg`}>
+                        {testimonials[testimonialIdx].avatar}
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold text-foreground">{testimonials[testimonialIdx].name}</div>
+                        <div className="text-xs text-muted-foreground">{testimonials[testimonialIdx].role}</div>
+                      </div>
+                      <div className="ml-auto flex gap-0.5">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground leading-relaxed italic">
+                      "{testimonials[testimonialIdx].text}"
+                    </p>
+                  </motion.div>
+                </AnimatePresence>
+                {/* Progress dots */}
+                <div className="flex items-center justify-center gap-1.5 mt-6">
+                  {testimonials.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setTestimonialIdx(i)}
+                      className={`h-1.5 rounded-full transition-all duration-300 ${i === testimonialIdx ? "w-6 bg-primary" : "w-1.5 bg-border hover:bg-muted-foreground/30"}`}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </FadeInView>
+
+          {/* Testimonial cards grid */}
+          <div className="mx-auto max-w-5xl grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {testimonials.slice(0, 3).map((t, i) => (
+              <FadeInView key={t.name} delay={i * 0.08}>
+                <motion.div
+                  whileHover={{ y: -3 }}
+                  className="rounded-2xl border border-border/50 bg-card/60 backdrop-blur-sm p-5 transition-all hover:border-border hover:shadow-lg"
+                >
+                  <div className="flex items-center gap-2.5 mb-3">
+                    <div className={`h-8 w-8 rounded-full bg-gradient-to-br ${t.color} flex items-center justify-center text-white text-[10px] font-bold`}>
+                      {t.avatar}
+                    </div>
+                    <div>
+                      <div className="text-xs font-semibold text-foreground">{t.name}</div>
+                      <div className="text-[10px] text-muted-foreground">{t.role}</div>
+                    </div>
+                    <div className="ml-auto flex gap-0.5">
+                      {[...Array(5)].map((_, j) => (
+                        <Star key={j} className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">"{t.text}"</p>
+                </motion.div>
+              </FadeInView>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── FAQ Section ── */}
+      <section className="py-20 md:py-28 relative overflow-hidden">
+        <div
+          className="absolute inset-0 -z-10 opacity-[0.02]"
+          style={{
+            backgroundImage: "url('https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=2070&q=80')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundAttachment: "fixed",
+          }}
+        />
+        <div className="container">
+          <FadeInView>
+            <div className="mx-auto max-w-2xl text-center mb-14">
+              <span className="text-xs font-semibold uppercase tracking-widest text-primary/70 mb-3 block">
+                <HelpCircle className="h-3.5 w-3.5 inline-block mr-1 -mt-0.5" />
+                Got questions?
+              </span>
+              <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+                Frequently Asked Questions
+              </h2>
+              <p className="mt-3 text-muted-foreground">Everything you need to know about our document builder.</p>
+            </div>
+          </FadeInView>
+          <FadeInView delay={0.1}>
+            <div className="mx-auto max-w-2xl">
+              <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-xl overflow-hidden shadow-lg">
+                <Accordion type="single" collapsible className="divide-y divide-border/30">
+                  {faqItems.map((faq, i) => (
+                    <AccordionItem key={i} value={`faq-${i}`} className="border-0">
+                      <AccordionTrigger className="px-6 py-4 text-sm font-semibold text-foreground hover:no-underline hover:text-primary transition-colors">
+                        {faq.q}
+                      </AccordionTrigger>
+                      <AccordionContent className="px-6 text-sm text-muted-foreground leading-relaxed">
+                        {faq.a}
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              </div>
+            </div>
+          </FadeInView>
         </div>
       </section>
 

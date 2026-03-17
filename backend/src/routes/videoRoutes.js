@@ -200,22 +200,17 @@ async function tryCobaltDownload(url, options = {}) {
   // Working Cobalt instances — community-maintained, shuffled for load balancing (2026 updated)
   const ALL_INSTANCES = [
     'https://api.cobalt.tools',         // Official Cobalt API — most reliable
+    'https://cobalt.imput.net',
+    'https://cobalt-api.ayo.tf',
     'https://cobalt.canine.tools',
     'https://co.eepy.today',
-    'https://cobalt-api.ayo.tf',
-    'https://cobalt.imput.net',
     'https://cobalt-api.hyper.lol',
     'https://api.cobalt.best',
     'https://cobalt.tskau.team',
-    'https://cobalt.api.timelessnesses.me',
-    'https://api.savetofiles.com',
     'https://cobalt-backend.canine.tools',
-    'https://dl.khyernet.xyz',
-    'https://cobalt.siri.sh',
     'https://cobalt.rainn.dev',
     'https://cobalt.nerdvpn.de',
     'https://cobalt.jemand.live',
-    'https://api.cobalt.lol',
   ];
   // Keep official instance first, shuffle the rest for load balancing
   const [first, ...rest] = ALL_INSTANCES;
@@ -256,7 +251,7 @@ async function tryCobaltDownload(url, options = {}) {
             'Content-Type': 'application/json',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
           },
-          timeout: 20000,
+          timeout: 12000,
           validateStatus: (s) => s < 500,
         });
         const data = response.data;
@@ -945,119 +940,75 @@ router.post('/terabox-info', async (req, res) => {
     // Method 2: Third-party Terabox APIs
     const apis = [
       {
-        name: 'TeraboxDL-Primary',
-        url: `https://terabox-dl-arridha.vercel.app/api?url=${encodeURIComponent(url)}`,
+        name: 'TeraboxDL-AllDL',
+        url: `https://alldl.xyz/api/terabox?url=${encodeURIComponent(url)}`,
         parse: (data) => {
-          if (data && (data.file_name || data.name)) {
-            const name = data.file_name || data.name || 'Unknown File';
-            return {
-              name, size: data.size || data.file_size || 'Unknown',
-              thumbnail: data.thumb || data.thumbnail || '',
-              downloadLink: data.direct_link || data.download_link || data.dlink || '',
-              isVideo: /\.(mp4|mkv|avi|mov|wmv|flv|webm|m4v|3gp)$/i.test(name),
-            };
-          }
-          return null;
-        },
-      },
-      {
-        name: 'TeraboxDL-V2',
-        url: `https://teraboxvideodownloader.nepcoderdevs.com/api/getDownload?url=${encodeURIComponent(url)}`,
-        parse: (data) => {
-          if (data && data.response && data.response.length > 0) {
-            const item = data.response[0];
-            return {
-              name: item.title || item.server_filename || 'Terabox File',
-              size: item.size || 'Unknown',
-              thumbnail: item.thumbs?.url3 || item.thumbs?.url2 || '',
-              downloadLink: item.resolutions?.['720p']?.url || item.resolutions?.['480p']?.url || item.fast_link || '',
-              isVideo: true,
-            };
-          }
-          return null;
-        },
-      },
-      {
-        name: 'TeraboxDL-Backup',
-        url: `https://teraboxdownloader.online/api?url=${encodeURIComponent(url)}`,
-        parse: (data) => {
-          if (data && (data.file_name || data.name)) {
-            const name = data.file_name || data.name || 'Unknown File';
-            return {
-              name, size: data.size || data.file_size || 'Unknown',
-              thumbnail: data.thumb || data.thumbnail || '',
-              downloadLink: data.direct_link || data.download_link || data.dlink || '',
-              isVideo: /\.(mp4|mkv|avi|mov|wmv|flv|webm|m4v|3gp)$/i.test(name),
-            };
-          }
-          return null;
-        },
-      },
-      {
-        name: 'TeraboxDL-V3',
-        url: `https://terabox-dl-api.vercel.app/api/download?url=${encodeURIComponent(url)}`,
-        parse: (data) => {
-          if (data && data.ok && data.file_name) {
-            return {
-              name: data.file_name, size: data.size || 'Unknown',
-              thumbnail: data.thumb || '', downloadLink: data.download_link || '',
-              isVideo: /\.(mp4|mkv|avi|mov|wmv|flv|webm|m4v|3gp)$/i.test(data.file_name),
-            };
-          }
-          return null;
-        },
-      },
-      {
-        name: 'TeraboxDL-V4',
-        url: `https://tera.instavideosave.com/api?url=${encodeURIComponent(url)}`,
-        parse: (data) => {
-          if (data && (data.file_name || data.title)) {
-            const name = data.file_name || data.title || 'Terabox File';
-            return {
-              name, size: data.size || data.file_size || 'Unknown',
-              thumbnail: data.thumb || data.thumbnail || '',
-              downloadLink: data.direct_link || data.download_link || data.dlink || '',
-              isVideo: /\.(mp4|mkv|avi|mov|wmv|flv|webm|m4v|3gp)$/i.test(name),
-            };
-          }
-          return null;
-        },
-      },
-      {
-        name: 'TeraboxDL-V5',
-        url: `https://ytshorts.savetube.me/api/v1/terabox-downloader?url=${encodeURIComponent(url)}`,
-        parse: (data) => {
-          if (data && data.data && data.data.file_name) {
+          if (data && data.status === 'success' && data.data) {
             const d = data.data;
             return {
-              name: d.file_name, size: d.size || 'Unknown',
+              name: d.file_name || d.title || 'Terabox File',
+              size: d.size || 'Unknown',
+              thumbnail: d.thumb || d.thumbnail || '',
+              downloadLink: d.download_link || d.direct_link || d.dlink || '',
+              isVideo: /\.(mp4|mkv|avi|mov|wmv|flv|webm|m4v|3gp)$/i.test(d.file_name || ''),
+            };
+          }
+          return null;
+        },
+      },
+      {
+        name: 'TeraboxDL-TeraDownloader',
+        url: `https://teradownloader.com/api/download?url=${encodeURIComponent(url)}`,
+        parse: (data) => {
+          if (data && (data.file_name || data.name || data.title)) {
+            const name = data.file_name || data.name || data.title || 'Terabox File';
+            return {
+              name,
+              size: data.size || data.file_size || 'Unknown',
+              thumbnail: data.thumb || data.thumbnail || data.image || '',
+              downloadLink: data.direct_link || data.download_link || data.dlink || data.link || '',
+              isVideo: /\.(mp4|mkv|avi|mov|wmv|flv|webm|m4v|3gp)$/i.test(name),
+            };
+          }
+          return null;
+        },
+      },
+      {
+        name: 'TeraboxDL-SaveBox',
+        url: `https://api.savebox.app/api/terabox?url=${encodeURIComponent(url)}`,
+        parse: (data) => {
+          if (data && data.data) {
+            const d = data.data;
+            return {
+              name: d.file_name || d.title || 'Terabox File',
+              size: d.size || 'Unknown',
               thumbnail: d.thumb || d.thumbnail || '',
               downloadLink: d.direct_link || d.download_link || d.dlink || '',
-              isVideo: /\.(mp4|mkv|avi|mov|wmv|flv|webm|m4v|3gp)$/i.test(d.file_name),
+              isVideo: /\.(mp4|mkv|avi|mov|wmv|flv|webm|m4v|3gp)$/i.test(d.file_name || ''),
             };
           }
           return null;
         },
       },
       {
-        name: 'TeraboxDL-V6',
-        url: `https://teraboxdownloader.nepcoderdevs.com/api/getDownload?url=${encodeURIComponent(url)}`,
+        name: 'TeraboxDL-DLPanda',
+        url: `https://dlpanda.com/api/terabox?url=${encodeURIComponent(url)}`,
         parse: (data) => {
-          if (data && data.response && data.response.length > 0) {
-            const item = data.response[0];
+          if (data && (data.file_name || data.name)) {
+            const name = data.file_name || data.name || 'Terabox File';
             return {
-              name: item.title || item.server_filename || 'Terabox File',
-              size: item.size || 'Unknown',
-              thumbnail: item.thumbs?.url3 || item.thumbs?.url2 || '',
-              downloadLink: item.resolutions?.['720p']?.url || item.resolutions?.['480p']?.url || item.fast_link || '',
-              isVideo: true,
+              name,
+              size: data.size || data.file_size || 'Unknown',
+              thumbnail: data.thumb || data.thumbnail || '',
+              downloadLink: data.direct_link || data.download_link || data.dlink || '',
+              isVideo: /\.(mp4|mkv|avi|mov|wmv|flv|webm|m4v|3gp)$/i.test(name),
             };
           }
           return null;
         },
       },
       {
-        name: 'TeraboxDL-V7',
+        name: 'TeraboxDL-SaveAll',
         url: `https://www.saveall.ai/api/terabox?url=${encodeURIComponent(url)}`,
         parse: (data) => {
           if (data && data.data) {
@@ -1073,22 +1024,6 @@ router.post('/terabox-info', async (req, res) => {
           return null;
         },
       },
-      {
-        name: 'TeraboxDL-V8',
-        url: `https://terabox.udrop.com/api/get-download?url=${encodeURIComponent(url)}`,
-        parse: (data) => {
-          if (data && (data.file_name || data.name)) {
-            const name = data.file_name || data.name || 'Terabox File';
-            return {
-              name, size: data.size || data.file_size || 'Unknown',
-              thumbnail: data.thumb || data.thumbnail || '',
-              downloadLink: data.direct_link || data.download_link || data.dlink || '',
-              isVideo: /\.(mp4|mkv|avi|mov|wmv|flv|webm|m4v|3gp)$/i.test(name),
-            };
-          }
-          return null;
-        },
-      },
     ];
 
     let fileInfo = null;
@@ -1096,8 +1031,8 @@ router.post('/terabox-info', async (req, res) => {
       try {
         console.log(`[Terabox Info] Trying ${api.name}...`);
         const resp = await axios.get(api.url, {
-          timeout: 20000,
-          signal: AbortSignal.timeout(25000),
+          timeout: 10000,
+          signal: AbortSignal.timeout(12000),
           headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
         });
         fileInfo = api.parse(resp.data);
@@ -1108,6 +1043,46 @@ router.post('/terabox-info', async (req, res) => {
       } catch (err) {
         console.log(`[Terabox Info] ${api.name} failed: ${err.message}`);
         continue;
+      }
+    }
+
+    // Method 3: Puppeteer direct scraping (last resort)
+    if (!fileInfo) {
+      try {
+        console.log('[Terabox Info] Trying Puppeteer scraping...');
+        const puppeteer = require('puppeteer');
+        const browser = await puppeteer.launch({
+          headless: 'new',
+          args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
+          timeout: 30000,
+        });
+        const page = await browser.newPage();
+        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+        await page.goto(url, { waitUntil: 'networkidle2', timeout: 25000 });
+
+        fileInfo = await page.evaluate(() => {
+          const title = document.querySelector('.file-name, .name, h1, .video-title, [class*="file-name"]');
+          const size = document.querySelector('.file-size, .size, [class*="file-size"]');
+          const thumb = document.querySelector('video[poster], img.thumb, .thumbnail img, [class*="thumbnail"] img, video');
+          const downloadBtn = document.querySelector('a[href*="download"], a[href*="d.terabox"], button[class*="download"]');
+
+          if (title) {
+            const name = title.textContent?.trim() || 'Terabox File';
+            return {
+              name,
+              size: size?.textContent?.trim() || 'Unknown',
+              thumbnail: thumb?.getAttribute('poster') || thumb?.getAttribute('src') || '',
+              downloadLink: downloadBtn?.getAttribute('href') || '',
+              isVideo: /\.(mp4|mkv|avi|mov|wmv|flv|webm|m4v|3gp)$/i.test(name),
+            };
+          }
+          return null;
+        });
+
+        await browser.close();
+        if (fileInfo) console.log('[Terabox Info] ✅ Got info via Puppeteer');
+      } catch (puppeteerErr) {
+        console.log('[Terabox Info] Puppeteer failed:', puppeteerErr.message);
       }
     }
 
@@ -1134,13 +1109,65 @@ router.post('/terabox-info', async (req, res) => {
 async function getTeraboxInfoFromAPIs(url) {
   const apis = [
     {
-      name: 'TeraboxDL-Primary',
-      url: `https://terabox-dl-arridha.vercel.app/api?url=${encodeURIComponent(url)}`,
+      name: 'TeraboxDL-AllDL',
+      url: `https://alldl.xyz/api/terabox?url=${encodeURIComponent(url)}`,
+      parse: (data) => {
+        if (data && data.status === 'success' && data.data) {
+          const d = data.data;
+          return {
+            name: d.file_name || d.title || 'Terabox File',
+            size: d.size || 'Unknown',
+            thumbnail: d.thumb || d.thumbnail || '',
+            downloadLink: d.download_link || d.direct_link || d.dlink || '',
+            isVideo: /\.(mp4|mkv|avi|mov|wmv|flv|webm|m4v|3gp)$/i.test(d.file_name || ''),
+          };
+        }
+        return null;
+      },
+    },
+    {
+      name: 'TeraboxDL-TeraDownloader',
+      url: `https://teradownloader.com/api/download?url=${encodeURIComponent(url)}`,
+      parse: (data) => {
+        if (data && (data.file_name || data.name || data.title)) {
+          const name = data.file_name || data.name || data.title || 'Terabox File';
+          return {
+            name,
+            size: data.size || data.file_size || 'Unknown',
+            thumbnail: data.thumb || data.thumbnail || data.image || '',
+            downloadLink: data.direct_link || data.download_link || data.dlink || data.link || '',
+            isVideo: /\.(mp4|mkv|avi|mov|wmv|flv|webm|m4v|3gp)$/i.test(name),
+          };
+        }
+        return null;
+      },
+    },
+    {
+      name: 'TeraboxDL-SaveBox',
+      url: `https://api.savebox.app/api/terabox?url=${encodeURIComponent(url)}`,
+      parse: (data) => {
+        if (data && data.data) {
+          const d = data.data;
+          return {
+            name: d.file_name || d.title || 'Terabox File',
+            size: d.size || 'Unknown',
+            thumbnail: d.thumb || d.thumbnail || '',
+            downloadLink: d.direct_link || d.download_link || d.dlink || '',
+            isVideo: /\.(mp4|mkv|avi|mov|wmv|flv|webm|m4v|3gp)$/i.test(d.file_name || ''),
+          };
+        }
+        return null;
+      },
+    },
+    {
+      name: 'TeraboxDL-DLPanda',
+      url: `https://dlpanda.com/api/terabox?url=${encodeURIComponent(url)}`,
       parse: (data) => {
         if (data && (data.file_name || data.name)) {
-          const name = data.file_name || data.name || 'Unknown File';
+          const name = data.file_name || data.name || 'Terabox File';
           return {
-            name, size: data.size || data.file_size || 'Unknown',
+            name,
+            size: data.size || data.file_size || 'Unknown',
             thumbnail: data.thumb || data.thumbnail || '',
             downloadLink: data.direct_link || data.download_link || data.dlink || '',
             isVideo: /\.(mp4|mkv|avi|mov|wmv|flv|webm|m4v|3gp)$/i.test(name),
@@ -1150,41 +1177,7 @@ async function getTeraboxInfoFromAPIs(url) {
       },
     },
     {
-      name: 'TeraboxDL-V2',
-      url: `https://teraboxvideodownloader.nepcoderdevs.com/api/getDownload?url=${encodeURIComponent(url)}`,
-      parse: (data) => {
-        if (data && data.response && data.response.length > 0) {
-          const item = data.response[0];
-          return {
-            name: item.title || item.server_filename || 'Terabox File',
-            size: item.size || 'Unknown',
-            thumbnail: item.thumbs?.url3 || item.thumbs?.url2 || '',
-            downloadLink: item.resolutions?.['720p']?.url || item.resolutions?.['480p']?.url || item.fast_link || '',
-            isVideo: true,
-          };
-        }
-        return null;
-      },
-    },
-    {
-      name: 'TeraboxDL-V6',
-      url: `https://teraboxdownloader.nepcoderdevs.com/api/getDownload?url=${encodeURIComponent(url)}`,
-      parse: (data) => {
-        if (data && data.response && data.response.length > 0) {
-          const item = data.response[0];
-          return {
-            name: item.title || item.server_filename || 'Terabox File',
-            size: item.size || 'Unknown',
-            thumbnail: item.thumbs?.url3 || item.thumbs?.url2 || '',
-            downloadLink: item.resolutions?.['720p']?.url || item.resolutions?.['480p']?.url || item.fast_link || '',
-            isVideo: true,
-          };
-        }
-        return null;
-      },
-    },
-    {
-      name: 'TeraboxDL-V7',
+      name: 'TeraboxDL-SaveAll',
       url: `https://www.saveall.ai/api/terabox?url=${encodeURIComponent(url)}`,
       parse: (data) => {
         if (data && data.data) {
@@ -1200,30 +1193,14 @@ async function getTeraboxInfoFromAPIs(url) {
         return null;
       },
     },
-    {
-      name: 'TeraboxDL-V8',
-      url: `https://terabox.udrop.com/api/get-download?url=${encodeURIComponent(url)}`,
-      parse: (data) => {
-        if (data && (data.file_name || data.name)) {
-          const name = data.file_name || data.name || 'Terabox File';
-          return {
-            name, size: data.size || data.file_size || 'Unknown',
-            thumbnail: data.thumb || data.thumbnail || '',
-            downloadLink: data.direct_link || data.download_link || data.dlink || '',
-            isVideo: /\.(mp4|mkv|avi|mov|wmv|flv|webm|m4v|3gp)$/i.test(name),
-          };
-        }
-        return null;
-      },
-    },
   ];
 
   for (const api of apis) {
     try {
       console.log(`[Terabox Helper] Trying ${api.name}...`);
       const resp = await axios.get(api.url, {
-        timeout: 20000,
-        signal: AbortSignal.timeout(25000),
+        timeout: 10000,
+        signal: AbortSignal.timeout(12000),
         headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
       });
       const result = api.parse(resp.data);

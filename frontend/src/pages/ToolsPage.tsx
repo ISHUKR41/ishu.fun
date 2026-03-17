@@ -21,7 +21,7 @@ import AnimatedCounter from "@/components/animations/AnimatedCounter";
 import GradientMesh from "@/components/animations/GradientMesh";
 import MorphingBlob from "@/components/animations/MorphingBlob";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { useState, useMemo, lazy, Suspense, useEffect, useRef } from "react";
+import { useState, useMemo, lazy, Suspense, useEffect, useRef, memo, useCallback } from "react";
 import { Search, ArrowRight, Sparkles, X, Zap, Shield, Clock, Download, Star, CheckCircle, Users, FileText, Upload, MousePointerClick, Settings, ChevronRight, Award, TrendingUp, Layers } from "lucide-react";
 import { Link } from "react-router-dom";
 import { allToolsData, toolCategories } from "@/data/tools-data";
@@ -39,6 +39,31 @@ gsap.registerPlugin(ScrollTrigger);
 
 // Lazy load 3D scene with error fallback to prevent blank screen on import failure
 const ToolsScene3D = lazy(() => import("@/components/3d/ToolsScene3D").catch(() => ({ default: () => null })));
+
+// Memoized tool card for the main grid — prevents re-renders when siblings change
+const ToolGridCard = memo(function ToolGridCard({ tool }: { tool: typeof allToolsData[number] }) {
+  return (
+    <Link to={`/tools/${tool.slug}`}>
+      <motion.div
+        whileHover={{ y: -6, scale: 1.05 }}
+        whileTap={{ scale: 0.97 }}
+        className="group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-border bg-card p-4 text-center transition-all hover:border-primary/30 hover:shadow-glow"
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+        <div className="relative">
+          <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary transition-all group-hover:scale-110 group-hover:bg-primary/20">
+            <ToolIcon iconName={tool.icon} size={20} />
+          </div>
+          <h3 className="font-display text-xs font-semibold text-foreground">{tool.name}</h3>
+          <p className="mt-1 line-clamp-2 text-[10px] leading-relaxed text-muted-foreground">{tool.desc}</p>
+          <span className="mt-2 inline-block rounded bg-secondary px-2 py-0.5 text-[9px] font-medium text-muted-foreground transition-colors group-hover:bg-primary/10 group-hover:text-primary">
+            {tool.category}
+          </span>
+        </div>
+      </motion.div>
+    </Link>
+  );
+});
 
 // Fuse instance is created at module level using the static allToolsData (never changes)
 const fuse = new Fuse(allToolsData, {
@@ -74,6 +99,15 @@ const ToolsPage = () => {
   // Disable tilt on touch/mobile devices for better performance
   const isMobile = useMemo(() => typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches, []);
 
+  // Pre-compute category counts to avoid repeated .filter() in render
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { All: allToolsData.length };
+    for (const t of allToolsData) {
+      counts[t.category] = (counts[t.category] || 0) + 1;
+    }
+    return counts;
+  }, []);
+
   useEffect(() => {
     const ctx = gsap.context(() => {
       gsap.fromTo(".how-step",
@@ -104,7 +138,7 @@ const ToolsPage = () => {
     return items;
   }, [activeCat, search]);
 
-  const popularFiltered = allToolsData.filter(t => popularTools.includes(t.name));
+  const popularFiltered = useMemo(() => allToolsData.filter(t => popularTools.includes(t.name)), []);
 
   return (
     <Layout>
@@ -215,7 +249,7 @@ const ToolsPage = () => {
                   }`}>
                   {cat}
                   <span className="ml-2 text-xs opacity-60">
-                    ({cat === "All" ? allToolsData.length : allToolsData.filter(t => t.category === cat).length})
+                    ({categoryCounts[cat] ?? 0})
                   </span>
                 </motion.button>
               ))}
@@ -304,27 +338,9 @@ const ToolsPage = () => {
               </h2>
             </div>
           </FadeInView>
-          <div ref={gridRef} className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+          <div ref={gridRef} className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 contain-layout">
             {filtered.map((tool) => (
-              <Link key={tool.slug} to={`/tools/${tool.slug}`}>
-                <motion.div
-                  whileHover={{ y: -6, scale: 1.05 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-border bg-card p-4 text-center transition-all hover:border-primary/30 hover:shadow-glow"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-                  <div className="relative">
-                    <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary transition-all group-hover:scale-110 group-hover:bg-primary/20">
-                      <ToolIcon iconName={tool.icon} size={20} />
-                    </div>
-                    <h3 className="font-display text-xs font-semibold text-foreground">{tool.name}</h3>
-                    <p className="mt-1 line-clamp-2 text-[10px] leading-relaxed text-muted-foreground">{tool.desc}</p>
-                    <span className="mt-2 inline-block rounded bg-secondary px-2 py-0.5 text-[9px] font-medium text-muted-foreground transition-colors group-hover:bg-primary/10 group-hover:text-primary">
-                      {tool.category}
-                    </span>
-                  </div>
-                </motion.div>
-              </Link>
+              <ToolGridCard key={tool.slug} tool={tool} />
             ))}
           </div>
 

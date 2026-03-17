@@ -23,6 +23,7 @@ const ParticleField = () => {
 
     let animId: number;
     let isVisible = true;
+    let frameCount = 0;
 
     const particles: { x: number; y: number; vx: number; vy: number; size: number; alpha: number; fillColor: string }[] = [];
 
@@ -41,7 +42,7 @@ const ParticleField = () => {
 
     const init = () => {
       resize();
-      const count = Math.min(40, Math.floor((canvas.offsetWidth * canvas.offsetHeight) / 12000));
+      const count = Math.min(25, Math.floor((canvas.offsetWidth * canvas.offsetHeight) / 18000));
       for (let i = 0; i < count; i++) {
         const alpha = Math.random() * 0.5 + 0.1;
         particles.push({
@@ -67,7 +68,9 @@ const ParticleField = () => {
     }
 
     const draw = () => {
-      if (!isVisible) {
+      frameCount++;
+      // Draw every 2nd frame (30fps is visually identical for slow-moving particles)
+      if (!isVisible || frameCount % 2 !== 0) {
         animId = requestAnimationFrame(draw);
         return;
       }

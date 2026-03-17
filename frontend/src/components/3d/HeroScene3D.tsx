@@ -10,6 +10,8 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Float, MeshDistortMaterial, MeshWobbleMaterial, Sphere, Torus, Icosahedron, Octahedron, Box } from "@react-three/drei";
 import * as THREE from "three";
 
+const IS_MOBILE = typeof window !== "undefined" && (window.innerWidth < 768 || /Mobi|Android/i.test(navigator.userAgent));
+
 function useKeepAlive() {
   const { invalidate } = useThree();
   useFrame(() => invalidate());
@@ -71,7 +73,7 @@ const GlowingSphere = memo(function GlowingSphere() {
   });
   return (
     <Float speed={1} rotationIntensity={0.2} floatIntensity={0.8}>
-      <Sphere ref={ref} args={[0.5, 32, 32]} position={[1.5, -1.5, 0.5]}>
+      <Sphere ref={ref} args={[0.5, 16, 16]} position={[1.5, -1.5, 0.5]}>
         <MeshDistortMaterial color="#3b82f6" distort={0.5} speed={2} transparent opacity={0.2} />
       </Sphere>
     </Float>
@@ -79,7 +81,7 @@ const GlowingSphere = memo(function GlowingSphere() {
 });
 
 const ParticleCloud = memo(function ParticleCloud() {
-  const count = 200;
+  const count = IS_MOBILE ? 80 : 200;
   const ref = useRef<THREE.Points>(null);
 
   const positions = useMemo(() => {
@@ -163,7 +165,8 @@ const HeroScene3D = () => {
         <Canvas
           camera={{ position: [0, 0, 5], fov: 60 }}
           frameloop="demand"
-          dpr={[1, 1.5]}
+          dpr={[1, IS_MOBILE ? 1 : 1.5]}
+          performance={{ min: 0.5 }}
           gl={{ antialias: false, alpha: true, powerPreference: "high-performance" }}
           style={{ background: "transparent" }}
         >

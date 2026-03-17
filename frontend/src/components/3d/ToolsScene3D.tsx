@@ -10,6 +10,8 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Float, MeshDistortMaterial, Icosahedron, Box, Torus } from "@react-three/drei";
 import * as THREE from "three";
 
+const IS_MOBILE = typeof window !== "undefined" && (window.innerWidth < 768 || /Mobi|Android/i.test(navigator.userAgent));
+
 function useKeepAlive() {
   const { invalidate } = useThree();
   useFrame(() => invalidate());
@@ -61,7 +63,7 @@ const CentralOrb = memo(function CentralOrb() {
 
 const ConnectorLines = memo(function ConnectorLines() {
   const ref = useRef<THREE.Points>(null);
-  const count = 100;
+  const count = IS_MOBILE ? 50 : 100;
 
   const positions = useMemo(() => {
     const pos = new Float32Array(count * 3);
@@ -127,7 +129,8 @@ const ToolsScene3D = () => {
         <Canvas
           camera={{ position: [0, 0, 4], fov: 50 }}
           frameloop="demand"
-          dpr={[1, 1.5]}
+          dpr={[1, IS_MOBILE ? 1 : 1.5]}
+          performance={{ min: 0.5 }}
           gl={{ antialias: false, alpha: true, powerPreference: "high-performance" }}
           style={{ background: "transparent" }}
         >

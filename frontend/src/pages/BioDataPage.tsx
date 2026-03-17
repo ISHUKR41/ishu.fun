@@ -207,8 +207,52 @@ const BioDataPreview: React.FC<BioDataPreviewProps> = (p) => {
   );
 };
 
+// ─── Template Color Themes ─────────────────────────────────────────────────────
+const TEMPLATE_COLORS = [
+  { name: "Violet", primary: "#8b5cf6", secondary: "#a78bfa", gradient: "from-violet-500 to-purple-500", ring: "focus:ring-violet-500/20 focus:border-violet-500/60", glow: "rgba(139,92,246,0.4)" },
+  { name: "Rose", primary: "#f43f5e", secondary: "#fb7185", gradient: "from-rose-500 to-pink-500", ring: "focus:ring-rose-500/20 focus:border-rose-500/60", glow: "rgba(244,63,94,0.4)" },
+  { name: "Blue", primary: "#3b82f6", secondary: "#60a5fa", gradient: "from-blue-500 to-indigo-500", ring: "focus:ring-blue-500/20 focus:border-blue-500/60", glow: "rgba(59,130,246,0.4)" },
+  { name: "Emerald", primary: "#10b981", secondary: "#34d399", gradient: "from-emerald-500 to-teal-500", ring: "focus:ring-emerald-500/20 focus:border-emerald-500/60", glow: "rgba(16,185,129,0.4)" },
+  { name: "Amber", primary: "#f59e0b", secondary: "#fbbf24", gradient: "from-amber-500 to-yellow-500", ring: "focus:ring-amber-500/20 focus:border-amber-500/60", glow: "rgba(245,158,11,0.4)" },
+  { name: "Cyan", primary: "#06b6d4", secondary: "#22d3ee", gradient: "from-cyan-500 to-sky-500", ring: "focus:ring-cyan-500/20 focus:border-cyan-500/60", glow: "rgba(6,182,212,0.4)" },
+  { name: "Fuchsia", primary: "#d946ef", secondary: "#e879f9", gradient: "from-fuchsia-500 to-purple-500", ring: "focus:ring-fuchsia-500/20 focus:border-fuchsia-500/60", glow: "rgba(217,70,239,0.4)" },
+  { name: "Lime", primary: "#84cc16", secondary: "#a3e635", gradient: "from-lime-500 to-green-500", ring: "focus:ring-lime-500/20 focus:border-lime-500/60", glow: "rgba(132,204,22,0.4)" },
+  { name: "Indigo", primary: "#6366f1", secondary: "#818cf8", gradient: "from-indigo-500 to-blue-500", ring: "focus:ring-indigo-500/20 focus:border-indigo-500/60", glow: "rgba(99,102,241,0.4)" },
+  { name: "Teal", primary: "#14b8a6", secondary: "#2dd4bf", gradient: "from-teal-500 to-emerald-500", ring: "focus:ring-teal-500/20 focus:border-teal-500/60", glow: "rgba(20,184,166,0.4)" },
+];
+
+// ─── Template Color Picker Component ──────────────────────────────────────────
+const TemplateColorPicker: React.FC<{ selected: number; onSelect: (i: number) => void }> = ({ selected, onSelect }) => (
+  <div className="flex flex-wrap items-center gap-2">
+    <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 mr-1">Theme:</span>
+    {TEMPLATE_COLORS.map((c, i) => (
+      <motion.button
+        key={c.name}
+        whileHover={{ scale: 1.2 }}
+        whileTap={{ scale: 0.9 }}
+        onClick={() => onSelect(i)}
+        className="relative h-7 w-7 rounded-full transition-all duration-200"
+        style={{
+          background: `linear-gradient(135deg, ${c.primary}, ${c.secondary})`,
+          boxShadow: selected === i ? `0 0 0 2px var(--background), 0 0 0 4px ${c.primary}, 0 0 16px ${c.glow}` : "none",
+        }}
+        title={c.name}
+      >
+        {selected === i && (
+          <motion.div
+            initial={{ scale: 0 }} animate={{ scale: 1 }}
+            className="absolute inset-0 flex items-center justify-center"
+          >
+            <CheckCircle className="h-3.5 w-3.5 text-white drop-shadow" />
+          </motion.div>
+        )}
+      </motion.button>
+    ))}
+  </div>
+);
+
 // ─── Constants ─────────────────────────────────────────────────────────────────
-const inputCls = "w-full rounded-xl border border-border/50 bg-background/30 px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/45 focus:border-violet-500/60 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:shadow-[0_0_18px_rgba(139,92,246,0.12)] backdrop-blur-md transition-all duration-300";
+const inputCls = "w-full rounded-xl border border-border/50 bg-background/30 px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/45 focus:outline-none focus:ring-2 focus:shadow-[0_0_18px_rgba(139,92,246,0.12)] backdrop-blur-md transition-all duration-300 hover:border-border/80 hover:shadow-[0_0_12px_rgba(139,92,246,0.06)] hover:bg-background/40";
 const labelCls = "mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70";
 
 // ─── Main Component ────────────────────────────────────────────────────────────
@@ -253,6 +297,9 @@ const BioDataPage = () => {
   const [confetti, setConfetti] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const formSectionsRef = useRef<HTMLDivElement>(null);
+  // Template color theme
+  const [templateColor, setTemplateColor] = useState(0);
+  const activeTheme = TEMPLATE_COLORS[templateColor];
 
   useEffect(() => {
     if (disableHeavyEffects) return;
@@ -402,7 +449,7 @@ const BioDataPage = () => {
           <FadeInView delay={0.05}>
             <div className="mx-auto max-w-4xl mb-8">
               <div className="rounded-2xl border border-border/40 bg-gradient-to-b from-card/90 to-card/50 backdrop-blur-xl p-5 shadow-2xl">
-                <div className="flex items-center gap-5">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
                   <CircularProgress value={completion} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1.5">
@@ -411,11 +458,22 @@ const BioDataPage = () => {
                         {completion===100?"✅ All filled!":completion>50?"Keep going! 🔥":"Let's start! 🚀"}
                       </span>
                     </div>
-                    <div className="h-1.5 rounded-full bg-border/40 overflow-hidden">
+                    <div className="h-1.5 rounded-full bg-border/40 overflow-hidden relative">
                       <motion.div className="h-full rounded-full bg-gradient-to-r from-violet-500 to-purple-500"
                         initial={{ width:0 }} animate={{ width:`${completion}%` }} transition={{ duration:0.6, ease:"easeOut" }}/>
+                      {completion > 0 && completion < 100 && (
+                        <motion.div
+                          className="absolute top-0 h-full w-8 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                          animate={{ left: ["-10%", `${completion}%`] }}
+                          transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                        />
+                      )}
                     </div>
                     <p className="text-xs text-muted-foreground mt-2">Fill Name, DOB, Gender, Email, Phone, Education, Occupation & Father's Name for 100%</p>
+                    {/* Template Color Picker */}
+                    <div className="mt-3 pt-3 border-t border-border/30">
+                      <TemplateColorPicker selected={templateColor} onSelect={setTemplateColor} />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -616,7 +674,7 @@ const BioDataPage = () => {
             <div className="bio-section-gsap" style={{ willChange: "transform" }}>
             <FadeInView delay={0.18}>
               <motion.div
-                className="rounded-2xl border border-border/40 bg-gradient-to-br from-violet-500/10 via-purple-500/8 to-pink-500/10 p-8 text-center backdrop-blur-xl shadow-2xl"
+                className="rounded-2xl border border-border/40 bg-gradient-to-br from-violet-500/10 via-purple-500/8 to-pink-500/10 p-6 sm:p-8 text-center backdrop-blur-xl shadow-2xl"
                 style={{ boxShadow:"0 0 60px rgba(139,92,246,0.08), 0 20px 60px rgba(0,0,0,0.3)" }}>
                 <motion.div animate={{ y:[0,-6,0] }} transition={{ repeat:Infinity, duration:3, ease:"easeInOut" }} className="mb-4 inline-block">
                   <div className="flex h-16 w-16 mx-auto items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-2xl"
@@ -625,19 +683,31 @@ const BioDataPage = () => {
                   </div>
                 </motion.div>
                 <h3 className="text-xl font-black text-foreground mb-2">Ready to Download?</h3>
-                <p className="text-sm text-muted-foreground mb-6">Your bio-data will be exported as a beautifully formatted PDF</p>
-                <motion.button
-                  whileHover={{ scale:1.04, boxShadow:"0 0 40px rgba(139,92,246,0.6), 0 8px 32px rgba(0,0,0,0.3)" }}
-                  whileTap={{ scale:0.97 }}
-                  onClick={generatePDF}
-                  className="relative overflow-hidden inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r from-violet-500 via-purple-500 to-pink-500 px-10 py-4 text-sm font-bold text-white shadow-2xl transition-all"
-                  style={{ boxShadow:"0 4px 24px rgba(139,92,246,0.4)" }}>
-                  <motion.div animate={{ x:["-100%","200%"] }} transition={{ repeat:Infinity, duration:2.5, ease:"linear" }}
-                    className="absolute inset-0 w-1/3 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12"/>
-                  <Download className="h-5 w-5 relative z-10"/>
-                  <span className="relative z-10">Download Bio-Data PDF</span>
-                  <Zap className="h-4 w-4 relative z-10 opacity-80"/>
-                </motion.button>
+                <p className="text-sm text-muted-foreground mb-2">Your bio-data will be exported as a beautifully formatted PDF</p>
+                <p className="text-xs text-muted-foreground/60 mb-6">Selected theme: <span className="font-semibold" style={{ color: activeTheme.primary }}>{activeTheme.name}</span></p>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <motion.button
+                    whileHover={{ scale:1.03 }}
+                    whileTap={{ scale:0.97 }}
+                    onClick={() => setShowPreview(true)}
+                    className="inline-flex items-center gap-2 rounded-2xl border border-violet-500/40 bg-violet-500/10 px-6 py-3.5 text-sm font-bold text-violet-400 hover:bg-violet-500/20 transition-all"
+                  >
+                    <Eye className="h-4 w-4"/>
+                    <span>Preview</span>
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale:1.04, boxShadow:"0 0 40px rgba(139,92,246,0.6), 0 8px 32px rgba(0,0,0,0.3)" }}
+                    whileTap={{ scale:0.97 }}
+                    onClick={generatePDF}
+                    className="relative overflow-hidden inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r from-violet-500 via-purple-500 to-pink-500 px-10 py-4 text-sm font-bold text-white shadow-2xl transition-all"
+                    style={{ boxShadow:"0 4px 24px rgba(139,92,246,0.4)" }}>
+                    <motion.div animate={{ x:["-100%","200%"] }} transition={{ repeat:Infinity, duration:2.5, ease:"linear" }}
+                      className="absolute inset-0 w-1/3 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12"/>
+                    <Download className="h-5 w-5 relative z-10"/>
+                    <span className="relative z-10">Download Bio-Data PDF</span>
+                    <Zap className="h-4 w-4 relative z-10 opacity-80"/>
+                  </motion.button>
+                </div>
               </motion.div>
             </FadeInView>
             </div>
@@ -645,6 +715,21 @@ const BioDataPage = () => {
           </div>
         </div>
       </section>
+
+      {/* Preview Modal */}
+      <AnimatePresence>
+        {showPreview && (
+          <BioDataPreview
+            fullName={fullName} dob={dob} gender={gender} religion={religion} caste={caste}
+            nationality={nationality} maritalStatus={maritalStatus} height={height} weight={weight}
+            bloodGroup={bloodGroup} complexion={complexion} motherTongue={motherTongue} hobbies={hobbies}
+            email={email} phone={phone} address={address} education={education}
+            occupation={occupation} income={income} fatherName={fatherName} fatherOccupation={fatherOccupation}
+            motherName={motherName} motherOccupation={motherOccupation} siblings={siblings} familyType={familyType}
+            photoSrc={photoSrc} onClose={() => setShowPreview(false)}
+          />
+        )}
+      </AnimatePresence>
     </Layout>
   );
 };

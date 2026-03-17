@@ -16,6 +16,8 @@ import {
 } from "@react-three/drei";
 import * as THREE from "three";
 
+const IS_MOBILE = typeof window !== "undefined" && (window.innerWidth < 768 || /Mobi|Android/i.test(navigator.userAgent));
+
 function useKeepAlive() {
   const { invalidate } = useThree();
   useFrame(() => invalidate());
@@ -78,7 +80,7 @@ const FloatingTorusKnot = memo(function FloatingTorusKnot() {
   });
   return (
     <Float speed={2} rotationIntensity={0.2} floatIntensity={1.5}>
-      <TorusKnot ref={ref} args={[0.45, 0.1, 64, 12]} position={[3.2, 0.5, -1]}>
+      <TorusKnot ref={ref} args={[0.45, 0.1, IS_MOBILE ? 32 : 64, IS_MOBILE ? 8 : 12]} position={[3.2, 0.5, -1]}>
         <MeshDistortMaterial color="#3b82f6" wireframe distort={0.15} speed={1.5} transparent opacity={0.28} />
       </TorusKnot>
     </Float>
@@ -126,7 +128,7 @@ const PulsingSphere = memo(function PulsingSphere() {
   });
   return (
     <Float speed={1.2} rotationIntensity={0.1} floatIntensity={0.8}>
-      <Sphere ref={ref} args={[0.45, 32, 32]} position={[-2.5, -1.5, 0.5]}>
+      <Sphere ref={ref} args={[0.45, 16, 16]} position={[-2.5, -1.5, 0.5]}>
         <MeshDistortMaterial color="#10b981" distort={0.55} speed={2} transparent opacity={0.15} />
       </Sphere>
     </Float>
@@ -134,7 +136,7 @@ const PulsingSphere = memo(function PulsingSphere() {
 });
 
 const ParticleCloud = memo(function ParticleCloud() {
-  const count = 200;
+  const count = IS_MOBILE ? 80 : 200;
   const ref = useRef<THREE.Points>(null);
   const positions = useMemo(() => {
     const pos = new Float32Array(count * 3);
@@ -206,7 +208,8 @@ const CVScene3D = () => {
         <Canvas
           camera={{ position: [0, 0, 6.5], fov: 58 }}
           frameloop="demand"
-          dpr={[1, 1.5]}
+          dpr={[1, IS_MOBILE ? 1 : 1.5]}
+          performance={{ min: 0.5 }}
           gl={{ antialias: false, alpha: true, powerPreference: "high-performance" }}
           style={{ background: "transparent" }}
         >

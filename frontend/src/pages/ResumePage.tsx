@@ -1,12 +1,15 @@
 import Layout from "@/components/layout/Layout";
 import FadeInView from "@/components/animations/FadeInView";
+import GradientMesh from "@/components/animations/GradientMesh";
+import ShimmerText from "@/components/animations/ShimmerText";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { useState, useMemo, useRef, useEffect } from "react";
 import {
   FileText, Plus, Trash2, Download, ArrowLeft,
   User, GraduationCap, Briefcase, Code, FolderOpen,
   CheckCircle, Palette, ChevronUp, Zap,
-  Eye, X, MapPin, Mail, Phone, Globe, Linkedin, Award
+  Eye, X, MapPin, Mail, Phone, Globe, Linkedin, Award,
+  Shield, Sparkles
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { BreadcrumbSchema } from "@/components/seo/JsonLd";
@@ -30,7 +33,7 @@ const SectionCard: React.FC<SectionCardProps> = ({
 }) => (
   <div
     id={`section-${id}`}
-    className="rounded-xl border border-border bg-card transition-colors"
+    className="rounded-xl border border-border bg-card transition-all duration-300 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5"
   >
     <button onClick={onToggle} className="flex w-full items-center justify-between p-4 sm:p-5 group">
       <div className="flex items-center gap-3">
@@ -73,15 +76,20 @@ const emptyEdu: Education = { degree: "", institution: "", year: "", grade: "" }
 const emptyExp: Experience = { title: "", company: "", duration: "", description: "" };
 const emptyProj: Project = { name: "", description: "", tech: "" };
 
-const inputCls = "w-full rounded-lg border border-border bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/15 transition-all min-h-[42px]";
+const inputCls = "w-full rounded-lg border border-border bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 hover:border-primary/30 hover:bg-accent/30 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:shadow-[0_0_0_4px_rgba(59,130,246,0.06)] transition-all duration-300 min-h-[42px]";
 const labelCls = "mb-1.5 block text-xs font-medium text-muted-foreground";
 
 const templateColors = [
-  { name: "Blue",    primary: [30,64,175] as [number,number,number],   hex: "#3b82f6" },
-  { name: "Violet",  primary: [88,28,135] as [number,number,number],   hex: "#8b5cf6" },
-  { name: "Emerald", primary: [5,122,85]  as [number,number,number],   hex: "#10b981" },
-  { name: "Rose",    primary: [190,18,60] as [number,number,number],   hex: "#ef4444" },
-  { name: "Amber",   primary: [180,83,9]  as [number,number,number],   hex: "#f59e0b" },
+  { name: "Blue",     primary: [30,64,175]  as [number,number,number], hex: "#3b82f6" },
+  { name: "Violet",   primary: [88,28,135]  as [number,number,number], hex: "#8b5cf6" },
+  { name: "Emerald",  primary: [5,122,85]   as [number,number,number], hex: "#10b981" },
+  { name: "Rose",     primary: [190,18,60]  as [number,number,number], hex: "#ef4444" },
+  { name: "Amber",    primary: [180,83,9]   as [number,number,number], hex: "#f59e0b" },
+  { name: "Ocean",    primary: [2,132,199]  as [number,number,number], hex: "#0ea5e9" },
+  { name: "Sunset",   primary: [234,88,12]  as [number,number,number], hex: "#f97316" },
+  { name: "Forest",   primary: [22,101,52]  as [number,number,number], hex: "#16a34a" },
+  { name: "Royal",    primary: [67,56,202]  as [number,number,number], hex: "#4f46e5" },
+  { name: "Midnight", primary: [51,65,85]   as [number,number,number], hex: "#475569" },
 ];
 
 const sectionMeta = [
@@ -115,6 +123,7 @@ const ResumePreview: React.FC<ResumePreviewProps> = (props) => {
     website && { icon: Globe, text: website },
     linkedin && { icon: Linkedin, text: linkedin.replace("https://linkedin.com/in/", "@") },
   ].filter(Boolean) as { icon: React.ElementType; text: string }[];
+  const [tplStyle, setTplStyle] = useState<"classic"|"modern"|"minimal">("classic");
 
   const SectionHeading = ({ text }: { text: string }) => (
     <div className="mb-3">
@@ -146,6 +155,18 @@ const ResumePreview: React.FC<ResumePreviewProps> = (props) => {
 
         <div className="h-1 w-full rounded-t-xl" style={{ backgroundColor: accentHex }} />
 
+        {/* Template Style Tabs */}
+        <div className="flex items-center gap-1 px-4 pt-3 pb-0">
+          {(["classic","modern","minimal"] as const).map(s => (
+            <button key={s} onClick={() => setTplStyle(s)}
+              className={`px-3 py-1.5 text-[11px] font-medium rounded-md transition-all ${tplStyle===s ? "text-white shadow-sm" : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"}`}
+              style={tplStyle===s ? { backgroundColor: accentHex } : {}}>
+              {s.charAt(0).toUpperCase()+s.slice(1)}
+            </button>
+          ))}
+        </div>
+
+        {tplStyle === "classic" ? (
         <div className="p-8 md:p-10">
           <div className="text-center border-b pb-5 mb-6" style={{ borderColor: `${accentHex}25` }}>
             <h1 className="text-2xl font-bold tracking-tight" style={{ color: accentHex }}>
@@ -239,6 +260,167 @@ const ResumePreview: React.FC<ResumePreviewProps> = (props) => {
             </div>
           )}
         </div>
+        ) : tplStyle === "modern" ? (
+        <div className="p-8 md:p-10">
+          <div className="flex flex-col md:flex-row gap-6">
+            <div className="md:w-[35%] shrink-0 md:pr-6 md:border-r-2" style={{ borderColor: `${accentHex}15` }}>
+              <div className="rounded-lg p-4 mb-4" style={{ background: `${accentHex}08` }}>
+                <h1 className="text-xl font-bold tracking-tight" style={{ color: accentHex }}>{fullName || "Your Name"}</h1>
+              </div>
+              {contactItems.length > 0 && (
+                <div className="space-y-1.5 mb-5">
+                  {contactItems.map((item, i) => (
+                    <div key={i} className="flex items-center gap-1.5 text-[11px] text-zinc-500 dark:text-zinc-400">
+                      <item.icon className="h-3 w-3" style={{ color: accentHex }} />
+                      {item.text}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {skillTags.length > 0 && (
+                <div>
+                  <SectionHeading text="Skills" />
+                  <div className="flex flex-wrap gap-1.5">
+                    {skillTags.map((skill, i) => (
+                      <span key={i} className="rounded-md px-2 py-0.5 text-xs font-medium"
+                        style={{ background: `${accentHex}12`, color: accentHex, border: `1px solid ${accentHex}25` }}>
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="flex-1 space-y-5">
+              {summary && (
+                <div>
+                  <SectionHeading text="Professional Summary" />
+                  <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">{summary}</p>
+                </div>
+              )}
+              {filledExp.length > 0 && (
+                <div>
+                  <SectionHeading text="Experience" />
+                  <div className="space-y-3">
+                    {filledExp.map((exp, i) => (
+                      <div key={i}>
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">{exp.title}</p>
+                            <p className="text-xs font-medium" style={{ color: accentHex }}>{exp.company}</p>
+                          </div>
+                          {exp.duration && <p className="text-xs text-zinc-500 dark:text-zinc-400 shrink-0">{exp.duration}</p>}
+                        </div>
+                        {exp.description && <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">{exp.description}</p>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {filledEdu.length > 0 && (
+                <div>
+                  <SectionHeading text="Education" />
+                  <div className="space-y-2.5">
+                    {filledEdu.map((edu, i) => (
+                      <div key={i} className="flex items-start justify-between">
+                        <div>
+                          <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">{edu.degree}</p>
+                          <p className="text-xs text-zinc-500 dark:text-zinc-400">{edu.institution}</p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          {edu.year && <p className="text-xs text-zinc-500 dark:text-zinc-400">{edu.year}</p>}
+                          {edu.grade && <p className="text-xs font-medium" style={{ color: accentHex }}>{edu.grade}</p>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {filledProj.length > 0 && (
+                <div>
+                  <SectionHeading text="Projects" />
+                  <div className="space-y-2.5">
+                    {filledProj.map((proj, i) => (
+                      <div key={i}>
+                        <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">{proj.name}</p>
+                        {proj.tech && <p className="text-xs" style={{ color: accentHex }}>Tech: {proj.tech}</p>}
+                        {proj.description && <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">{proj.description}</p>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+        ) : (
+        <div className="p-8 md:p-10">
+          <div className="text-center mb-6">
+            <h1 className="text-2xl font-light tracking-widest text-zinc-800 dark:text-zinc-100 uppercase">{fullName || "Your Name"}</h1>
+            {contactItems.length > 0 && (
+              <div className="mt-2 flex flex-wrap justify-center gap-x-3 gap-y-1">
+                {contactItems.map((item, i) => (
+                  <span key={i} className="text-[11px] text-zinc-500 dark:text-zinc-400">{item.text}</span>
+                ))}
+              </div>
+            )}
+            <div className="mt-3 h-px bg-zinc-200 dark:bg-zinc-700" />
+          </div>
+          {summary && (
+            <div className="mb-5">
+              <h2 className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-2">Summary</h2>
+              <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">{summary}</p>
+            </div>
+          )}
+          {filledEdu.length > 0 && (
+            <div className="mb-5">
+              <h2 className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-2">Education</h2>
+              <div className="space-y-2">
+                {filledEdu.map((edu, i) => (
+                  <div key={i}>
+                    <p className="text-sm text-zinc-800 dark:text-zinc-100">{edu.degree}{edu.institution ? ` — ${edu.institution}` : ""}</p>
+                    <p className="text-xs text-zinc-400">{[edu.year, edu.grade].filter(Boolean).join(" | ")}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {filledExp.length > 0 && (
+            <div className="mb-5">
+              <h2 className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-2">Experience</h2>
+              <div className="space-y-3">
+                {filledExp.map((exp, i) => (
+                  <div key={i}>
+                    <p className="text-sm text-zinc-800 dark:text-zinc-100">{exp.title}{exp.company ? ` — ${exp.company}` : ""}</p>
+                    {exp.duration && <p className="text-xs text-zinc-400">{exp.duration}</p>}
+                    {exp.description && <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed mt-0.5">{exp.description}</p>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {skillTags.length > 0 && (
+            <div className="mb-5">
+              <h2 className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-2">Skills</h2>
+              <p className="text-sm text-zinc-600 dark:text-zinc-300">{skillTags.join("  ·  ")}</p>
+            </div>
+          )}
+          {filledProj.length > 0 && (
+            <div>
+              <h2 className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-2">Projects</h2>
+              <div className="space-y-2">
+                {filledProj.map((proj, i) => (
+                  <div key={i}>
+                    <p className="text-sm text-zinc-800 dark:text-zinc-100">{proj.name}</p>
+                    {proj.tech && <p className="text-xs text-zinc-400">Tech: {proj.tech}</p>}
+                    {proj.description && <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed mt-0.5">{proj.description}</p>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        )}
       </motion.div>
     </motion.div>
   );
@@ -310,6 +492,21 @@ const ResumePage = () => {
     skills: !!skills.trim(),
     projects: projects.some(p => p.name),
   }), [fullName, email, phone, location, summary, education, experience, skills, projects]);
+
+  const atsScore = useMemo(() => {
+    let score = 0;
+    if (fullName.trim()) score += 12;
+    if (email.trim()) score += 10;
+    if (phone.trim()) score += 8;
+    if (location.trim()) score += 5;
+    if (summary.trim()) { score += 10; if (summary.trim().length > 100) score += 5; }
+    if (education.some(e => e.degree || e.institution)) score += 12;
+    if (experience.some(e => e.title || e.company)) score += 15;
+    const skillCount = skills.split(/[,\n]/).map(s => s.trim()).filter(Boolean).length;
+    if (skillCount > 0) { score += 10; if (skillCount >= 5) score += 5; }
+    if (projects.some(p => p.name)) score += 8;
+    return Math.min(score, 100);
+  }, [fullName, email, phone, location, summary, education, experience, skills, projects]);
 
   const generatePDF = () => {
     const doc = new jsPDF();
@@ -389,6 +586,11 @@ const ResumePage = () => {
         y: bgY
       }} />
 
+      {/* Animated Gradient Mesh Background */}
+      <div className="fixed inset-0 -z-[9] pointer-events-none">
+        <GradientMesh variant="aurora" />
+      </div>
+
       {/* Live Preview Modal */}
       <AnimatePresence>
         {showPreview && (
@@ -437,12 +639,19 @@ const ResumePage = () => {
                 Back to CV
               </Link>
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg" style={{ backgroundColor: `${tc.hex}15` }}>
-                  <FileText className="h-5 w-5" style={{ color: tc.hex }} />
-                </div>
+                <motion.div
+                  className="flex h-10 w-10 items-center justify-center rounded-lg"
+                  style={{ backgroundColor: `${tc.hex}15` }}
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <Sparkles className="h-5 w-5" style={{ color: tc.hex }} />
+                </motion.div>
                 <div>
-                  <h1 className="text-xl sm:text-2xl font-bold text-foreground">Resume Builder</h1>
-                  <p className="text-xs text-muted-foreground mt-0.5">Fill in your details and download a professional PDF</p>
+                  <h1 className="text-xl sm:text-2xl font-bold">
+                    <ShimmerText>Resume Builder</ShimmerText>
+                  </h1>
+                  <p className="text-xs text-muted-foreground mt-0.5">Build your professional resume with AI-powered ATS optimization</p>
                 </div>
               </div>
             </div>
@@ -453,25 +662,54 @@ const ResumePage = () => {
             <div className="mx-auto max-w-4xl mb-6">
               <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                  {/* Progress indicator */}
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="relative h-12 w-12 shrink-0">
-                      <svg width="48" height="48" style={{ transform: "rotate(-90deg)" }}>
-                        <circle cx="24" cy="24" r="20" stroke="currentColor" className="text-border" strokeWidth="3" fill="none" />
-                        <circle cx="24" cy="24" r="20" stroke={tc.hex} strokeWidth="3" fill="none"
-                          strokeLinecap="round" strokeDasharray={`${2 * Math.PI * 20}`}
-                          strokeDashoffset={`${2 * Math.PI * 20 * (1 - completion / 100)}`}
-                          className="transition-all duration-500" />
-                      </svg>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-xs font-bold text-foreground">{completion}%</span>
+                  {/* Progress & ATS indicators */}
+                  <div className="flex items-center gap-4 min-w-0 flex-wrap">
+                    <div className="flex items-center gap-2.5">
+                      <div className="relative h-12 w-12 shrink-0">
+                        <svg width="48" height="48" style={{ transform: "rotate(-90deg)" }}>
+                          <circle cx="24" cy="24" r="20" stroke="currentColor" className="text-border" strokeWidth="3" fill="none" />
+                          <circle cx="24" cy="24" r="20" stroke={tc.hex} strokeWidth="3" fill="none"
+                            strokeLinecap="round" strokeDasharray={`${2 * Math.PI * 20}`}
+                            strokeDashoffset={`${2 * Math.PI * 20 * (1 - completion / 100)}`}
+                            className="transition-all duration-500" />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-[10px] font-bold text-foreground">{completion}%</span>
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-xs font-medium text-foreground">Complete</span>
+                        <p className="text-[10px] text-muted-foreground">
+                          {completion === 100 ? "All filled" : `${completion}%`}
+                        </p>
                       </div>
                     </div>
-                    <div>
-                      <span className="text-sm font-medium text-foreground">Profile Completion</span>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {completion === 100 ? "All sections filled" : `${completion}% complete`}
-                      </p>
+                    <div className="h-8 w-px bg-border hidden sm:block" />
+                    <div className="flex items-center gap-2.5">
+                      <div className="relative h-12 w-12 shrink-0">
+                        <svg width="48" height="48" style={{ transform: "rotate(-90deg)" }}>
+                          <circle cx="24" cy="24" r="20" stroke="currentColor" className="text-border" strokeWidth="3" fill="none" />
+                          <motion.circle cx="24" cy="24" r="20"
+                            stroke={atsScore >= 70 ? "#10b981" : atsScore >= 40 ? "#f59e0b" : "#ef4444"}
+                            strokeWidth="3" fill="none" strokeLinecap="round"
+                            strokeDasharray={`${2 * Math.PI * 20}`}
+                            initial={{ strokeDashoffset: 2 * Math.PI * 20 }}
+                            animate={{ strokeDashoffset: 2 * Math.PI * 20 * (1 - atsScore / 100) }}
+                            transition={{ duration: 0.8, ease: "easeOut" }} />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-[10px] font-bold text-foreground">{atsScore}</span>
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-xs font-medium text-foreground flex items-center gap-1">
+                          <Shield className="h-3 w-3" style={{ color: atsScore >= 70 ? "#10b981" : atsScore >= 40 ? "#f59e0b" : "#ef4444" }} />
+                          ATS Score
+                        </span>
+                        <p className="text-[10px] text-muted-foreground">
+                          {atsScore >= 80 ? "Excellent" : atsScore >= 60 ? "Good" : atsScore >= 40 ? "Fair" : "Needs work"}
+                        </p>
+                      </div>
                     </div>
                   </div>
 
@@ -500,23 +738,25 @@ const ResumePage = () => {
                     <div className="flex items-center gap-2">
                       <Palette className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                       <span className="text-[11px] text-muted-foreground shrink-0">Theme:</span>
-                      <div className="flex gap-2">
+                      <div className="flex gap-1.5 flex-wrap">
                         {templateColors.map((color, i) => (
                           <button key={color.name}
                             onClick={() => setSelectedColor(i)}
                             className="flex flex-col items-center gap-0.5"
                           >
-                            <div
-                              className={`h-6 w-6 rounded-full transition-all ${selectedColor===i ? "ring-2 ring-offset-2 ring-offset-background scale-110" : "opacity-50 hover:opacity-80"}`}
+                            <motion.div
+                              whileHover={{ scale: 1.2 }}
+                              whileTap={{ scale: 0.9 }}
+                              className={`h-5 w-5 rounded-full transition-all ${selectedColor===i ? "ring-2 ring-offset-2 ring-offset-background scale-110" : "opacity-50 hover:opacity-80"}`}
                               style={{ backgroundColor: color.hex, ...(selectedColor===i ? { boxShadow: `0 0 0 2px ${color.hex}` } : {}) }}
                             >
                               {selectedColor===i && (
                                 <div className="flex items-center justify-center h-full">
-                                  <CheckCircle className="h-3 w-3 text-white" />
+                                  <CheckCircle className="h-2.5 w-2.5 text-white" />
                                 </div>
                               )}
-                            </div>
-                            <span className={`text-[9px] ${selectedColor===i ? "text-foreground font-medium" : "text-muted-foreground/50"}`}>{color.name}</span>
+                            </motion.div>
+                            <span className={`text-[8px] ${selectedColor===i ? "text-foreground font-medium" : "text-muted-foreground/50"}`}>{color.name}</span>
                           </button>
                         ))}
                       </div>

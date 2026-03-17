@@ -57,7 +57,7 @@ const TeraboxDownloaderPage = () => {
     for (let i = 0; i <= retries; i++) {
       const controller = new AbortController();
       abortRef.current = controller;
-      const timeoutMs = i === 0 ? 150000 : Math.max(45000, 120000 - i * 30000);
+      const timeoutMs = i === 0 ? 240000 : Math.max(60000, 180000 - i * 30000);
       const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
       try {
         const res = await fetch(fetchUrl, { ...options, signal: controller.signal });

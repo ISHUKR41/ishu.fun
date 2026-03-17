@@ -20,8 +20,9 @@ import MorphingBlob from "@/components/animations/MorphingBlob";
 import AnimatedCounter from "@/components/animations/AnimatedCounter";
 import { BreadcrumbSchema } from "@/components/seo/JsonLd";
 import SEOHead, { SEO_DATA } from "@/components/seo/SEOHead";
-import { useState, useEffect, useRef, useMemo, useCallback, memo, lazy, Suspense } from "react";
-import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
+import { useState, useEffect, useRef, useMemo, useCallback, memo, lazy, Suspense, forwardRef } from "react";
+import { VirtuosoGrid } from "react-virtuoso";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Tv, Search, X, Play, Loader2, Radio, Film, Music, Newspaper, Baby,
   BookOpen, Heart, Dumbbell, Globe, Laugh, Church, Utensils,
@@ -162,6 +163,10 @@ const CAT_META: Record<string, { label: string; icon: typeof Tv; gradient: strin
 
 const ALL_CAT = "all";
 const FAV_CAT = "favorites";
+
+/* ═══════════════════ SESSION STORAGE CACHE ═══════════════════ */
+const TV_CACHE_KEY = "ishu_tv_channels_v3";
+const TV_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
 const Q_ORDER: Record<string, number> = { "2160p": 6, "1080p": 5, "720p": 4, "576p": 3, "480p": 2, "360p": 1, "240p": 0 };
 
 /* ═══════════════════ M3U PARSER ═══════════════════ */
@@ -203,9 +208,12 @@ function parseM3U(text: string, defaultLang: string): { name: string; logo: stri
 const API_URL = import.meta.env.VITE_API_URL || "https://ishu-site.onrender.com";
 const BACKEND_PROXY = `${API_URL}/api/stream-proxy`;
 
-// Backend proxy is primary — it now rewrites M3U8 relative URLs to absolute
+// Multiple proxy fallbacks for maximum channel reliability
 const CORS_PROXIES = [
   (url: string) => `${BACKEND_PROXY}?url=${encodeURIComponent(url)}`,
+  // Public CORS proxies as fallbacks
+  (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
 ];
 
 /* ═══════════════════ STREAM RELIABILITY SCORING ═══════════════════ */
@@ -575,17 +583,26 @@ function useRobustPlayer(
     }
   }, []);
 
-  // Build expanded attempt list: proxy FIRST (most streams need CORS bypass),
-  // then direct as fallback for streams that already have CORS headers
+  // Build expanded attempt list: try DIRECT first for known CDNs with CORS headers,
+  // then proxy for everything else, with multiple proxy fallbacks
   const buildAttemptList = useCallback((streamList: StreamUrl[]) => {
     const list: { url: string; proxyIdx: number; original: StreamUrl }[] = [];
+    const directCDNs = ["akamaized.net", "cloudfront.net", "youtube.com", "googlevideo.com", "dai.google.com", "amagi.tv", "amagimedia.com", "cdn.jwplayer.com"];
     for (const s of streamList) {
-      // Backend proxy first (handles CORS + M3U8 URL rewriting)
+      const urlLower = s.url.toLowerCase();
+      const isDirectCDN = directCDNs.some(cdn => urlLower.includes(cdn));
+      if (isDirectCDN) {
+        // Try direct first for CDNs with CORS support
+        list.push({ url: s.url, proxyIdx: -1, original: s });
+      }
+      // Backend proxy (handles CORS + M3U8 URL rewriting)
       for (let i = 0; i < CORS_PROXIES.length; i++) {
         list.push({ url: s.url, proxyIdx: i, original: s });
       }
-      // Direct attempt as fallback (for streams that natively support CORS)
-      list.push({ url: s.url, proxyIdx: -1, original: s });
+      // Direct attempt as fallback for non-CDN streams
+      if (!isDirectCDN) {
+        list.push({ url: s.url, proxyIdx: -1, original: s });
+      }
     }
     return list;
   }, []);
@@ -651,19 +668,19 @@ function useRobustPlayer(
     const hlsConfig: Partial<any> = {
       enableWorker: true,
       lowLatencyMode: false,
-      maxBufferLength: 60,
-      maxMaxBufferLength: 300,
+      maxBufferLength: 30,
+      maxMaxBufferLength: 60,
       startLevel: -1,
-      fragLoadingMaxRetry: 15,
+      fragLoadingMaxRetry: 6,
       fragLoadingRetryDelay: 1000,
-      fragLoadingMaxRetryTimeout: 30000,
-      manifestLoadingMaxRetry: 10,
+      fragLoadingMaxRetryTimeout: 15000,
+      manifestLoadingMaxRetry: 5,
       manifestLoadingRetryDelay: 1000,
       manifestLoadingMaxRetryTimeout: timeout,
-      levelLoadingMaxRetry: 10,
-      levelLoadingRetryDelay: 800,
-      levelLoadingMaxRetryTimeout: 20000,
-      backBufferLength: 60,
+      levelLoadingMaxRetry: 5,
+      levelLoadingRetryDelay: 1000,
+      levelLoadingMaxRetryTimeout: 15000,
+      backBufferLength: 30,
       capLevelToPlayerSize: true,
       progressive: true,
       testBandwidth: true,
@@ -672,6 +689,8 @@ function useRobustPlayer(
       abrBandWidthUpFactor: 0.5,
       appendErrorMaxRetry: 5,
       enableSoftwareAES: true,
+      // Better error recovery
+      fragLoadPolicy: { default: { maxTimeToFirstByteMs: 15000, maxLoadTimeMs: 60000, timeoutRetry: { maxNumRetry: 4, retryDelayMs: 1000, maxRetryDelayMs: 8000 }, errorRetry: { maxNumRetry: 6, retryDelayMs: 1000, maxRetryDelayMs: 8000 } } },
     };
 
     // For proxied streams, route ALL XHR requests through the proxy
@@ -737,13 +756,14 @@ function useRobustPlayer(
 
     hls.on(Hls.Events.ERROR, (_e: any, data: any) => {
       if (!data.fatal) return;
-      if (data.type === Hls.ErrorTypes.MEDIA_ERROR && retryRef.current < 3) {
+      if (data.type === Hls.ErrorTypes.MEDIA_ERROR && retryRef.current < 5) {
         retryRef.current++;
         if (retryRef.current <= 2) hls.recoverMediaError();
-        else { hls.swapAudioCodec(); hls.recoverMediaError(); }
+        else if (retryRef.current <= 4) { hls.swapAudioCodec(); hls.recoverMediaError(); }
+        else { hls.recoverMediaError(); }
         return;
       }
-      if (data.type === Hls.ErrorTypes.NETWORK_ERROR && retryRef.current < 2) {
+      if (data.type === Hls.ErrorTypes.NETWORK_ERROR && retryRef.current < 4) {
         retryRef.current++;
         hls.startLoad();
         return;
@@ -840,21 +860,30 @@ const ChannelCard = memo(({
     </div>
   );
 
-  // Disable Tilt on mobile for performance
+  // Remove Tilt glare for performance - too many channel cards
   if (IS_MOBILE || PREFERS_REDUCED_MOTION) return cardContent;
 
   return (
-    <Tilt tiltMaxAngleX={5} tiltMaxAngleY={5} glareEnable glareMaxOpacity={0.05} scale={1.02}>
+    <Tilt tiltMaxAngleX={3} tiltMaxAngleY={3} glareEnable={false} scale={1.01} transitionSpeed={600}>
       {cardContent}
     </Tilt>
   );
 });
 
+/* ═══════════════════ VIRTUOSO GRID COMPONENTS ═══════════════════ */
+const VirtuosoGridList = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ style, children, ...props }, ref) => (
+    <div ref={ref} {...props} style={{ ...style, willChange: "transform" }}
+      className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8" />
+  ),
+);
+const VirtuosoGridItem = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ children, ...props }, ref) => <div ref={ref} {...props}>{children}</div>,
+);
+const virtuosoGridComponents = { List: VirtuosoGridList, Item: VirtuosoGridItem };
+
 /* ═══════════════════ MAIN COMPONENT ═══════════════════ */
 const TVPage = () => {
-  const { scrollY } = useScroll();
-  const bgY = useTransform(scrollY, [0, 2000], [0, -150]);
-
   const [channels, setChannels] = useState<Channel[]>([]);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [fetchProgress, setFetchProgress] = useState(0);
@@ -866,9 +895,16 @@ const TVPage = () => {
 
   // Filters
   const [activeCat, setActiveCat] = useState(ALL_CAT);
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
+  // Debounce search to avoid multiple Fuse.js runs per keystroke
+  useEffect(() => {
+    const timer = setTimeout(() => setSearch(searchInput), 200);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   // Player
   const [playing, setPlaying] = useState<Channel | null>(null);
@@ -900,25 +936,38 @@ const TVPage = () => {
     }
   }, [volume, muted]);
 
-  /* ── Fuse.js search ── */
-  const fuse = useMemo(() => new Fuse(channels, {
-    keys: [
-      { name: "name", weight: 0.5 },
-      { name: "group", weight: 0.1 },
-      { name: "languages", weight: 0.15 },
-      { name: "categoryLabel", weight: 0.1 },
-      { name: "network", weight: 0.15 },
-    ],
-    threshold: 0.4,
-    includeScore: true,
-    minMatchCharLength: 1,
-    ignoreLocation: true,
-  }), [channels]);
+  /* ── Fuse.js search (lazily initialized) ── */
+  const fuseRef = useRef<Fuse<Channel> | null>(null);
+  const fuseChannelsRef = useRef<Channel[]>([]);
+  const getFuse = useCallback(() => {
+    if (!fuseRef.current || fuseChannelsRef.current !== channels) {
+      fuseRef.current = new Fuse(channels, {
+        keys: [
+          { name: "name", weight: 0.5 },
+          { name: "group", weight: 0.1 },
+          { name: "languages", weight: 0.15 },
+          { name: "categoryLabel", weight: 0.1 },
+          { name: "network", weight: 0.15 },
+        ],
+        threshold: 0.4,
+        includeScore: true,
+        minMatchCharLength: 1,
+        ignoreLocation: true,
+      });
+      fuseChannelsRef.current = channels;
+    }
+    return fuseRef.current;
+  }, [channels]);
 
   const searchResults = useMemo(() => {
     if (!search.trim()) return [];
-    return fuse.search(search).slice(0, 50).map((r) => r.item);
-  }, [fuse, search]);
+    const results = getFuse().search(search).slice(0, 80).map((r) => r.item);
+    // Filter by selected language if one is chosen
+    if (selectedLang && selectedLang !== "all") {
+      return results.filter(ch => ch.languages.some(l => l.toLowerCase() === selectedLang.toLowerCase()));
+    }
+    return results;
+  }, [getFuse, search, selectedLang]);
 
   /* ── Channels filtered by selected language ── */
   const langChannels = useMemo(() => {
@@ -931,18 +980,18 @@ const TVPage = () => {
     let list = langChannels;
     if (activeCat === FAV_CAT) list = list.filter((c) => favorites.has(c.id));
     else if (activeCat !== ALL_CAT) list = list.filter((c) => c.category === activeCat);
-    if (search.trim()) {
-      const ids = new Set(fuse.search(search).map((r) => r.item.id));
+    if (search.trim() && searchResults.length > 0) {
+      const ids = new Set(searchResults.map((r) => r.id));
       list = list.filter((c) => ids.has(c.id));
     }
-    return [...list].sort((a, b) => {
+    return list.slice().sort((a, b) => {
       const aF = failedIds.has(a.id) ? 1 : 0;
       const bF = failedIds.has(b.id) ? 1 : 0;
       if (aF !== bF) return aF - bF;
       if (b.streams.length !== a.streams.length) return b.streams.length - a.streams.length;
       return a.name.localeCompare(b.name);
     });
-  }, [langChannels, activeCat, search, fuse, favorites, failedIds]);
+  }, [langChannels, activeCat, search, searchResults, favorites, failedIds]);
 
   // Reset expanded categories when language or category filter changes
   useEffect(() => { setExpandedCats(new Set()); }, [selectedLang, activeCat]);
@@ -1020,11 +1069,33 @@ const TVPage = () => {
     }
   }, [pState, playing]);
 
-  /* ── Fetch data ── */
+  /* ── Fetch data (with sessionStorage cache) ── */
   useEffect(() => {
+    // Check sessionStorage cache first
+    try {
+      const cached = sessionStorage.getItem(TV_CACHE_KEY);
+      if (cached) {
+        const { data, timestamp } = JSON.parse(cached);
+        if (Date.now() - timestamp < TV_CACHE_TTL && Array.isArray(data) && data.length > 0) {
+          setChannels(data);
+          setFetchProgress(100);
+          setFetchMsg(`Loaded ${data.length} channels (cached)`);
+          setFetchLoading(false);
+          return;
+        }
+      }
+    } catch {}
+
     const ctrl = new AbortController();
     fetchAllChannels(ctrl.signal, (pct, msg) => { setFetchProgress(pct); setFetchMsg(msg); })
-      .then((chs) => { setChannels(chs); setFetchLoading(false); })
+      .then((chs) => {
+        setChannels(chs);
+        setFetchLoading(false);
+        // Cache in sessionStorage
+        try {
+          sessionStorage.setItem(TV_CACHE_KEY, JSON.stringify({ data: chs, timestamp: Date.now() }));
+        } catch {}
+      })
       .catch((err) => {
         if (err.name !== "AbortError") { setFetchError(err.message); setFetchLoading(false); }
       });
@@ -1099,12 +1170,12 @@ const TVPage = () => {
   /* ═══════════════════ RENDER ═══════════════════ */
   return (
     <Layout>
-      {/* Dynamic Background Image for TVPage (Fixed to viewport) */}
-      <motion.div className="fixed inset-0 -z-10 opacity-[0.05] mix-blend-luminosity pointer-events-none scale-[1.15] origin-center" style={{
+      {/* Dynamic Background Image for TVPage (Fixed to viewport - CSS only for performance) */}
+      <div className="fixed inset-0 -z-10 opacity-[0.05] mix-blend-luminosity pointer-events-none" style={{
         backgroundImage: "url('https://images.unsplash.com/photo-1593784991095-a205069470b6?auto=format&fit=crop&q=80')",
         backgroundSize: "cover",
         backgroundPosition: "center",
-        y: bgY
+        backgroundAttachment: "fixed",
       }} />
       <SEOHead {...SEO_DATA.tv} />
       <BreadcrumbSchema items={[{ name: "Home", url: "/" }, { name: "Live TV", url: "/tv" }]} />
@@ -1115,8 +1186,8 @@ const TVPage = () => {
         <section className="relative overflow-hidden py-20 sm:py-28 lg:py-32">
           <div className="pointer-events-none absolute inset-0">
             <GradientMesh variant="aurora" />
-            {!IS_MOBILE && <MorphingBlob color="hsl(217,91%,55%)" size={500} duration={20} />}
-            {!IS_MOBILE && <MorphingBlob color="hsl(260,100%,65%)" size={400} duration={25} />}
+            {!IS_MOBILE && <MorphingBlob color="hsl(217,91%,55%)" size={300} duration={40} />}
+            {!IS_MOBILE && <MorphingBlob color="hsl(260,100%,65%)" size={250} duration={50} />}
             <div className="absolute inset-0 cross-grid opacity-[0.03]" />
           </div>
           {!IS_MOBILE && !PREFERS_REDUCED_MOTION && (
@@ -1230,9 +1301,9 @@ const TVPage = () => {
                   </div>
                 </FadeInView>
 
+                <FadeInView>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                   {/* All Languages */}
-                  <FadeInView delay={0.02}>
                     {IS_MOBILE ? (
                       <button onClick={() => setSelectedLang("all")}
                         className="group relative flex w-full flex-col items-center gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-5 sm:p-6 text-center transition-all hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10">
@@ -1246,7 +1317,7 @@ const TVPage = () => {
                         <ArrowRight className="h-4 w-4 text-primary opacity-0 group-hover:opacity-100 transition-opacity absolute right-3 top-3" />
                       </button>
                     ) : (
-                    <Tilt tiltMaxAngleX={8} tiltMaxAngleY={8} glareEnable glareMaxOpacity={0.08} scale={1.03}>
+                    <Tilt tiltMaxAngleX={4} tiltMaxAngleY={4} glareEnable={false} scale={1.02} transitionSpeed={600}>
                       <button onClick={() => setSelectedLang("all")}
                         className="group relative flex w-full flex-col items-center gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-5 sm:p-6 text-center transition-all hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10">
                         <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 text-2xl sm:text-3xl shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform">
@@ -1260,12 +1331,11 @@ const TVPage = () => {
                       </button>
                     </Tilt>
                     )}
-                  </FadeInView>
 
                   {/* Known languages */}
                   {langCounts
                     .filter(([lang]) => LANGUAGES[lang])
-                    .map(([lang, count], idx) => {
+                    .map(([lang, count]) => {
                       const meta = LANGUAGES[lang]!;
                       const langBtn = (
                         <button onClick={() => setSelectedLang(lang)}
@@ -1282,20 +1352,20 @@ const TVPage = () => {
                         </button>
                       );
                       return (
-                        <FadeInView key={lang} delay={Math.min((idx + 1) * 0.03, 0.3)}>
+                        <div key={lang}>
                           {IS_MOBILE ? langBtn : (
-                            <Tilt tiltMaxAngleX={8} tiltMaxAngleY={8} glareEnable glareMaxOpacity={0.08} scale={1.03}>
+                            <Tilt tiltMaxAngleX={4} tiltMaxAngleY={4} glareEnable={false} scale={1.02} transitionSpeed={600}>
                               {langBtn}
                             </Tilt>
                           )}
-                        </FadeInView>
+                        </div>
                       );
                     })}
 
                   {/* Other languages */}
                   {langCounts
                     .filter(([lang]) => !LANGUAGES[lang])
-                    .map(([lang, count], idx) => {
+                    .map(([lang, count]) => {
                       const otherBtn = (
                         <button onClick={() => setSelectedLang(lang)}
                           className="group relative flex w-full flex-col items-center gap-3 rounded-2xl border border-border/40 glass p-5 sm:p-6 text-center transition-all hover:border-primary/40 hover:shadow-xl">
@@ -1309,26 +1379,27 @@ const TVPage = () => {
                         </button>
                       );
                       return (
-                        <FadeInView key={lang} delay={Math.min((idx + 15) * 0.03, 0.5)}>
+                        <div key={lang}>
                           {IS_MOBILE ? otherBtn : (
-                            <Tilt tiltMaxAngleX={8} tiltMaxAngleY={8} glareEnable glareMaxOpacity={0.08} scale={1.03}>
+                            <Tilt tiltMaxAngleX={4} tiltMaxAngleY={4} glareEnable={false} scale={1.02} transitionSpeed={600}>
                               {otherBtn}
                             </Tilt>
                           )}
-                        </FadeInView>
+                        </div>
                       );
                     })}
                 </div>
+                </FadeInView>
 
                 {/* Quick search */}
                 <FadeInView delay={0.3}>
                   <div className="mt-10 text-center">
                     <p className="text-xs text-muted-foreground mb-3">Or search across all languages</p>
                     <SearchBar
-                      searchRef={searchRef} search={search} setSearch={setSearch}
+                      searchRef={searchRef} search={searchInput} setSearch={setSearchInput}
                       searchFocused={searchFocused} setSearchFocused={setSearchFocused}
                       searchResults={searchResults}
-                      onSelect={(ch) => { setSelectedLang("all"); playChannel(ch); setSearch(""); }}
+                      onSelect={(ch) => { setSelectedLang("all"); playChannel(ch); setSearchInput(""); }}
                     />
                   </div>
                 </FadeInView>
@@ -1505,10 +1576,10 @@ const TVPage = () => {
                     </div>
                     <div className="flex-1 max-w-sm">
                       <SearchBar
-                        searchRef={searchRef} search={search} setSearch={setSearch}
+                        searchRef={searchRef} search={searchInput} setSearch={setSearchInput}
                         searchFocused={searchFocused} setSearchFocused={setSearchFocused}
                         searchResults={searchResults}
-                        onSelect={(ch) => { playChannel(ch); setSearch(""); }}
+                        onSelect={(ch) => { playChannel(ch); setSearchInput(""); }}
                         compact
                       />
                     </div>
@@ -1636,20 +1707,27 @@ const TVPage = () => {
                           })}
                         </div>
                       ) : viewMode === "grid" ? (
-                        /* Flat grid when specific category selected */
-                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8" style={{ contentVisibility: "auto", containIntrinsicSize: "auto 400px", willChange: "auto" }}>
-                          {filtered.map((ch) => (
-                            <ChannelCard
-                              key={ch.id} ch={ch}
-                              isPlaying={playing?.id === ch.id}
-                              isFav={favorites.has(ch.id)}
-                              isDead={failedIds.has(ch.id)}
-                              showLang={showAllLangs}
-                              onPlay={() => playChannel(ch)}
-                              onToggleFav={() => toggleFav(ch.id)}
-                            />
-                          ))}
-                        </div>
+                        /* Flat grid when specific category selected - virtualized */
+                        <VirtuosoGrid
+                          useWindowScroll
+                          totalCount={filtered.length}
+                          overscan={200}
+                          components={virtuosoGridComponents}
+                          itemContent={(index) => {
+                            const ch = filtered[index];
+                            return (
+                              <ChannelCard
+                                key={ch.id} ch={ch}
+                                isPlaying={playing?.id === ch.id}
+                                isFav={favorites.has(ch.id)}
+                                isDead={failedIds.has(ch.id)}
+                                showLang={showAllLangs}
+                                onPlay={() => playChannel(ch)}
+                                onToggleFav={() => toggleFav(ch.id)}
+                              />
+                            );
+                          }}
+                        />
                       ) : (
                         /* List view */
                         <div className="space-y-1.5">

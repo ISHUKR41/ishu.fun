@@ -196,8 +196,16 @@ app.get('/api/stream-proxy', streamLimiter, (req, res) => {
     }
 
     let redirectCount = 0;
-    const MAX_REDIRECTS = 8;
+    const MAX_REDIRECTS = 12;
     let finished = false;
+
+    // Rotate User-Agents for better compatibility with different CDNs
+    const USER_AGENTS = [
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+        'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+    ];
+    const randomUA = USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
 
     function doProxy(url, retryCount = 0) {
         if (finished) return;
@@ -212,7 +220,7 @@ app.get('/api/stream-proxy', streamLimiter, (req, res) => {
 
         const proxyReq = client.get(url, {
             headers: {
-                'User-Agent': req.query.ua || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+                'User-Agent': req.query.ua || randomUA,
                 'Referer': referer,
                 'Origin': referer,
                 'Accept': '*/*',
@@ -222,7 +230,7 @@ app.get('/api/stream-proxy', streamLimiter, (req, res) => {
                 'Sec-Fetch-Mode': 'cors',
                 'Sec-Fetch-Site': 'cross-site',
             },
-            timeout: 30000,
+            timeout: 45000,
             ...(isHttps ? { rejectUnauthorized: false } : {}),
         }, (proxyRes) => {
             if (finished) { proxyRes.destroy(); return; }
@@ -295,8 +303,8 @@ app.get('/api/stream-proxy', streamLimiter, (req, res) => {
         proxyReq.on('error', (err) => {
             if (finished) return;
             console.error('[Stream Proxy] Error:', err.code || err.message, 'URL:', url.substring(0, 100));
-            if (retryCount < 3 && ['ECONNRESET', 'ETIMEDOUT', 'ECONNREFUSED', 'ENOTFOUND', 'EHOSTUNREACH', 'EPIPE', 'ERR_TLS_CERT_ALTNAME_INVALID', 'EAI_AGAIN', 'ECONNABORTED'].includes(err.code)) {
-                setTimeout(() => doProxy(url, retryCount + 1), 300 * (retryCount + 1));
+            if (retryCount < 5 && ['ECONNRESET', 'ETIMEDOUT', 'ECONNREFUSED', 'ENOTFOUND', 'EHOSTUNREACH', 'EPIPE', 'ERR_TLS_CERT_ALTNAME_INVALID', 'EAI_AGAIN', 'ECONNABORTED', 'ERR_SOCKET_CLOSED', 'ERR_TLS_HANDSHAKE_TIMEOUT'].includes(err.code)) {
+                setTimeout(() => doProxy(url, retryCount + 1), 500 * (retryCount + 1));
                 return;
             }
             if (!res.headersSent) res.status(502).json({ error: 'Stream proxy error' });
@@ -305,8 +313,8 @@ app.get('/api/stream-proxy', streamLimiter, (req, res) => {
         proxyReq.on('timeout', () => {
             proxyReq.destroy();
             if (finished) return;
-            if (retryCount < 2) {
-                setTimeout(() => doProxy(url, retryCount + 1), 200);
+            if (retryCount < 3) {
+                setTimeout(() => doProxy(url, retryCount + 1), 300);
                 return;
             }
             if (!res.headersSent) res.status(504).json({ error: 'Stream timeout' });
