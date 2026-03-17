@@ -1,24 +1,21 @@
 /**
  * ToolsScene3D.tsx - 3D Scene for Tools Page
- * 
- * Renders a decorative 3D background for the Tools page hero section.
- * Shows floating document shapes, a rotating gear (torus), a central orb,
- * and scattered connector particles.
- * 
- * Components:
- * - ToolGear: Rotating hexagonal torus (represents tools/gears)
- * - FloatingDoc: Small rectangular shapes floating around (represent documents)
- * - CentralOrb: Pulsing distorted sphere in the center
- * - ConnectorLines: Scattered particles creating a network effect
+ *
+ * Performance: Uses frameloop="demand" + IntersectionObserver to pause when offscreen.
+ * All sub-components wrapped in React.memo.
  */
 
-import { useRef, useMemo, Suspense } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { useRef, useMemo, Suspense, memo, useState, useEffect } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Float, MeshDistortMaterial, Icosahedron, Box, Torus } from "@react-three/drei";
 import * as THREE from "three";
 
-/** Rotating hexagonal torus - looks like a gear or tool icon */
-function ToolGear() {
+function useKeepAlive() {
+  const { invalidate } = useThree();
+  useFrame(() => invalidate());
+}
+
+const ToolGear = memo(function ToolGear() {
   const ref = useRef<THREE.Mesh>(null);
   useFrame((state) => {
     if (!ref.current) return;
@@ -27,21 +24,13 @@ function ToolGear() {
   return (
     <Float speed={1.5} floatIntensity={1}>
       <Torus ref={ref} args={[1, 0.2, 6, 6]}>
-        <MeshDistortMaterial
-          color="#3b82f6"
-          wireframe
-          distort={0.1}
-          speed={2}
-          transparent
-          opacity={0.3}
-        />
+        <MeshDistortMaterial color="#3b82f6" wireframe distort={0.1} speed={2} transparent opacity={0.3} />
       </Torus>
     </Float>
   );
-}
+});
 
-/** Small floating rectangle - represents a document/file */
-function FloatingDoc({ position, color }: { position: [number, number, number]; color: string }) {
+const FloatingDoc = memo(function FloatingDoc({ position, color }: { position: [number, number, number]; color: string }) {
   const ref = useRef<THREE.Mesh>(null);
   useFrame((state) => {
     if (!ref.current) return;
@@ -55,35 +44,25 @@ function FloatingDoc({ position, color }: { position: [number, number, number]; 
       </Box>
     </Float>
   );
-}
+});
 
-/** Pulsing icosahedron (20-sided sphere) at the center */
-function CentralOrb() {
+const CentralOrb = memo(function CentralOrb() {
   const ref = useRef<THREE.Mesh>(null);
   useFrame((state) => {
     if (!ref.current) return;
-    // Gentle breathing/pulsing scale effect
     ref.current.scale.setScalar(1 + Math.sin(state.clock.elapsedTime) * 0.1);
   });
   return (
     <Icosahedron ref={ref} args={[0.4, 2]}>
-      <MeshDistortMaterial
-        color="#3b82f6"
-        distort={0.4}
-        speed={3}
-        transparent
-        opacity={0.15}
-      />
+      <MeshDistortMaterial color="#3b82f6" distort={0.4} speed={3} transparent opacity={0.15} />
     </Icosahedron>
   );
-}
+});
 
-/** Scattered particles that slowly rotate - creates a network/constellation effect */
-function ConnectorLines() {
+const ConnectorLines = memo(function ConnectorLines() {
   const ref = useRef<THREE.Points>(null);
-  const count = 30;
-  
-  // Generate random positions in a 6x4x3 box
+  const count = 100;
+
   const positions = useMemo(() => {
     const pos = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
@@ -96,7 +75,7 @@ function ConnectorLines() {
 
   useFrame((state) => {
     if (!ref.current) return;
-    ref.current.rotation.y = state.clock.elapsedTime * 0.03;  // Very slow rotation
+    ref.current.rotation.y = state.clock.elapsedTime * 0.03;
   });
 
   return (
@@ -107,35 +86,58 @@ function ConnectorLines() {
       <pointsMaterial size={0.015} color="#60a5fa" transparent opacity={0.5} sizeAttenuation />
     </points>
   );
+});
+
+function SceneContent() {
+  useKeepAlive();
+  return (
+    <>
+      <ambientLight intensity={0.4} />
+      <pointLight position={[3, 3, 3]} intensity={0.4} color="#3b82f6" />
+      <pointLight position={[-3, -2, 2]} intensity={0.3} color="#8b5cf6" />
+      <ToolGear />
+      <CentralOrb />
+      <FloatingDoc position={[-2, 1, -0.5]} color="#3b82f6" />
+      <FloatingDoc position={[2.2, -0.8, 0]} color="#8b5cf6" />
+      <FloatingDoc position={[-1.5, -1.2, 0.5]} color="#06b6d4" />
+      <FloatingDoc position={[1.8, 1.2, -0.3]} color="#10b981" />
+      <ConnectorLines />
+    </>
+  );
 }
 
-/** Main Tools 3D Scene - overlays on top of the tools page hero */
 const ToolsScene3D = () => {
-  return (
-    <div className="pointer-events-none absolute inset-0 z-0">
-      <Canvas
-        camera={{ position: [0, 0, 4], fov: 50 }}
-        dpr={[1, 1]}
-        gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
-        style={{ background: "transparent" }}
-      >
-        <Suspense fallback={null}>
-          <ambientLight intensity={0.4} />
-          <pointLight position={[3, 3, 3]} intensity={0.4} color="#3b82f6" />
-          <pointLight position={[-3, -2, 2]} intensity={0.3} color="#8b5cf6" />
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(true);
 
-          <ToolGear />
-          <CentralOrb />
-          <FloatingDoc position={[-2, 1, -0.5]} color="#3b82f6" />
-          <FloatingDoc position={[2.2, -0.8, 0]} color="#8b5cf6" />
-          <FloatingDoc position={[-1.5, -1.2, 0.5]} color="#06b6d4" />
-          <FloatingDoc position={[1.8, 1.2, -0.3]} color="#10b981" />
-          <ConnectorLines />
-        </Suspense>
-      </Canvas>
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsVisible(entry.isIntersecting),
+      { threshold: 0 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={containerRef} className="pointer-events-none absolute inset-0 z-0">
+      {isVisible && (
+        <Canvas
+          camera={{ position: [0, 0, 4], fov: 50 }}
+          frameloop="demand"
+          dpr={[1, 1.5]}
+          gl={{ antialias: false, alpha: true, powerPreference: "high-performance" }}
+          style={{ background: "transparent" }}
+        >
+          <Suspense fallback={null}>
+            <SceneContent />
+          </Suspense>
+        </Canvas>
+      )}
     </div>
   );
 };
 
-// Export the component
 export default ToolsScene3D;

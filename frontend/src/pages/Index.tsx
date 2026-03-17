@@ -94,8 +94,3 @@ const Index = () => {
 };
 
 export default Index;
-    </Layout>
-  );
-};
-
-export default Index;

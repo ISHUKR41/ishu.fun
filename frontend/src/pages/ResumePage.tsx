@@ -864,7 +864,7 @@ const ResumePage = () => {
                     whileHover={{ scale: 1.04, boxShadow: `0 0 40px ${tc.hex}60, 0 8px 32px rgba(0,0,0,0.3)` }}
                     whileTap={{ scale: 0.97 }}
                     onClick={generatePDF}
-                    className={`relative overflow-hidden inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r ${tc.accent} px-10 py-4 text-sm font-bold text-white shadow-2xl transition-all`}
+                    className={`relative overflow-hidden inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r ${tc.accent} px-7 sm:px-10 py-3.5 sm:py-4 text-sm font-bold text-white shadow-2xl transition-all touch-manipulation`}
                     style={{ boxShadow: `0 4px 24px ${tc.hex}40` }}
                   >
                     {/* Shimmer overlay */}
