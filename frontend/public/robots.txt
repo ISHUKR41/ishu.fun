@@ -1,17 +1,41 @@
+# robots.txt for ishu.fun — Indian StudentHub University
+# Last updated: 2026-03-17
+
+# Google
 User-agent: Googlebot
 Allow: /
 Crawl-delay: 1
 
+# Bing
 User-agent: Bingbot
 Allow: /
 Crawl-delay: 2
 
+# Yandex
+User-agent: Yandex
+Allow: /
+Crawl-delay: 3
+
+# Social Media Crawlers
 User-agent: Twitterbot
 Allow: /
 
 User-agent: facebookexternalhit
 Allow: /
 
+User-agent: LinkedInBot
+Allow: /
+
+User-agent: WhatsApp
+Allow: /
+
+User-agent: TelegramBot
+Allow: /
+
+User-agent: Slackbot
+Allow: /
+
+# All other bots
 User-agent: *
 Allow: /
 Disallow: /admin
@@ -19,6 +43,15 @@ Disallow: /auth/
 Disallow: /dashboard
 Disallow: /profile
 Disallow: /settings
+Disallow: /notifications
+Disallow: /activity
+Disallow: /saved
+Disallow: /tracker
+Disallow: /tools/history
 Crawl-delay: 3
 
+# Sitemaps
 Sitemap: https://ishu.fun/sitemap.xml
+
+# Host
+Host: https://ishu.fun

@@ -11,7 +11,7 @@
  */
 
 import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import gsap from "gsap";
 import {
   Activity, Wrench, Bookmark, GraduationCap, Shield,
@@ -56,6 +56,8 @@ const groupByDay = (items: any[]) => {
 };
 
 const ActivityPage = () => {
+  const { scrollY } = useScroll();
+  const bgY = useTransform(scrollY, [0, 2000], [0, -150]);
   const { getToken, isSignedIn } = useClerkAuth();
   const [page, setPage] = useState(1);
   const listRef = useRef<HTMLDivElement>(null);
@@ -101,6 +103,14 @@ const ActivityPage = () => {
 
   return (
     <div ref={listRef} className="max-w-3xl mx-auto px-3 py-6 sm:px-4 sm:py-8 lg:px-8">
+      {/* Dynamic Background Image for Activity (Fixed to viewport) */}
+      <motion.div className="fixed inset-0 -z-10 opacity-[0.05] mix-blend-luminosity pointer-events-none scale-[1.15] origin-center" style={{
+        backgroundImage: "url('https://images.unsplash.com/photo-1506744269153-b016426ffc59?auto=format&fit=crop&w=2074&q=80')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        y: bgY
+      }} />
+
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -15 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
         <h1 className="text-2xl font-bold text-white flex items-center gap-3">

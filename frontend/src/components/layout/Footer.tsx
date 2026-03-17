@@ -16,43 +16,62 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Mail, Phone, MessageCircle, Twitter, Youtube, Instagram, Linkedin, ArrowUpRight, Heart, Sparkles, Globe, Shield, Zap } from "lucide-react";
 
-// Footer navigation links organized by category
+// Footer navigation links organized by category — SEO optimized for internal linking
 const footerLinks = {
   Platform: [
-  { label: "Results", href: "/results" },
-  { label: "PDF Tools", href: "/tools" },
-  { label: "News", href: "/news" },
-  { label: "Blog", href: "/blog" },
-  { label: "Test Series", href: "/test" },
-  { label: "About Us", href: "/about" },
-  { label: "Contact", href: "/contact" }],
+  { label: "Government Results", href: "/results" },
+  { label: "100+ Free PDF Tools", href: "/tools" },
+  { label: "Live TV (700+ Channels)", href: "/tv" },
+  { label: "Latest News India", href: "/news" },
+  { label: "Blog & Study Guides", href: "/blog" },
+  { label: "Practice Tests", href: "/test" },
+  { label: "Free CV Maker", href: "/cv" },
+  { label: "About ISHU", href: "/about" },
+  { label: "Contact Us", href: "/contact" }],
 
   "Exam Categories": [
-  { label: "UPSC", href: "/results?category=upsc" },
-  { label: "SSC", href: "/results?category=ssc" },
-  { label: "Banking", href: "/results?category=banking" },
-  { label: "Railways", href: "/results?category=railways" },
+  { label: "UPSC (IAS/IPS)", href: "/results?category=upsc" },
+  { label: "SSC (CGL/CHSL/MTS)", href: "/results?category=ssc" },
+  { label: "Banking (IBPS/SBI)", href: "/results?category=banking" },
+  { label: "Railways (RRB)", href: "/results?category=railways" },
   { label: "NTA (JEE/NEET)", href: "/results?category=nta" },
-  { label: "Defence", href: "/results?category=defence" },
-  { label: "Teaching", href: "/results?category=teaching" },
-  { label: "PSU", href: "/results?category=psu" }],
+  { label: "Defence (CDS/NDA)", href: "/results?category=defence" },
+  { label: "Teaching (CTET)", href: "/results?category=teaching" },
+  { label: "PSU Jobs", href: "/results?category=psu" },
+  { label: "Police Recruitment", href: "/results?category=police" }],
 
-  "Popular Tools": [
-  { label: "Merge PDF", href: "/tools/merge-pdf" },
-  { label: "Compress PDF", href: "/tools/compress-pdf" },
-  { label: "PDF to Word", href: "/tools/pdf-to-word" },
-  { label: "Word to PDF", href: "/tools/word-to-pdf" },
-  { label: "JPG to PDF", href: "/tools/jpg-to-pdf" },
-  { label: "Split PDF", href: "/tools/split-pdf" },
+  "Video Downloaders": [
+  { label: "YouTube Downloader HD", href: "/tools/youtube-downloader" },
+  { label: "Terabox Downloader", href: "/tools/terabox-downloader" },
+  { label: "Universal Video Downloader", href: "/tools/universal-video-downloader" }],
+
+  "Popular PDF Tools": [
+  { label: "Merge PDF Free", href: "/tools/merge-pdf" },
+  { label: "Compress PDF Online", href: "/tools/compress-pdf" },
+  { label: "PDF to Word Converter", href: "/tools/pdf-to-word" },
+  { label: "Word to PDF Converter", href: "/tools/word-to-pdf" },
+  { label: "PDF to JPG Converter", href: "/tools/pdf-to-jpg" },
+  { label: "JPG to PDF Converter", href: "/tools/jpg-to-pdf" },
+  { label: "Split PDF Free", href: "/tools/split-pdf" },
+  { label: "Edit PDF Online", href: "/tools/edit-pdf" },
+  { label: "OCR PDF Free", href: "/tools/ocr-pdf" },
   { label: "All 100+ Tools →", href: "/tools" }],
 
+  "CV & Resume": [
+  { label: "Free CV Maker", href: "/cv" },
+  { label: "Resume Builder Free", href: "/cv/resume" },
+  { label: "Bio-Data Maker", href: "/cv/bio-data" }],
+
   "Top States": [
-  { label: "Uttar Pradesh", href: "/results/state/uttar-pradesh" },
-  { label: "Bihar", href: "/results/state/bihar" },
-  { label: "Rajasthan", href: "/results/state/rajasthan" },
-  { label: "Madhya Pradesh", href: "/results/state/madhya-pradesh" },
-  { label: "Maharashtra", href: "/results/state/maharashtra" },
-  { label: "Delhi", href: "/results/state/delhi" },
+  { label: "Uttar Pradesh Results", href: "/results/state/uttar-pradesh" },
+  { label: "Bihar Results", href: "/results/state/bihar" },
+  { label: "Rajasthan Results", href: "/results/state/rajasthan" },
+  { label: "Madhya Pradesh Results", href: "/results/state/madhya-pradesh" },
+  { label: "Maharashtra Results", href: "/results/state/maharashtra" },
+  { label: "Delhi Results", href: "/results/state/delhi" },
+  { label: "Karnataka Results", href: "/results/state/karnataka" },
+  { label: "Tamil Nadu Results", href: "/results/state/tamil-nadu" },
+  { label: "West Bengal Results", href: "/results/state/west-bengal" },
   { label: "All 36 States →", href: "/results" }]
 
 };

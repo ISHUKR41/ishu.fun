@@ -14,7 +14,7 @@
  */
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import {
   User, Shield, Bell, Palette, Eye, Save,
   Mail, Github, Globe, Trash2, AlertTriangle,
@@ -59,6 +59,8 @@ const Toggle = ({ checked, onChange, label, desc }: { checked: boolean; onChange
 );
 
 const SettingsPage = () => {
+  const { scrollY } = useScroll();
+  const bgY = useTransform(scrollY, [0, 2000], [0, -150]);
   const { user, signOut } = useAuth();
   const { getToken } = useClerkAuth();
   const navigate = useNavigate();
@@ -201,6 +203,14 @@ const SettingsPage = () => {
 
   return (
     <div className="max-w-4xl mx-auto px-3 py-6 sm:px-4 sm:py-8 lg:px-8">
+      {/* Dynamic Background Image for Settings (Fixed to viewport) */}
+      <motion.div className="fixed inset-0 -z-10 opacity-[0.05] mix-blend-luminosity pointer-events-none scale-[1.15] origin-center" style={{
+        backgroundImage: "url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=2070&q=80')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        y: bgY
+      }} />
+
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -15 }}

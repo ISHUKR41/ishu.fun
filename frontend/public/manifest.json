@@ -1,0 +1,52 @@
+{
+  "name": "ISHU — Indian StudentHub University",
+  "short_name": "ISHU",
+  "description": "India's #1 free platform for government exam results, sarkari naukri, 100+ PDF tools, video downloader, 700+ live TV & 1000+ daily news.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020817",
+  "theme_color": "#0070f3",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en-IN",
+  "categories": ["education", "utilities", "news"],
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Government Results",
+      "short_name": "Results",
+      "url": "/results",
+      "description": "Check latest government exam results & vacancies"
+    },
+    {
+      "name": "PDF Tools",
+      "short_name": "Tools",
+      "url": "/tools",
+      "description": "100+ free online PDF tools"
+    },
+    {
+      "name": "YouTube Downloader",
+      "short_name": "YT Download",
+      "url": "/tools/youtube-downloader",
+      "description": "Download YouTube videos in HD for free"
+    },
+    {
+      "name": "Live TV",
+      "short_name": "TV",
+      "url": "/tv",
+      "description": "700+ live Indian TV channels free"
+    },
+    {
+      "name": "Latest News",
+      "short_name": "News",
+      "url": "/news",
+      "description": "1000+ daily news articles"
+    }
+  ]
+}

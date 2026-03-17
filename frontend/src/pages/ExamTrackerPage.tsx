@@ -13,7 +13,7 @@
  */
 
 import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import gsap from "gsap";
 import {
   GraduationCap, Plus, X, Calendar, FileText, Clock,
@@ -37,6 +37,9 @@ const getDaysUntil = (date: string | undefined) => {
 };
 
 const ExamTrackerPage = () => {
+  const { scrollY } = useScroll();
+  const bgY = useTransform(scrollY, [0, 2000], [0, -150]);
+
   const { exams, isLoading, addExam, updateExam, removeExam, isAdding } = useExamTracker();
   const [showAddModal, setShowAddModal] = useState(false);
   const [formData, setFormData] = useState({
@@ -110,6 +113,14 @@ const ExamTrackerPage = () => {
 
   return (
     <div ref={gridRef} className="max-w-7xl mx-auto px-3 py-6 sm:px-4 sm:py-8 lg:px-8">
+      {/* Background Image for Exam Tracker (Fixed to viewport) */}
+      <motion.div className="fixed inset-0 -z-10 opacity-[0.05] mix-blend-luminosity pointer-events-none scale-[1.15] origin-center" style={{
+        backgroundImage: "url('https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=2070&q=80')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        y: bgY
+      }} />
+
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -15 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
         <div className="flex items-center justify-between">

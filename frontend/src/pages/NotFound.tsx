@@ -29,6 +29,13 @@ const quickLinks = [
 const NotFound = () => {
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-hero">
+      {/* Dynamic Background Image */}
+      <div className="absolute inset-0 z-0 opacity-[0.15] mix-blend-luminosity pointer-events-none" style={{
+        backgroundImage: "url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=2072&q=80')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }} />
+
       <ParticleField />
       <div className="pointer-events-none absolute left-1/3 top-1/3 h-[400px] w-[400px] rounded-full bg-primary/5 blur-[120px]" />
       <div className="pointer-events-none absolute bottom-1/3 right-1/3 h-[300px] w-[300px] rounded-full bg-destructive/5 blur-[100px]" />

@@ -19,8 +19,9 @@
  * Features: Animated section cards, GSAP animations, 3D tilt effects
  */
 import Layout from "@/components/layout/Layout";
+import SEOHead, { SEO_DATA } from "@/components/seo/SEOHead";
 import FadeInView from "@/components/animations/FadeInView";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { FileText, CheckCircle, Globe, User, Wrench, Bell, AlertTriangle, Scale, Ban, RefreshCw, Mail, ChevronRight, Shield, Gavel } from "lucide-react";
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
@@ -44,6 +45,8 @@ const sections = [
 ];
 
 const TermsPage = () => {
+  const { scrollY } = useScroll();
+  const bgY = useTransform(scrollY, [0, 2000], [0, -150]);
   const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -60,6 +63,16 @@ const TermsPage = () => {
 
   return (
     <Layout>
+      <SEOHead {...SEO_DATA.terms} />
+
+      {/* Dynamic Background Image */}
+      <motion.div className="fixed inset-0 -z-10 opacity-[0.05] mix-blend-luminosity pointer-events-none scale-[1.15] origin-center" style={{
+        backgroundImage: "url('https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&w=2070&q=80')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        y: bgY
+      }} />
+
       {/* Hero */}
       <section className="relative bg-gradient-hero py-28 overflow-hidden">
         <div className="bg-dots pointer-events-none absolute inset-0 opacity-20" />

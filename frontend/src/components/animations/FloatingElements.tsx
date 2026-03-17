@@ -20,6 +20,7 @@
  */
 
 import { motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
 
 // Orb colors, sizes, and positions for each palette - defined outside component to avoid re-creation on every render
 const PALETTES = {
@@ -39,21 +40,35 @@ const PALETTES = {
 } as const;
 
 const FloatingElements = ({ variant = "default" }: { variant?: "default" | "warm" | "cool" }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(true);
+
+  // Pause animations when offscreen for better performance
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsVisible(entry.isIntersecting),
+      { threshold: 0, rootMargin: "200px" }
+    );
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <>
+    <div ref={containerRef} className="pointer-events-none fixed inset-0 z-0" style={{ contain: "layout style" }}>
       {PALETTES[variant].map((orb, i) => (
         <motion.div
           key={i}
-          animate={{
-            x: [0, 30 * (i % 2 === 0 ? 1 : -1), 0],  // Alternate drift direction
+          animate={isVisible ? {
+            x: [0, 30 * (i % 2 === 0 ? 1 : -1), 0],
             y: [0, -20 * (i % 2 === 0 ? -1 : 1), 0],
-          }}
+          } : undefined}
           transition={{ repeat: Infinity, duration: orb.dur, ease: "easeInOut" }}
-          className={`pointer-events-none absolute ${orb.pos} ${orb.size} rounded-full ${orb.color} blur-[80px]`}
-          style={{ willChange: "transform" }}
+          className={`pointer-events-none absolute ${orb.pos} ${orb.size} rounded-full ${orb.color} blur-[60px]`}
+          style={{ willChange: isVisible ? "transform" : "auto", contain: "layout" }}
         />
       ))}
-    </>
+    </div>
   );
 };
 

@@ -5,11 +5,13 @@
  * Features: URL input, file preview, video player, download.
  */
 import Layout from "@/components/layout/Layout";
-import BackendStatusBar from "@/components/tools/BackendStatusBar";
+import SEOHead, { SEO_DATA } from "@/components/seo/SEOHead";
+import { VideoToolSchema, BreadcrumbSchema, HowToSchema } from "@/components/seo/JsonLd";
+import BackendStatusBar, { wakeBackend } from "@/components/tools/BackendStatusBar";
 import FadeInView from "@/components/animations/FadeInView";
 import GradientMesh from "@/components/animations/GradientMesh";
 import MorphingBlob from "@/components/animations/MorphingBlob";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import {
   ArrowLeft, Search, Loader2, Download, Play,
@@ -42,6 +44,10 @@ const TeraboxDownloaderPage = () => {
 
   const [backendReady, setBackendReady] = useState(false);
   const downloadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+
+  const { scrollY } = useScroll();
+  const y = useTransform(scrollY, [0, 2000], [0, -150]);
 
   const handlePaste = async () => {
     try { const text = await navigator.clipboard.readText(); setUrl(text); } catch {}
@@ -49,18 +55,24 @@ const TeraboxDownloaderPage = () => {
 
   const fetchWithRetry = async (fetchUrl: string, options: RequestInit, retries = 3): Promise<Response> => {
     for (let i = 0; i <= retries; i++) {
+      const controller = new AbortController();
+      abortRef.current = controller;
+      const timeoutMs = i === 0 ? 150000 : Math.max(45000, 120000 - i * 30000);
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), i === 0 ? 120000 : Math.max(30000, 90000 - i * 30000));
         const res = await fetch(fetchUrl, { ...options, signal: controller.signal });
-        clearTimeout(timeoutId);
         return res;
       } catch (err: any) {
-        if (i < retries && err?.name !== "AbortError") {
-          await new Promise(r => setTimeout(r, 2000 * (i + 1)));
+        if (i < retries) {
+          if (err?.name === "AbortError" || err?.message?.includes("fetch")) {
+            try { await wakeBackend(); } catch {}
+          }
+          await new Promise(r => setTimeout(r, 3000 * (i + 1)));
           continue;
         }
         throw err;
+      } finally {
+        clearTimeout(timeoutId);
       }
     }
     throw new Error("Request failed after retries");
@@ -68,6 +80,14 @@ const TeraboxDownloaderPage = () => {
 
   const fetchFileInfo = async () => {
     if (!url.trim()) { setError("Please enter a Terabox URL."); return; }
+    if (!backendReady) {
+      const ok = await wakeBackend();
+      if (!ok) {
+        setError("Backend is still waking up. Please wait a few seconds and try again.");
+        return;
+      }
+      setBackendReady(true);
+    }
     setLoading(true);
     setError(null);
     setFileInfo(null);
@@ -82,7 +102,11 @@ const TeraboxDownloaderPage = () => {
       });
 
       const data = await res.json();
-      if (!data.success || !data.file) { setError(data.error || "Failed to fetch file info."); return; }
+      if (!data.success || !data.file) {
+        const msg = data.error || "Failed to fetch file info.";
+        setError(msg.includes("Could not extract file info") ? msg + " Please check that the link is valid and not expired." : msg);
+        return;
+      }
       setFileInfo(data.file);
     } catch (err: any) {
       if (err?.name === "AbortError") {
@@ -97,6 +121,14 @@ const TeraboxDownloaderPage = () => {
 
   const handleDownload = async () => {
     if (!fileInfo) return;
+    if (!backendReady) {
+      const ok = await wakeBackend();
+      if (!ok) {
+        setError("Backend is still waking up. Please wait a few seconds and try again.");
+        return;
+      }
+      setBackendReady(true);
+    }
     setDownloading(true);
     setError(null);
     setDownloadReady(null);
@@ -160,10 +192,35 @@ const TeraboxDownloaderPage = () => {
     setShowPreview(false); setDownloadReady(null);
   };
 
+  useEffect(() => {
+    return () => {
+      if (downloadTimerRef.current) clearTimeout(downloadTimerRef.current);
+      if (abortRef.current) abortRef.current.abort();
+    };
+  }, []);
+
   return (
     <Layout>
+      <SEOHead {...SEO_DATA.teraboxDownloader} />
+      <BreadcrumbSchema items={[{ name: "Tools", url: "/tools" }, { name: "Terabox Downloader", url: "/tools/terabox-downloader" }]} />
+      <VideoToolSchema name="Terabox Downloader — ISHU" description="Download Terabox videos and files for free. Paste link, preview and download." url="/tools/terabox-downloader" />
+      
+      {/* Dynamic Background Image for TeraboxDownloaderPage (Fixed to viewport) */}
+      <motion.div className="fixed inset-0 -z-10 opacity-[0.05] mix-blend-luminosity pointer-events-none scale-[1.15] origin-center" style={{
+        backgroundImage: "url('https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&w=2070&q=80')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        y
+      }} />
+
       {/* Hero */}
       <section className="relative bg-gradient-hero py-20 overflow-hidden">
+        {/* Dynamic Background Image */}
+        <div className="absolute inset-0 opacity-[0.10] mix-blend-luminosity" style={{
+          backgroundImage: "url('https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&w=2070&q=80')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }} />
         <GradientMesh variant="aurora" />
         <div className="pointer-events-none absolute inset-0 cross-grid opacity-10" />
         <MorphingBlob color="hsl(210 100% 56% / 0.08)" size={500} className="left-[5%] top-[10%]" />
@@ -230,10 +287,10 @@ const TeraboxDownloaderPage = () => {
                   </div>
                   <motion.button
                     whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-                    onClick={fetchFileInfo} disabled={loading}
-                    className="flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 font-display text-sm font-semibold text-white transition-all hover:bg-blue-700 hover:shadow-glow disabled:opacity-50 shrink-0"
+                    onClick={fetchFileInfo} disabled={loading || !backendReady}
+                    className="flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 font-display text-sm font-semibold text-white transition-all hover:bg-blue-700 hover:shadow-glow disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
                   >
-                    {loading ? <><Loader2 size={16} className="animate-spin" /> Fetching...</> : <><Search size={16} /> Fetch</>}
+                    {loading ? <><Loader2 size={16} className="animate-spin" /> Fetching...</> : <><Search size={16} /> {backendReady ? "Fetch" : "Waiting for Server..."}</>}
                   </motion.button>
                 </div>
                 <AnimatePresence>
@@ -327,8 +384,8 @@ const TeraboxDownloaderPage = () => {
                     <div className="flex flex-col sm:flex-row gap-3">
                       <motion.button
                         whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-                        onClick={handleDownload} disabled={downloading}
-                        className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-blue-600 py-4 font-display text-sm font-semibold text-white transition-all hover:bg-blue-700 hover:shadow-glow disabled:opacity-50"
+                        onClick={handleDownload} disabled={downloading || !backendReady}
+                        className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-blue-600 py-4 font-display text-sm font-semibold text-white transition-all hover:bg-blue-700 hover:shadow-glow disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {downloading ? <><Loader2 size={18} className="animate-spin" /> Downloading...</> : <><Download size={18} /> Download File</>}
                       </motion.button>

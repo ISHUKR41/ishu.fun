@@ -18,7 +18,7 @@ import Layout from "@/components/layout/Layout";
 import FadeInView from "@/components/animations/FadeInView";
 import ParticleField from "@/components/animations/ParticleField";
 import AnimatedCounter from "@/components/animations/AnimatedCounter";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { Rocket, Bell, Mail, Twitter, Youtube, Instagram, Linkedin, BookOpen, Brain, Target, Trophy, Sparkles, Zap, Shield, Clock, Users, Star, Award, BarChart3, CheckCircle } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import Tilt from "react-parallax-tilt";
@@ -58,6 +58,8 @@ const roadmap = [
 ];
 
 const TestPage = () => {
+  const { scrollY } = useScroll();
+  const bgY = useTransform(scrollY, [0, 2000], [0, -150]);
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
@@ -104,6 +106,14 @@ const TestPage = () => {
 
   return (
     <Layout>
+      {/* Dynamic Background Image */}
+      <motion.div className="fixed inset-0 -z-10 opacity-[0.05] mix-blend-luminosity pointer-events-none scale-[1.15] origin-center" style={{
+        backgroundImage: "url('https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=2070&q=80')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        y: bgY
+      }} />
+
       {/* Hero */}
       <section className="relative flex min-h-[100vh] items-center overflow-hidden bg-gradient-hero">
         <ParticleField />

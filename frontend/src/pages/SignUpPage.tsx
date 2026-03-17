@@ -18,8 +18,8 @@
  */
 import Layout from "@/components/layout/Layout";
 import { useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { Link, Navigate } from "react-router-dom";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { 
   BookOpen, Sparkles, MessageCircle, ArrowRight, Shield,
   TrendingUp, Users, Zap, Lock, Fingerprint,
@@ -31,14 +31,11 @@ import { TypeAnimation } from "react-type-animation";
 import gsap from "gsap";
 
 const SignUpPage = () => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
+  const { user, loading } = useAuth();
   const panelRef = useRef<HTMLElement>(null);
 
-  // Redirect if already logged in
-  useEffect(() => {
-    if (user) navigate("/", { replace: true });
-  }, [user, navigate]);
+  const { scrollY } = useScroll();
+  const bgY = useTransform(scrollY, [0, 2000], [0, -150]);
 
   // GSAP staggered entrance animations
   useEffect(() => {
@@ -60,7 +57,7 @@ const SignUpPage = () => {
     return () => ctx.revert();
   }, []);
 
-  if (user) return null;
+  if (!loading && user) return <Navigate to="/" replace />;
 
   return (
     <Layout>
@@ -68,6 +65,14 @@ const SignUpPage = () => {
         {/* === ANIMATED BACKGROUND MESH === */}
         <div className="absolute inset-0" style={{
           background: "radial-gradient(ellipse 120% 80% at 50% 0%, hsl(220 60% 8%) 0%, hsl(225 50% 4%) 60%, hsl(230 60% 2%) 100%)"
+        }} />
+
+        {/* Dynamic Background Image */}
+        <motion.div className="fixed inset-0 opacity-[0.15] mix-blend-luminosity scale-[1.15] origin-center -z-10" style={{
+          backgroundImage: "url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=2070&q=80')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          y: bgY
         }} />
 
         {/* Animated grid pattern */}

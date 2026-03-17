@@ -25,6 +25,7 @@
 
 import { lazy, Suspense } from "react";
 import Layout from "@/components/layout/Layout";
+import SEOHead, { SEO_DATA } from "@/components/seo/SEOHead";
 // Above-fold sections — loaded eagerly for fast initial paint
 import HeroSection from "@/components/home/HeroSection";
 import TrustedBySection from "@/components/home/TrustedBySection";
@@ -58,6 +59,7 @@ const SectionFallback = () => <div style={{ minHeight: "200px" }} aria-hidden="t
 const Index = () => {
   return (
     <Layout>
+      <SEOHead {...SEO_DATA.home} />
       {/* SEO Schemas - invisible structured data for search engines */}
       <WebsiteSchema />
       <OrganizationSchema />

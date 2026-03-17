@@ -42,6 +42,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Tilt from "react-parallax-tilt";
 import { BreadcrumbSchema } from "@/components/seo/JsonLd";
+import SEOHead, { SEO_DATA } from "@/components/seo/SEOHead";
 import Fuse from "fuse.js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -263,9 +264,10 @@ const NewsPage = () => {
   const translationRequestRef = useRef(0);
 
   // Parallax for hero
-  const { scrollYProgress } = useScroll();
+  const { scrollYProgress, scrollY } = useScroll();
   const heroY = useTransform(scrollYProgress, [0, 0.3], [0, -60]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.25], [1, 0.6]);
+  const bgY = useTransform(scrollY, [0, 2000], [0, -150]);
 
   // Simulate initial loading
   useEffect(() => {
@@ -520,7 +522,16 @@ const NewsPage = () => {
 
   return (
     <Layout>
+      <SEOHead {...SEO_DATA.news} />
       <BreadcrumbSchema items={[{ name: "News", url: "/news" }]} />
+
+      {/* Dynamic Background Image */}
+      <motion.div className="fixed inset-0 -z-10 opacity-[0.05] mix-blend-luminosity pointer-events-none scale-[1.15] origin-center" style={{
+        backgroundImage: "url('https://images.unsplash.com/photo-1495020689067-958852a7765e?auto=format&fit=crop&w=2069&q=80')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        y: bgY
+      }} />
 
       {/* ═══ HERO ═══ */}
       <motion.section ref={heroRef} style={{ y: heroY, opacity: heroOpacity }}
@@ -1880,7 +1891,7 @@ const NewsPage = () => {
         "@type": "CollectionPage",
         name: "Latest News & Updates — ISHU",
         description: "1000+ daily news articles across 30 categories in 22 Indian languages",
-        url: "https://ishu.lovable.app/news",
+        url: "https://ishu.fun/news",
         publisher: { "@type": "EducationalOrganization", name: "ISHU — Indian StudentHub University" },
       }) }} />
     </Layout>

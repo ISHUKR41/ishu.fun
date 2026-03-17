@@ -289,7 +289,8 @@ const NewsArticlePage = () => {
   const articleRef = useRef<HTMLElement>(null);
 
   // Reading progress
-  const { scrollYProgress } = useScroll();
+  const { scrollY, scrollYProgress } = useScroll();
+  const bgY = useTransform(scrollY, [0, 2000], [0, -150]);
   const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
   const progressPercent = useTransform(scrollYProgress, [0, 1], [0, 100]);
 
@@ -382,6 +383,14 @@ const NewsArticlePage = () => {
   return (
     <Layout>
       <BreadcrumbSchema items={[{ name: "News", url: "/news" }, { name: article.category, url: `/news?cat=${article.category}` }]} />
+
+      {/* Dynamic Background Image */}
+      <motion.div className="fixed inset-0 -z-10 opacity-[0.05] mix-blend-luminosity pointer-events-none scale-[1.15] origin-center" style={{
+        backgroundImage: "url('https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=2070&q=80')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        y: bgY
+      }} />
 
       {/* Reading Progress Bar */}
       <motion.div style={{ scaleX }} className="fixed left-0 right-0 top-16 z-50 h-1 origin-left bg-primary" />

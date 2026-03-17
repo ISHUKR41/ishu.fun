@@ -22,8 +22,8 @@
 import { useParams, Link } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import FadeInView from "@/components/animations/FadeInView";
-import { motion } from "framer-motion";
-import { useState, useCallback, useRef, useEffect } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { Upload, FileText, Download, CheckCircle, ArrowLeft, Loader2, X, ArrowRight, AlertCircle } from "lucide-react";
 import { allToolsData } from "@/data/tools-data";
 import ToolIcon from "@/components/tools/ToolIcon";
@@ -32,6 +32,9 @@ import { Progress } from "@/components/ui/progress";
 import { processFiles, downloadResult, getAcceptedTypes, isCreateTool, needsMultipleFiles, type ProcessResult, type ToolOptions } from "@/lib/pdf-processor";
 
 const ToolPage = () => {
+  const { scrollY } = useScroll();
+  const bgY = useTransform(scrollY, [0, 2000], [0, -150]);
+
   const { toolSlug } = useParams<{ toolSlug: string }>();
   const tool = allToolsData.find((t) => t.slug === toolSlug);
   const [files, setFiles] = useState<File[]>([]);
@@ -60,9 +63,12 @@ const ToolPage = () => {
     setToolOptions(opts);
   }, []);
 
-  const relatedTools = allToolsData
-    .filter((t) => t.slug !== toolSlug && t.category === tool?.category)
-    .slice(0, 6);
+  const relatedTools = useMemo(() =>
+    allToolsData
+      .filter((t) => t.slug !== toolSlug && t.category === tool?.category)
+      .slice(0, 6),
+    [toolSlug, tool?.category]
+  );
 
   if (!tool) {
     return (
@@ -194,6 +200,14 @@ const ToolPage = () => {
 
   return (
     <Layout>
+      {/* Dynamic Background Image for ToolPage (Fixed to viewport) */}
+      <motion.div className="fixed inset-0 -z-10 opacity-[0.05] mix-blend-luminosity pointer-events-none scale-[1.15] origin-center" style={{
+        backgroundImage: "url('https://images.unsplash.com/photo-1542204165-65bf26472b9b?auto=format&fit=crop&w=2074&q=80')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        y: bgY
+      }} />
+
       {/* Header */}
       <section className="bg-gradient-hero py-16">
         <div className="container">

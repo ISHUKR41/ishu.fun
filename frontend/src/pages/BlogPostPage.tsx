@@ -17,7 +17,7 @@
 import { useParams, Link } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import FadeInView from "@/components/animations/FadeInView";
-import { motion, useScroll } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { useState } from "react";
 import { Clock, Heart, ArrowLeft, Share2, BookOpen, Calendar, User, ChevronRight, MessageCircle, Twitter, Linkedin, Copy, Check, Sparkles } from "lucide-react";
 
@@ -208,7 +208,8 @@ const BlogPostPage = () => {
   const post = blogSlug ? blogData[blogSlug] : null;
   const [liked, setLiked] = useState(false);
   const [copied, setCopied] = useState(false);
-  const { scrollYProgress } = useScroll();
+  const { scrollY, scrollYProgress } = useScroll();
+  const bgY = useTransform(scrollY, [0, 2000], [0, -150]);
 
   const toc = post?.content
     .filter((p) => p.startsWith("## "))
@@ -237,6 +238,14 @@ const BlogPostPage = () => {
 
   return (
     <Layout>
+      {/* Dynamic Background Image */}
+      <motion.div className="fixed inset-0 -z-10 opacity-[0.05] mix-blend-luminosity pointer-events-none scale-[1.15] origin-center" style={{
+        backgroundImage: "url('https://images.unsplash.com/photo-1456324504439-367cee3b3c32?auto=format&fit=crop&w=2070&q=80')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        y: bgY
+      }} />
+
       {/* Reading Progress Bar */}
       <motion.div
         style={{ scaleX: scrollYProgress }}

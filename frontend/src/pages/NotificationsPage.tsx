@@ -12,7 +12,7 @@
  */
 
 import { useEffect, useRef, useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import gsap from "gsap";
 import {
   Bell, GraduationCap, Wrench, Trophy, Shield, Megaphone,
@@ -98,6 +98,9 @@ const NotificationsPage = () => {
   const filtered = activeFilter === "all" ? notifications : notifications.filter((n: any) => n.type === activeFilter);
   const grouped = useMemo(() => groupByDate(filtered), [filtered]);
 
+  const { scrollY } = useScroll();
+  const bgY = useTransform(scrollY, [0, 2000], [0, -150]);
+
   // Handler: mark all as read
   const handleMarkAllRead = async () => {
     const unreadIds = notifications
@@ -135,6 +138,14 @@ const NotificationsPage = () => {
 
   return (
     <div ref={listRef} className="max-w-3xl mx-auto px-3 py-6 sm:px-4 sm:py-8 lg:px-8">
+      {/* Background Image for Notifications (Fixed to viewport) */}
+      <motion.div className="fixed inset-0 -z-10 opacity-[0.05] mix-blend-luminosity pointer-events-none scale-[1.15] origin-center" style={{
+        backgroundImage: "url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=2070&q=80')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        y: bgY
+      }} />
+
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -15 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
         <div className="flex items-center justify-between">

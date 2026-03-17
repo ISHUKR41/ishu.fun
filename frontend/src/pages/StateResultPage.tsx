@@ -18,7 +18,7 @@
  */
 import Layout from "@/components/layout/Layout";
 import FadeInView from "@/components/animations/FadeInView";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, MapPin, Calendar, Users, FileText, Rocket, Sparkles } from "lucide-react";
 
@@ -63,12 +63,22 @@ const allStates = [
 ];
 
 const StateResultPage = () => {
+  const { scrollY } = useScroll();
+  const bgY = useTransform(scrollY, [0, 2000], [0, -150]);
   const { stateSlug } = useParams<{ stateSlug: string }>();
   const state = allStates.find((s) => s.slug === stateSlug);
 
   if (!state) {
     return (
       <Layout>
+        {/* Dynamic Background Image */}
+        <motion.div className="fixed inset-0 -z-10 opacity-[0.05] mix-blend-luminosity pointer-events-none scale-[1.15] origin-center" style={{
+          backgroundImage: "url('https://images.unsplash.com/photo-1524803764836-e04eab2d2ef4?auto=format&fit=crop&w=2070&q=80')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          y: bgY
+        }} />
+
         <div className="flex min-h-[60vh] items-center justify-center">
           <div className="text-center">
             <h1 className="font-display text-2xl font-bold text-foreground">State Not Found</h1>
@@ -84,6 +94,14 @@ const StateResultPage = () => {
   if (!state.active) {
     return (
       <Layout>
+        {/* Dynamic Background Image */}
+        <motion.div className="fixed inset-0 -z-10 opacity-[0.05] mix-blend-luminosity pointer-events-none scale-[1.15] origin-center" style={{
+          backgroundImage: "url('https://images.unsplash.com/photo-1524803764836-e04eab2d2ef4?auto=format&fit=crop&w=2070&q=80')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          y: bgY
+        }} />
+
         <section className="relative flex min-h-[70vh] items-center bg-gradient-hero">
           <div className="bg-dots pointer-events-none absolute inset-0 opacity-20" />
           <div className="container relative text-center">
@@ -122,6 +140,14 @@ const StateResultPage = () => {
   // Active state page
   return (
     <Layout>
+      {/* Dynamic Background Image */}
+      <motion.div className="fixed inset-0 -z-10 opacity-[0.05] mix-blend-luminosity pointer-events-none scale-[1.15] origin-center" style={{
+        backgroundImage: "url('https://images.unsplash.com/photo-1524803764836-e04eab2d2ef4?auto=format&fit=crop&w=2070&q=80')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        y: bgY
+      }} />
+
       <section className="bg-gradient-hero py-20">
         <div className="container">
           <FadeInView>

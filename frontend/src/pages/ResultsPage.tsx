@@ -20,7 +20,7 @@ import Layout from "@/components/layout/Layout";
 import FadeInView from "@/components/animations/FadeInView";
 import GradientMesh from "@/components/animations/GradientMesh";
 import MorphingBlob from "@/components/animations/MorphingBlob";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Search, Calendar, Users, MapPin, FileText, ChevronDown, ChevronUp, ArrowRight, Clock, AlertCircle, CheckCircle, BookOpen, Filter, Bell, Sparkles, TrendingUp, Zap, Shield } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
@@ -28,6 +28,7 @@ import Tilt from "react-parallax-tilt";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { BreadcrumbSchema } from "@/components/seo/JsonLd";
+import SEOHead, { SEO_DATA } from "@/components/seo/SEOHead";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -349,6 +350,8 @@ const statusToFilter: Record<string, string> = {
 };
 
 const ResultsPage = () => {
+  const { scrollY } = useScroll();
+  const bgY = useTransform(scrollY, [0, 2000], [0, -150]);
   const [activeCategory, setActiveCategory] = useState("All");
   const [activeType, setActiveType] = useState("All Types");
   const [activeStatus, setActiveStatus] = useState("All Status");
@@ -387,7 +390,17 @@ const ResultsPage = () => {
 
   return (
     <Layout>
+      <SEOHead {...SEO_DATA.results} />
       <BreadcrumbSchema items={[{ name: "Results", url: "/results" }]} />
+
+      {/* Dynamic Background Image */}
+      <motion.div className="fixed inset-0 -z-10 opacity-[0.05] mix-blend-luminosity pointer-events-none scale-[1.15] origin-center" style={{
+        backgroundImage: "url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=2071&q=80')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        y: bgY
+      }} />
+
       {/* Hero */}
       <section ref={heroRef} className="relative bg-gradient-hero py-24 overflow-hidden">
         {/* Enhanced background effects */}
@@ -830,12 +843,12 @@ const ResultsPage = () => {
           "@type": "WebPage",
           "name": "Government Exam Results & Vacancies",
           "description": "Central & state-level exam results, vacancies, admit cards for UPSC, SSC, Banking, Railways, NTA & more.",
-          "url": "https://ishu.lovable.app/results",
+          "url": "https://ishu.fun/results",
           "breadcrumb": {
             "@type": "BreadcrumbList",
             "itemListElement": [
-              { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://ishu.lovable.app/" },
-              { "@type": "ListItem", "position": 2, "name": "Results", "item": "https://ishu.lovable.app/results" }
+              { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://ishu.fun/" },
+              { "@type": "ListItem", "position": 2, "name": "Results", "item": "https://ishu.fun/results" }
             ]
           }
         })

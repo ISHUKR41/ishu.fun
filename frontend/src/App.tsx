@@ -143,8 +143,6 @@ const DashboardLayout = lazy(() => import("./components/dashboard/DashboardLayou
 // Clerk publishable key from environment
 const CLERK_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
-console.log("[v0] CLERK_KEY present:", !!CLERK_KEY);
-
 // Create a React Query client with sensible cache defaults to reduce redundant API calls
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -266,15 +264,10 @@ const AppContent = () => {
  * Order matters: Clerk > QueryClient > Tooltip > Router > Auth
  */
 const App = () => {
-  console.log("[v0] App component rendering");
-  
   // If Clerk key is missing, show a helpful error page instead of a blank screen
   if (!CLERK_KEY) {
-    console.log("[v0] Clerk key missing, showing fallback");
     return <MissingEnvFallback />;
   }
-  
-  console.log("[v0] Clerk key present, rendering full app");
 
   return (
     <ErrorBoundary>

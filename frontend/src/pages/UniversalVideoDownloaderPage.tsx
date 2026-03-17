@@ -13,12 +13,14 @@
  * - Responsive premium UI
  */
 import Layout from "@/components/layout/Layout";
-import BackendStatusBar from "@/components/tools/BackendStatusBar";
+import SEOHead, { SEO_DATA } from "@/components/seo/SEOHead";
+import { VideoToolSchema, BreadcrumbSchema } from "@/components/seo/JsonLd";
+import BackendStatusBar, { wakeBackend } from "@/components/tools/BackendStatusBar";
 import FadeInView from "@/components/animations/FadeInView";
 import GradientMesh from "@/components/animations/GradientMesh";
 import MorphingBlob from "@/components/animations/MorphingBlob";
-import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect } from "react";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
 import {
   ArrowLeft, Search, Loader2, Download, Play,
   Clipboard, AlertCircle, CheckCircle, Globe,
@@ -70,6 +72,10 @@ const UniversalVideoDownloaderPage = () => {
   const [error, setError] = useState<string | null>(null);
 
   const [backendReady, setBackendReady] = useState(false);
+  const abortRef = useRef<AbortController | null>(null);
+
+  const { scrollY } = useScroll();
+  const y = useTransform(scrollY, [0, 2000], [0, -150]);
 
   const handlePaste = async () => {
     try { const text = await navigator.clipboard.readText(); setUrl(text); } catch {}
@@ -77,18 +83,26 @@ const UniversalVideoDownloaderPage = () => {
 
   const fetchWithRetry = async (fetchUrl: string, options: RequestInit, retries = 3): Promise<Response> => {
     for (let i = 0; i <= retries; i++) {
+      const controller = new AbortController();
+      abortRef.current = controller;
+      // First attempt gets longest timeout (backend may be cold-starting)
+      const timeoutMs = i === 0 ? 150000 : Math.max(45000, 120000 - i * 30000);
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), i === 0 ? 120000 : Math.max(30000, 90000 - i * 30000));
         const res = await fetch(fetchUrl, { ...options, signal: controller.signal });
-        clearTimeout(timeoutId);
         return res;
       } catch (err: any) {
-        if (i < retries && err?.name !== "AbortError") {
-          await new Promise(r => setTimeout(r, 2000 * (i + 1)));
+        if (i < retries) {
+          // On network error or timeout, try waking backend before next retry
+          if (err?.name === "AbortError" || err?.message?.includes("fetch")) {
+            try { await wakeBackend(); } catch {}
+          }
+          await new Promise(r => setTimeout(r, 3000 * (i + 1)));
           continue;
         }
         throw err;
+      } finally {
+        clearTimeout(timeoutId);
       }
     }
     throw new Error("Request failed after retries");
@@ -96,6 +110,14 @@ const UniversalVideoDownloaderPage = () => {
 
   const handleDownload = async () => {
     if (!url.trim()) { setError("Please enter a video URL."); return; }
+    if (!backendReady) {
+      const ok = await wakeBackend();
+      if (!ok) {
+        setError("Backend is waking up (~30s on free tier). Please wait and try again.");
+        return;
+      }
+      setBackendReady(true);
+    }
     setLoading(true);
     setError(null);
     setResult(null);
@@ -150,10 +172,34 @@ const UniversalVideoDownloaderPage = () => {
     setUrl(""); setResult(null); setError(null);
   };
 
+  useEffect(() => {
+    return () => {
+      if (abortRef.current) abortRef.current.abort();
+    };
+  }, []);
+
   return (
     <Layout>
+      <SEOHead {...SEO_DATA.universalVideoDownloader} />
+      <BreadcrumbSchema items={[{ name: "Tools", url: "/tools" }, { name: "Universal Video Downloader", url: "/tools/universal-video-downloader" }]} />
+      <VideoToolSchema name="Universal Video Downloader — ISHU" description="Download videos from Instagram, TikTok, Facebook, Twitter & 1000+ sites for free." url="/tools/universal-video-downloader" />
+      
+      {/* Dynamic Background Image for UniversalVideoDownloaderPage (Fixed to viewport) */}
+      <motion.div className="fixed inset-0 -z-10 opacity-[0.05] mix-blend-luminosity pointer-events-none scale-[1.15] origin-center" style={{
+        backgroundImage: "url('https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?auto=format&fit=crop&w=2074&q=80')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        y
+      }} />
+
       {/* Hero */}
       <section className="relative bg-gradient-hero py-20 overflow-hidden">
+        {/* Dynamic Background Image */}
+        <div className="absolute inset-0 opacity-[0.12] mix-blend-luminosity" style={{
+          backgroundImage: "url('https://images.unsplash.com/photo-1478720568477-152d9b164e26?auto=format&fit=crop&w=2070&q=80')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }} />
         <GradientMesh variant="aurora" />
         <div className="pointer-events-none absolute inset-0 cross-grid opacity-10" />
         <MorphingBlob color="hsl(270 100% 60% / 0.08)" size={550} className="left-[2%] top-[5%]" />
@@ -260,13 +306,13 @@ const UniversalVideoDownloaderPage = () => {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={handleDownload}
-                    disabled={loading}
-                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 py-4 font-display text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-glow disabled:opacity-50"
+                    disabled={loading || !backendReady}
+                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 py-4 font-display text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-glow disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {loading ? (
                       <><Loader2 size={18} className="animate-spin" /> Processing...</>
                     ) : (
-                      <><Download size={18} /> {audioOnly ? "Download Audio (MP3)" : `Download Video (${selectedQuality}p)`}</>
+                      <><Download size={18} /> {backendReady ? (audioOnly ? "Download Audio (MP3)" : `Download Video (${selectedQuality}p)`) : "Waiting for Server..."}</>
                     )}
                   </motion.button>
                 </div>

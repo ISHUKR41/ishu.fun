@@ -16,7 +16,7 @@
  * 3. Components use useAuth() to get user info, admin status, etc.
  */
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, ReactNode } from "react";
 import { useUser as useClerkUser, useAuth as useClerkAuth, useClerk } from "@clerk/clerk-react";
 
 // Shape of the auth data available to all components
@@ -39,7 +39,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
  */
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { user: clerkUser, isLoaded } = useClerkUser();
-  const { isSignedIn, getToken } = useClerkAuth();
+  const { isSignedIn } = useClerkAuth();
   const clerk = useClerk();
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -106,26 +106,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await clerk.signOut();
   };
 
-  // Build a user-like object compatible with existing components
-  const user = clerkUser ? {
-    id: clerkUser.id,
-    email: clerkUser.primaryEmailAddress?.emailAddress || "",
-    user_metadata: {
-      display_name: clerkUser.fullName || clerkUser.firstName || "",
-      phone: clerkUser.primaryPhoneNumber?.phoneNumber || "",
-    },
-  } : null;
+  // Build a stable user object so consumers don't re-render on every provider render
+  const user = useMemo(() => {
+    if (!clerkUser) return null;
+    return {
+      id: clerkUser.id,
+      email: clerkUser.primaryEmailAddress?.emailAddress || "",
+      user_metadata: {
+        display_name: clerkUser.fullName || clerkUser.firstName || "",
+        phone: clerkUser.primaryPhoneNumber?.phoneNumber || "",
+      },
+    };
+  }, [clerkUser]);
+
+  const contextValue = useMemo(() => ({
+    user: isSignedIn ? user : null,
+    session: isSignedIn ? { user } : null,
+    loading: !isLoaded,
+    isAdmin,
+    signIn,
+    signUp,
+    signOut,
+  }), [isSignedIn, user, isLoaded, isAdmin]);
 
   return (
-    <AuthContext.Provider value={{
-      user: isSignedIn ? user : null,
-      session: isSignedIn ? { user } : null,
-      loading: !isLoaded,
-      isAdmin,
-      signIn,
-      signUp,
-      signOut,
-    }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

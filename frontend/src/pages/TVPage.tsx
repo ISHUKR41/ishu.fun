@@ -18,10 +18,10 @@ import FadeInView from "@/components/animations/FadeInView";
 import GradientMesh from "@/components/animations/GradientMesh";
 import MorphingBlob from "@/components/animations/MorphingBlob";
 import AnimatedCounter from "@/components/animations/AnimatedCounter";
-import ParticleField from "@/components/animations/ParticleField";
 import { BreadcrumbSchema } from "@/components/seo/JsonLd";
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import SEOHead, { SEO_DATA } from "@/components/seo/SEOHead";
+import { useState, useEffect, useRef, useMemo, useCallback, memo, lazy, Suspense } from "react";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import {
   Tv, Search, X, Play, Loader2, Radio, Film, Music, Newspaper, Baby,
   BookOpen, Heart, Dumbbell, Globe, Laugh, Church, Utensils,
@@ -39,6 +39,13 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
+
+// Lazy load ParticleField - heavy canvas component
+const ParticleField = lazy(() => import("@/components/animations/ParticleField"));
+
+// Detect mobile/reduced motion for disabling heavy effects
+const IS_MOBILE = typeof window !== "undefined" && (window.matchMedia("(max-width: 768px)").matches || navigator.maxTouchPoints > 0);
+const PREFERS_REDUCED_MOTION = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /* ═══════════════════ TYPES ═══════════════════ */
 interface ApiChannel {
@@ -616,12 +623,12 @@ function useRobustPlayer(
     // Determine the actual URL to load and whether to use proxy xhrSetup
     const isProxied = attempt.proxyIdx >= 0;
     const loadUrl = isProxied ? CORS_PROXIES[attempt.proxyIdx](attempt.url) : attempt.url;
-    const timeout = isProxied ? 25000 : 15000; // Generous timeouts for stream loading
+    const timeout = isProxied ? 35000 : 20000; // Generous timeouts for stream loading
 
     // Stall detection
     const onTimeUpdate = () => {
       if (stallRef.current) clearTimeout(stallRef.current);
-      stallRef.current = setTimeout(() => tryAttempt(idx + 1), 15000);
+      stallRef.current = setTimeout(() => tryAttempt(idx + 1), 8000);
     };
     timeUpdateRef.current = onTimeUpdate;
     video.addEventListener("timeupdate", onTimeUpdate);
@@ -644,23 +651,27 @@ function useRobustPlayer(
     const hlsConfig: Partial<any> = {
       enableWorker: true,
       lowLatencyMode: false,
-      maxBufferLength: 30,
-      maxMaxBufferLength: 120,
+      maxBufferLength: 60,
+      maxMaxBufferLength: 300,
       startLevel: -1,
-      fragLoadingMaxRetry: 10,
+      fragLoadingMaxRetry: 15,
       fragLoadingRetryDelay: 1000,
-      fragLoadingMaxRetryTimeout: 20000,
-      manifestLoadingMaxRetry: 6,
+      fragLoadingMaxRetryTimeout: 30000,
+      manifestLoadingMaxRetry: 10,
       manifestLoadingRetryDelay: 1000,
       manifestLoadingMaxRetryTimeout: timeout,
-      levelLoadingMaxRetry: 6,
+      levelLoadingMaxRetry: 10,
       levelLoadingRetryDelay: 800,
-      levelLoadingMaxRetryTimeout: 15000,
-      backBufferLength: 30,
+      levelLoadingMaxRetryTimeout: 20000,
+      backBufferLength: 60,
       capLevelToPlayerSize: true,
       progressive: true,
       testBandwidth: true,
       abrEwmaDefaultEstimate: 500000,
+      abrBandWidthFactor: 0.8,
+      abrBandWidthUpFactor: 0.5,
+      appendErrorMaxRetry: 5,
+      enableSoftwareAES: true,
     };
 
     // For proxied streams, route ALL XHR requests through the proxy
@@ -726,15 +737,15 @@ function useRobustPlayer(
 
     hls.on(Hls.Events.ERROR, (_e: any, data: any) => {
       if (!data.fatal) return;
-      if (data.type === Hls.ErrorTypes.MEDIA_ERROR && retryRef.current === 0) {
+      if (data.type === Hls.ErrorTypes.MEDIA_ERROR && retryRef.current < 3) {
         retryRef.current++;
-        hls.recoverMediaError();
+        if (retryRef.current <= 2) hls.recoverMediaError();
+        else { hls.swapAudioCodec(); hls.recoverMediaError(); }
         return;
       }
-      if (data.type === Hls.ErrorTypes.MEDIA_ERROR && retryRef.current === 1) {
+      if (data.type === Hls.ErrorTypes.NETWORK_ERROR && retryRef.current < 2) {
         retryRef.current++;
-        hls.swapAudioCodec();
-        hls.recoverMediaError();
+        hls.startLoad();
         return;
       }
       clearTimeout(loadTimeout);
@@ -767,7 +778,7 @@ function useRobustPlayer(
 }
 
 /* ═══════════════════ CHANNEL CARD COMPONENT ═══════════════════ */
-const ChannelCard = ({
+const ChannelCard = memo(({
   ch, isPlaying, isFav, isDead, showLang, onPlay, onToggleFav,
 }: {
   ch: Channel;
@@ -777,14 +788,14 @@ const ChannelCard = ({
   showLang: boolean;
   onPlay: () => void;
   onToggleFav: () => void;
-}) => (
-  <Tilt tiltMaxAngleX={5} tiltMaxAngleY={5} glareEnable glareMaxOpacity={0.05} scale={1.02}>
+}) => {
+  const cardContent = (
     <div onClick={onPlay}
       className={`group relative flex h-full flex-col items-center gap-2 rounded-2xl border p-3 sm:p-4 text-center cursor-pointer transition-all ${
         isPlaying ? "border-primary/60 bg-primary/10 shadow-xl shadow-primary/20 ring-1 ring-primary/30"
         : isDead ? "border-red-500/20 bg-red-500/5 opacity-40"
         : "border-border/40 glass hover:border-primary/30 hover:shadow-lg"
-      }`}>
+      }`} style={{ contain: "layout style paint" }}>
       {isDead && !isPlaying && (
         <div className="absolute left-1.5 top-1.5 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-red-500/20">
           <WifiOff className="h-3 w-3 text-red-400" />
@@ -801,7 +812,7 @@ const ChannelCard = ({
       </button>
       <div className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center overflow-hidden rounded-xl bg-white/5 p-1 group-hover:scale-105 transition-transform">
         {ch.logo ? (
-          <img src={ch.logo} alt={ch.name} loading="lazy" className="h-full w-full object-contain"
+          <img src={ch.logo} alt={ch.name} loading="lazy" decoding="async" className="h-full w-full object-contain"
             onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; (e.target as HTMLImageElement).nextElementSibling && ((e.target as HTMLImageElement).parentElement!.querySelector('.fallback-icon') as HTMLElement)?.classList.remove('hidden'); }} />
         ) : null}
         <Tv className={`h-6 w-6 text-muted-foreground ${ch.logo ? "hidden fallback-icon" : ""}`} />
@@ -827,11 +838,23 @@ const ChannelCard = ({
         </div>
       )}
     </div>
-  </Tilt>
-);
+  );
+
+  // Disable Tilt on mobile for performance
+  if (IS_MOBILE || PREFERS_REDUCED_MOTION) return cardContent;
+
+  return (
+    <Tilt tiltMaxAngleX={5} tiltMaxAngleY={5} glareEnable glareMaxOpacity={0.05} scale={1.02}>
+      {cardContent}
+    </Tilt>
+  );
+});
 
 /* ═══════════════════ MAIN COMPONENT ═══════════════════ */
 const TVPage = () => {
+  const { scrollY } = useScroll();
+  const bgY = useTransform(scrollY, [0, 2000], [0, -150]);
+
   const [channels, setChannels] = useState<Channel[]>([]);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [fetchProgress, setFetchProgress] = useState(0);
@@ -860,6 +883,9 @@ const TVPage = () => {
     try { const s = localStorage.getItem("ishu_tv_favs"); return s ? new Set(JSON.parse(s)) : new Set<string>(); }
     catch { return new Set<string>(); }
   });
+
+  // Track which categories have been expanded (for "Show More" optimization)
+  const [expandedCats, setExpandedCats] = useState<Set<string>>(new Set());
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const playerRef = useRef<HTMLDivElement | null>(null);
@@ -917,6 +943,9 @@ const TVPage = () => {
       return a.name.localeCompare(b.name);
     });
   }, [langChannels, activeCat, search, fuse, favorites, failedIds]);
+
+  // Reset expanded categories when language or category filter changes
+  useEffect(() => { setExpandedCats(new Set()); }, [selectedLang, activeCat]);
 
   /* ── Category-grouped channels for section view ── */
   const categoryGroups = useMemo(() => {
@@ -1070,18 +1099,31 @@ const TVPage = () => {
   /* ═══════════════════ RENDER ═══════════════════ */
   return (
     <Layout>
+      {/* Dynamic Background Image for TVPage (Fixed to viewport) */}
+      <motion.div className="fixed inset-0 -z-10 opacity-[0.05] mix-blend-luminosity pointer-events-none scale-[1.15] origin-center" style={{
+        backgroundImage: "url('https://images.unsplash.com/photo-1593784991095-a205069470b6?auto=format&fit=crop&q=80')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        y: bgY
+      }} />
+      <SEOHead {...SEO_DATA.tv} />
       <BreadcrumbSchema items={[{ name: "Home", url: "/" }, { name: "Live TV", url: "/tv" }]} />
       <div className="min-h-screen">
 
         {/* ═══ HERO ═══ */}
+        {!selectedLang && !playing ? (
         <section className="relative overflow-hidden py-20 sm:py-28 lg:py-32">
           <div className="pointer-events-none absolute inset-0">
             <GradientMesh variant="aurora" />
-            <MorphingBlob color="hsl(217,91%,55%)" size={500} duration={20} />
-            <MorphingBlob color="hsl(260,100%,65%)" size={400} duration={25} />
+            {!IS_MOBILE && <MorphingBlob color="hsl(217,91%,55%)" size={500} duration={20} />}
+            {!IS_MOBILE && <MorphingBlob color="hsl(260,100%,65%)" size={400} duration={25} />}
             <div className="absolute inset-0 cross-grid opacity-[0.03]" />
           </div>
-          <ParticleField />
+          {!IS_MOBILE && !PREFERS_REDUCED_MOTION && (
+            <Suspense fallback={null}>
+              <ParticleField />
+            </Suspense>
+          )}
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent" />
           <div className="container relative z-10">
             <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} className="mx-auto max-w-3xl text-center">
@@ -1116,6 +1158,10 @@ const TVPage = () => {
             </motion.div>
           </div>
         </section>
+        ) : (
+          /* Lightweight spacer when browsing channels (hero hidden for perf) */
+          <div className="pt-6" />
+        )}
 
         {/* ═══ STATS ═══ */}
         {!fetchLoading && channels.length > 0 && !selectedLang && !playing && (
@@ -1187,6 +1233,19 @@ const TVPage = () => {
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                   {/* All Languages */}
                   <FadeInView delay={0.02}>
+                    {IS_MOBILE ? (
+                      <button onClick={() => setSelectedLang("all")}
+                        className="group relative flex w-full flex-col items-center gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-5 sm:p-6 text-center transition-all hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10">
+                        <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 text-2xl sm:text-3xl shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform">
+                          🌐
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-foreground">All Languages</p>
+                          <p className="text-xs text-primary font-medium mt-0.5">{channels.length} channels</p>
+                        </div>
+                        <ArrowRight className="h-4 w-4 text-primary opacity-0 group-hover:opacity-100 transition-opacity absolute right-3 top-3" />
+                      </button>
+                    ) : (
                     <Tilt tiltMaxAngleX={8} tiltMaxAngleY={8} glareEnable glareMaxOpacity={0.08} scale={1.03}>
                       <button onClick={() => setSelectedLang("all")}
                         className="group relative flex w-full flex-col items-center gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-5 sm:p-6 text-center transition-all hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10">
@@ -1200,6 +1259,7 @@ const TVPage = () => {
                         <ArrowRight className="h-4 w-4 text-primary opacity-0 group-hover:opacity-100 transition-opacity absolute right-3 top-3" />
                       </button>
                     </Tilt>
+                    )}
                   </FadeInView>
 
                   {/* Known languages */}
@@ -1207,22 +1267,27 @@ const TVPage = () => {
                     .filter(([lang]) => LANGUAGES[lang])
                     .map(([lang, count], idx) => {
                       const meta = LANGUAGES[lang]!;
+                      const langBtn = (
+                        <button onClick={() => setSelectedLang(lang)}
+                          className="group relative flex w-full flex-col items-center gap-3 rounded-2xl border border-border/40 glass p-5 sm:p-6 text-center transition-all hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10">
+                          <div className={`flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-gradient-to-br ${meta.gradient} text-2xl sm:text-3xl shadow-lg group-hover:scale-110 transition-transform`}>
+                            {meta.emoji}
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-foreground">{meta.label}</p>
+                            <p className="text-[11px] text-muted-foreground/70">{meta.native}</p>
+                            <p className="text-xs text-primary font-medium mt-0.5">{count} channels</p>
+                          </div>
+                          <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity absolute right-3 top-3" />
+                        </button>
+                      );
                       return (
                         <FadeInView key={lang} delay={Math.min((idx + 1) * 0.03, 0.3)}>
-                          <Tilt tiltMaxAngleX={8} tiltMaxAngleY={8} glareEnable glareMaxOpacity={0.08} scale={1.03}>
-                            <button onClick={() => setSelectedLang(lang)}
-                              className="group relative flex w-full flex-col items-center gap-3 rounded-2xl border border-border/40 glass p-5 sm:p-6 text-center transition-all hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10">
-                              <div className={`flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-gradient-to-br ${meta.gradient} text-2xl sm:text-3xl shadow-lg group-hover:scale-110 transition-transform`}>
-                                {meta.emoji}
-                              </div>
-                              <div>
-                                <p className="text-sm font-bold text-foreground">{meta.label}</p>
-                                <p className="text-[11px] text-muted-foreground/70">{meta.native}</p>
-                                <p className="text-xs text-primary font-medium mt-0.5">{count} channels</p>
-                              </div>
-                              <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity absolute right-3 top-3" />
-                            </button>
-                          </Tilt>
+                          {IS_MOBILE ? langBtn : (
+                            <Tilt tiltMaxAngleX={8} tiltMaxAngleY={8} glareEnable glareMaxOpacity={0.08} scale={1.03}>
+                              {langBtn}
+                            </Tilt>
+                          )}
                         </FadeInView>
                       );
                     })}
@@ -1230,22 +1295,29 @@ const TVPage = () => {
                   {/* Other languages */}
                   {langCounts
                     .filter(([lang]) => !LANGUAGES[lang])
-                    .map(([lang, count], idx) => (
-                      <FadeInView key={lang} delay={Math.min((idx + 15) * 0.03, 0.5)}>
-                        <Tilt tiltMaxAngleX={8} tiltMaxAngleY={8} glareEnable glareMaxOpacity={0.08} scale={1.03}>
-                          <button onClick={() => setSelectedLang(lang)}
-                            className="group relative flex w-full flex-col items-center gap-3 rounded-2xl border border-border/40 glass p-5 sm:p-6 text-center transition-all hover:border-primary/40 hover:shadow-xl">
-                            <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-gray-500 to-gray-600 text-2xl sm:text-3xl shadow-lg group-hover:scale-110 transition-transform">
-                              🗣️
-                            </div>
-                            <div>
-                              <p className="text-sm font-bold text-foreground">{lang}</p>
-                              <p className="text-xs text-primary font-medium mt-0.5">{count} channels</p>
-                            </div>
-                          </button>
-                        </Tilt>
-                      </FadeInView>
-                    ))}
+                    .map(([lang, count], idx) => {
+                      const otherBtn = (
+                        <button onClick={() => setSelectedLang(lang)}
+                          className="group relative flex w-full flex-col items-center gap-3 rounded-2xl border border-border/40 glass p-5 sm:p-6 text-center transition-all hover:border-primary/40 hover:shadow-xl">
+                          <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-gray-500 to-gray-600 text-2xl sm:text-3xl shadow-lg group-hover:scale-110 transition-transform">
+                            🗣️
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-foreground">{lang}</p>
+                            <p className="text-xs text-primary font-medium mt-0.5">{count} channels</p>
+                          </div>
+                        </button>
+                      );
+                      return (
+                        <FadeInView key={lang} delay={Math.min((idx + 15) * 0.03, 0.5)}>
+                          {IS_MOBILE ? otherBtn : (
+                            <Tilt tiltMaxAngleX={8} tiltMaxAngleY={8} glareEnable glareMaxOpacity={0.08} scale={1.03}>
+                              {otherBtn}
+                            </Tilt>
+                          )}
+                        </FadeInView>
+                      );
+                    })}
                 </div>
 
                 {/* Quick search */}
@@ -1510,6 +1582,10 @@ const TVPage = () => {
                           {categoryGroups.map(({ key, channels: catChannels }) => {
                             const meta = CAT_META[key];
                             const Icon = meta?.icon || Globe;
+                            const INITIAL_SHOW = 20;
+                            const isExpanded = expandedCats.has(key);
+                            const visibleChannels = isExpanded ? catChannels : catChannels.slice(0, INITIAL_SHOW);
+                            const hasMore = catChannels.length > INITIAL_SHOW;
                             return (
                               <div key={key}>
                                 {/* Category section header */}
@@ -1523,8 +1599,8 @@ const TVPage = () => {
                                   </div>
                                 </div>
                                 {/* Channel grid */}
-                                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8">
-                                  {catChannels.map((ch) => (
+                                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8" style={{ contentVisibility: "auto", containIntrinsicSize: "auto 200px", willChange: "auto" }}>
+                                  {visibleChannels.map((ch) => (
                                     <ChannelCard
                                       key={ch.id} ch={ch}
                                       isPlaying={playing?.id === ch.id}
@@ -1536,13 +1612,32 @@ const TVPage = () => {
                                     />
                                   ))}
                                 </div>
+                                {/* Show More / Show Less button */}
+                                {hasMore && (
+                                  <div className="mt-3 text-center">
+                                    <button
+                                      onClick={() => setExpandedCats(prev => {
+                                        const next = new Set(prev);
+                                        if (next.has(key)) next.delete(key); else next.add(key);
+                                        return next;
+                                      })}
+                                      className="inline-flex items-center gap-2 rounded-xl border border-border/40 glass px-5 py-2.5 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all"
+                                    >
+                                      {isExpanded ? (
+                                        <>Show Less</>
+                                      ) : (
+                                        <>Show All {catChannels.length} Channels <ChevronDown className="h-3.5 w-3.5" /></>
+                                      )}
+                                    </button>
+                                  </div>
+                                )}
                               </div>
                             );
                           })}
                         </div>
                       ) : viewMode === "grid" ? (
                         /* Flat grid when specific category selected */
-                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8">
+                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8" style={{ contentVisibility: "auto", containIntrinsicSize: "auto 400px", willChange: "auto" }}>
                           {filtered.map((ch) => (
                             <ChannelCard
                               key={ch.id} ch={ch}

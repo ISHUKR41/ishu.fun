@@ -13,7 +13,7 @@
  */
 
 import { useEffect, useRef, useMemo } from "react";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import gsap from "gsap";
 import {
   MapPin, Calendar, Mail, Edit3, ExternalLink,
@@ -27,6 +27,8 @@ import ActivityGraph from "@/components/profile/ActivityGraph";
 import BadgeCollection from "@/components/profile/BadgeCollection";
 
 const ProfilePage = () => {
+  const { scrollY } = useScroll();
+  const bgY = useTransform(scrollY, [0, 2000], [0, -150]);
   const { user } = useAuth();
   const { profile, stats, isLoading } = useUserProfile();
   const heroRef = useRef<HTMLDivElement>(null);
@@ -103,6 +105,14 @@ const ProfilePage = () => {
 
   return (
     <div ref={heroRef} className="max-w-5xl mx-auto px-3 py-4 sm:px-4 sm:py-6 lg:px-8">
+      {/* Dynamic Background Image for Profile (Fixed to viewport) */}
+      <motion.div className="fixed inset-0 -z-10 opacity-[0.05] mix-blend-luminosity pointer-events-none scale-[1.15] origin-center" style={{
+        backgroundImage: "url('https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=2070&q=80')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        y: bgY
+      }} />
+
       {/* ══════ SECTION 1: Hero Banner ══════ */}
       <div className="relative mb-10 overflow-hidden rounded-2xl">
         {/* Cover Image or Gradient Background */}

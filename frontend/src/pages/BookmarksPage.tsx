@@ -12,7 +12,7 @@
  */
 
 import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import gsap from "gsap";
 import {
   Bookmark, FileText, Newspaper, BookOpen, Wrench, Briefcase,
@@ -30,6 +30,9 @@ const tabs = [
 ];
 
 const BookmarksPage = () => {
+  const { scrollY } = useScroll();
+  const bgY = useTransform(scrollY, [0, 2000], [0, -150]);
+
   const [activeTab, setActiveTab] = useState("");
   const [search, setSearch] = useState("");
   const { bookmarks, isLoading, removeBookmark, isRemoving } = useBookmarks(activeTab || undefined);
@@ -73,6 +76,14 @@ const BookmarksPage = () => {
 
   return (
     <div ref={gridRef} className="max-w-5xl mx-auto px-3 py-6 sm:px-4 sm:py-8 lg:px-8">
+      {/* Background Image for Bookmarks (Fixed to viewport) */}
+      <motion.div className="fixed inset-0 -z-10 opacity-[0.05] mix-blend-luminosity pointer-events-none scale-[1.15] origin-center" style={{
+        backgroundImage: "url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=2070&q=80')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        y: bgY
+      }} />
+
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -15 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
         <h1 className="text-2xl font-bold text-white flex items-center gap-3">

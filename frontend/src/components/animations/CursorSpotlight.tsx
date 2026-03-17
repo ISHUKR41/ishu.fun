@@ -9,18 +9,28 @@
  * via transform with both glows as children.
  */
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { motion, useMotionValue, useSpring } from "framer-motion";
 
 const CursorSpotlight = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const opacity = useMotionValue(0);
   const springOpacity = useSpring(opacity, { stiffness: 100, damping: 20 });
+  const rafId = useRef<number>(0);
+  const latestPos = useRef({ x: -9999, y: -9999 });
 
   useEffect(() => {
+    // Throttle mousemove to requestAnimationFrame (~60fps max) for smooth performance
     const move = (e: MouseEvent) => {
-      if (containerRef.current) {
-        containerRef.current.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
+      latestPos.current.x = e.clientX;
+      latestPos.current.y = e.clientY;
+      if (!rafId.current) {
+        rafId.current = requestAnimationFrame(() => {
+          if (containerRef.current) {
+            containerRef.current.style.transform = `translate3d(${latestPos.current.x}px, ${latestPos.current.y}px, 0)`;
+          }
+          rafId.current = 0;
+        });
       }
       opacity.set(1);
     };
@@ -34,6 +44,7 @@ const CursorSpotlight = () => {
       window.removeEventListener("mousemove", move);
       document.removeEventListener("mouseleave", leave);
       document.removeEventListener("mouseenter", enter);
+      if (rafId.current) cancelAnimationFrame(rafId.current);
     };
   }, [opacity]);
 

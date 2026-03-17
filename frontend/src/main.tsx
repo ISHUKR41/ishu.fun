@@ -6,6 +6,7 @@
  */
 
 import { createRoot } from "react-dom/client";
+import { HelmetProvider } from "react-helmet-async";
 import App from "./App.tsx";
 import "./index.css";  // Global styles (Tailwind, custom CSS, theme tokens)
 
@@ -16,8 +17,12 @@ const rootElement = document.getElementById("root");
 console.log("[v0] Root element found:", !!rootElement);
 
 if (rootElement) {
-  createRoot(rootElement).render(<App />);
+  createRoot(rootElement).render(
+    <HelmetProvider>
+      <App />
+    </HelmetProvider>
+  );
   console.log("[v0] App rendered to root");
-} else {
+}else {
   console.error("[v0] Root element not found!");
 }

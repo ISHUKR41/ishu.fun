@@ -20,7 +20,7 @@
  */
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import {
   LayoutDashboard, FileText, Newspaper, BookOpen, Users, Bell,
   BarChart3, Settings, Wrench, ChevronLeft, ChevronRight, LogOut,
@@ -765,6 +765,8 @@ const SiteSettings = () => {
 };
 
 const AdminPanel = () => {
+  const { scrollY } = useScroll();
+  const bgY = useTransform(scrollY, [0, 2000], [0, -150]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const location = useLocation();
 
@@ -786,6 +788,14 @@ const AdminPanel = () => {
     <div className="flex min-h-screen bg-background">
       {/* Background effects */}
       <div className="pointer-events-none fixed inset-0 bg-gradient-to-br from-primary/[0.02] via-transparent to-accent/[0.02]" />
+
+      {/* Dynamic Background Image for AdminPanel (Fixed to viewport) */}
+      <motion.div className="fixed inset-0 -z-10 opacity-[0.05] mix-blend-luminosity pointer-events-none scale-[1.15] origin-center" style={{
+        backgroundImage: "url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=2070&q=80')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        y: bgY
+      }} />
 
       {/* Sidebar */}
       <motion.aside

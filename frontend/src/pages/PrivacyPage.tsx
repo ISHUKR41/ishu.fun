@@ -21,8 +21,9 @@
  * - 3D tilt effects on cards
  */
 import Layout from "@/components/layout/Layout";
+import SEOHead, { SEO_DATA } from "@/components/seo/SEOHead";
 import FadeInView from "@/components/animations/FadeInView";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { Shield, Database, Bell, Lock, Cookie, Globe, Clock, UserCheck, Mail, Eye, Server, FileCheck, ChevronRight } from "lucide-react";
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
@@ -51,6 +52,8 @@ const quickFacts = [
 ];
 
 const PrivacyPage = () => {
+  const { scrollY } = useScroll();
+  const bgY = useTransform(scrollY, [0, 2000], [0, -150]);
   const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -72,6 +75,16 @@ const PrivacyPage = () => {
 
   return (
     <Layout>
+      <SEOHead {...SEO_DATA.privacy} />
+
+      {/* Dynamic Background Image */}
+      <motion.div className="fixed inset-0 -z-10 opacity-[0.05] mix-blend-luminosity pointer-events-none scale-[1.15] origin-center" style={{
+        backgroundImage: "url('https://images.unsplash.com/photo-1555561122-421712a2aa6a?auto=format&fit=crop&w=2070&q=80')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        y: bgY
+      }} />
+
       {/* Hero */}
       <section className="relative bg-gradient-hero py-28 overflow-hidden">
         <div className="bg-dots pointer-events-none absolute inset-0 opacity-20" />

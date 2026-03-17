@@ -101,7 +101,7 @@ const https = require('https');
 
 const streamLimiter = rateLimit({
     windowMs: 1 * 60 * 1000,
-    max: 5000,
+    max: 10000,
     message: { success: false, error: 'Stream rate limit exceeded' },
 });
 
@@ -180,14 +180,18 @@ app.get('/api/stream-proxy', streamLimiter, (req, res) => {
             const trimmed = line.trim();
             if (!trimmed) return line;
             if (trimmed.startsWith('#')) {
-                return line.replace(/URI="([^"]+)"/gi, (match, uri) => {
+                // Rewrite URI= attributes (key files, map segments, etc.)
+                let rewritten = line.replace(/URI="([^"]+)"/gi, (match, uri) => {
                     return `URI="${resolveUrl(uri, base)}"`;
                 });
+                // Rewrite EXT-X-MAP URI
+                rewritten = rewritten.replace(/EXT-X-MAP:URI="([^"]+)"/gi, (match, uri) => {
+                    return `EXT-X-MAP:URI="${resolveUrl(uri, base)}"`;
+                });
+                return rewritten;
             }
-            if (!trimmed.startsWith('#')) {
-                return resolveUrl(trimmed, base);
-            }
-            return line;
+            // Non-comment, non-empty lines are segment/playlist URLs
+            return resolveUrl(trimmed, base);
         }).join('\n');
     }
 
@@ -218,7 +222,7 @@ app.get('/api/stream-proxy', streamLimiter, (req, res) => {
                 'Sec-Fetch-Mode': 'cors',
                 'Sec-Fetch-Site': 'cross-site',
             },
-            timeout: 20000,
+            timeout: 30000,
             ...(isHttps ? { rejectUnauthorized: false } : {}),
         }, (proxyRes) => {
             if (finished) { proxyRes.destroy(); return; }
@@ -291,8 +295,8 @@ app.get('/api/stream-proxy', streamLimiter, (req, res) => {
         proxyReq.on('error', (err) => {
             if (finished) return;
             console.error('[Stream Proxy] Error:', err.code || err.message, 'URL:', url.substring(0, 100));
-            if (retryCount < 2 && ['ECONNRESET', 'ETIMEDOUT', 'ECONNREFUSED', 'ENOTFOUND', 'EHOSTUNREACH', 'EPIPE', 'ERR_TLS_CERT_ALTNAME_INVALID'].includes(err.code)) {
-                setTimeout(() => doProxy(url, retryCount + 1), 300);
+            if (retryCount < 3 && ['ECONNRESET', 'ETIMEDOUT', 'ECONNREFUSED', 'ENOTFOUND', 'EHOSTUNREACH', 'EPIPE', 'ERR_TLS_CERT_ALTNAME_INVALID', 'EAI_AGAIN', 'ECONNABORTED'].includes(err.code)) {
+                setTimeout(() => doProxy(url, retryCount + 1), 300 * (retryCount + 1));
                 return;
             }
             if (!res.headersSent) res.status(502).json({ error: 'Stream proxy error' });
@@ -301,7 +305,7 @@ app.get('/api/stream-proxy', streamLimiter, (req, res) => {
         proxyReq.on('timeout', () => {
             proxyReq.destroy();
             if (finished) return;
-            if (retryCount < 1) {
+            if (retryCount < 2) {
                 setTimeout(() => doProxy(url, retryCount + 1), 200);
                 return;
             }

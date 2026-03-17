@@ -5,11 +5,13 @@
  * Features: URL input, video preview (YouTube embed), quality selection, download.
  */
 import Layout from "@/components/layout/Layout";
-import BackendStatusBar from "@/components/tools/BackendStatusBar";
+import BackendStatusBar, { wakeBackend } from "@/components/tools/BackendStatusBar";
 import FadeInView from "@/components/animations/FadeInView";
 import GradientMesh from "@/components/animations/GradientMesh";
 import MorphingBlob from "@/components/animations/MorphingBlob";
-import { motion, AnimatePresence } from "framer-motion";
+import SEOHead, { SEO_DATA } from "@/components/seo/SEOHead";
+import { VideoToolSchema, BreadcrumbSchema, HowToSchema } from "@/components/seo/JsonLd";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { useState, useEffect } from "react";
 import {
   ArrowLeft, Search, Loader2, Download, Play, Eye,
@@ -54,6 +56,9 @@ const YouTubeDownloaderPage = () => {
   const [showPreview, setShowPreview] = useState(false);
   const [backendReady, setBackendReady] = useState(false);
 
+  const { scrollY } = useScroll();
+  const y = useTransform(scrollY, [0, 2000], [0, -150]);
+
   const handlePaste = async () => {
     try {
       const text = await navigator.clipboard.readText();
@@ -92,6 +97,13 @@ const YouTubeDownloaderPage = () => {
     setShowPreview(false);
 
     try {
+      // Ensure backend is awake first
+      if (!backendReady) {
+        const awake = await wakeBackend();
+        if (awake) setBackendReady(true);
+        else { setError("Backend server is starting up. Please wait 30-60 seconds and try again."); setLoading(false); return; }
+      }
+
       const res = await fetchWithRetry(`${API_URL}/api/tools/youtube-info`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -165,8 +177,31 @@ const YouTubeDownloaderPage = () => {
 
   return (
     <Layout>
+      <SEOHead {...SEO_DATA.youtubeDownloader} />
+      <BreadcrumbSchema items={[{ name: "Tools", url: "/tools" }, { name: "YouTube Downloader", url: "/tools/youtube-downloader" }]} />
+      <VideoToolSchema name="YouTube Video Downloader — ISHU" description="Download YouTube videos in HD 1080p, 4K quality for free. Paste URL, preview, select quality and download." url="/tools/youtube-downloader" />
+      <HowToSchema name="How to Download YouTube Videos" description="Download YouTube videos in 3 easy steps" steps={[
+        { name: "Paste URL", text: "Copy the YouTube video URL and paste it in the input box" },
+        { name: "Select Quality", text: "Choose your preferred quality from 360p to 4K" },
+        { name: "Download", text: "Click the download button to save the video" }
+      ]} />
+      
+      {/* Dynamic Background Image for YouTubeDownloaderPage (Fixed to viewport) */}
+      <motion.div className="fixed inset-0 -z-10 opacity-[0.05] mix-blend-luminosity pointer-events-none scale-[1.15] origin-center" style={{
+        backgroundImage: "url('https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&w=2074&q=80')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        y
+      }} />
+
       {/* Hero Section */}
       <section className="relative bg-gradient-hero py-20 overflow-hidden">
+        {/* Dynamic Background Image */}
+        <div className="absolute inset-0 opacity-[0.12] mix-blend-luminosity" style={{
+          backgroundImage: "url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=2064&q=80')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }} />
         <GradientMesh variant="aurora" />
         <div className="pointer-events-none absolute inset-0 cross-grid opacity-10" />
         <MorphingBlob color="hsl(0 100% 50% / 0.08)" size={500} className="left-[5%] top-[10%]" />

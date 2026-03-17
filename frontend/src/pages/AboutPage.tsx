@@ -32,6 +32,7 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { BreadcrumbSchema } from "@/components/seo/JsonLd";
+import SEOHead, { SEO_DATA } from "@/components/seo/SEOHead";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -77,6 +78,9 @@ const AboutPage = () => {
   const heroRef = useRef<HTMLElement>(null);
   const timelineRef = useRef<HTMLElement>(null);
   const statsRef = useRef<HTMLElement>(null);
+
+  const { scrollY } = useScroll();
+  const bgY = useTransform(scrollY, [0, 2000], [0, -150]);
 
   const { scrollYProgress: heroScroll } = useScroll({
     target: heroRef,
@@ -125,7 +129,16 @@ const AboutPage = () => {
 
   return (
     <Layout>
+      <SEOHead {...SEO_DATA.about} />
       <BreadcrumbSchema items={[{ name: "About", url: "/about" }]} />
+
+      {/* Dynamic Background Image */}
+      <motion.div className="fixed inset-0 -z-10 opacity-[0.05] mix-blend-luminosity pointer-events-none scale-[1.15] origin-center" style={{
+        backgroundImage: "url('https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=2070&q=80')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        y: bgY
+      }} />
 
       {/* Hero with parallax */}
       <section ref={heroRef} className="relative min-h-[75vh] flex items-center bg-gradient-hero overflow-hidden">

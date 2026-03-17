@@ -21,7 +21,7 @@ import GradientBorderCard from "@/components/animations/GradientBorderCard";
 import AnimatedCounter from "@/components/animations/AnimatedCounter";
 import GradientMesh from "@/components/animations/GradientMesh";
 import MorphingBlob from "@/components/animations/MorphingBlob";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { Clock, Heart, ArrowRight, Tag, Search, TrendingUp, Mail, BookOpen, Sparkles, Star, Users, Eye, MessageCircle, ChevronRight, Bookmark, Share2, Zap, Award, PenTool } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
@@ -32,6 +32,7 @@ import Tilt from "react-parallax-tilt";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { BreadcrumbSchema } from "@/components/seo/JsonLd";
+import SEOHead, { SEO_DATA } from "@/components/seo/SEOHead";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -69,6 +70,8 @@ const authorSpotlight = {
 };
 
 const BlogPage = () => {
+  const { scrollY } = useScroll();
+  const bgY = useTransform(scrollY, [0, 2000], [0, -150]);
   const [activeCat, setActiveCat] = useState("All");
   const [search, setSearch] = useState("");
   const [email, setEmail] = useState("");
@@ -103,7 +106,16 @@ const BlogPage = () => {
 
   return (
     <Layout>
+      <SEOHead {...SEO_DATA.blog} />
       <BreadcrumbSchema items={[{ name: "Blog", url: "/blog" }]} />
+
+      {/* Dynamic Background Image */}
+      <motion.div className="fixed inset-0 -z-10 opacity-[0.05] mix-blend-luminosity pointer-events-none scale-[1.15] origin-center" style={{
+        backgroundImage: "url('https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=2073&q=80')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        y: bgY
+      }} />
 
       {/* Hero Section */}
       <section ref={heroRef} className="relative bg-gradient-hero py-28 overflow-hidden">
@@ -537,7 +549,7 @@ const BlogPage = () => {
           "@type": "Blog",
           "name": "ISHU Expert Blog",
           "description": "In-depth guides, preparation tips, and success stories for government exam aspirants.",
-          "url": "https://ishu.lovable.app/blog",
+          "url": "https://ishu.fun/blog",
           "blogPost": blogs.slice(0, 5).map(b => ({
             "@type": "BlogPosting",
             "headline": b.title,

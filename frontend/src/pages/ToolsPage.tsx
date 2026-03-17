@@ -20,7 +20,7 @@ import FadeInView from "@/components/animations/FadeInView";
 import AnimatedCounter from "@/components/animations/AnimatedCounter";
 import GradientMesh from "@/components/animations/GradientMesh";
 import MorphingBlob from "@/components/animations/MorphingBlob";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { useState, useMemo, lazy, Suspense, useEffect, useRef } from "react";
 import { Search, ArrowRight, Sparkles, X, Zap, Shield, Clock, Download, Star, CheckCircle, Users, FileText, Upload, MousePointerClick, Settings, ChevronRight, Award, TrendingUp, Layers } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -32,7 +32,8 @@ import Fuse from "fuse.js";
 import Tilt from "react-parallax-tilt";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { BreadcrumbSchema } from "@/components/seo/JsonLd";
+import { BreadcrumbSchema, CollectionPageSchema } from "@/components/seo/JsonLd";
+import SEOHead, { SEO_DATA } from "@/components/seo/SEOHead";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -63,6 +64,8 @@ const trustBadges = [
 ];
 
 const ToolsPage = () => {
+  const { scrollY } = useScroll();
+  const bgY = useTransform(scrollY, [0, 2000], [0, -150]);
   const [activeCat, setActiveCat] = useState("All");
   const [search, setSearch] = useState("");
   const gridRef = useRef<HTMLDivElement>(null);
@@ -105,7 +108,16 @@ const ToolsPage = () => {
 
   return (
     <Layout>
+      <SEOHead {...SEO_DATA.tools} />
       <BreadcrumbSchema items={[{ name: "PDF Tools", url: "/tools" }]} />
+
+      {/* Dynamic Background Image */}
+      <motion.div className="fixed inset-0 -z-10 opacity-[0.05] mix-blend-luminosity pointer-events-none scale-[1.15] origin-center" style={{
+        backgroundImage: "url('https://images.unsplash.com/photo-1542204165-65bf26472b9b?auto=format&fit=crop&w=2074&q=80')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        y: bgY
+      }} />
 
       {/* Hero Section */}
       <section className="relative bg-gradient-hero py-28 overflow-hidden">

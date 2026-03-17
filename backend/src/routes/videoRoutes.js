@@ -28,6 +28,16 @@ const { v4: uuidv4 } = require('uuid');
 // Cache video info for 10 minutes
 const cache = new NodeCache({ stdTTL: 600, checkperiod: 120 });
 
+// Cobalt instance health tracking — failed instances are tried last
+const cobaltHealthMap = new Map(); // instance -> { failures: number, lastFail: timestamp }
+// Clear stale health entries every 10 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, v] of cobaltHealthMap) {
+    if (now - v.lastFail > 600000) cobaltHealthMap.delete(k);
+  }
+}, 600000);
+
 // Temp downloads directory
 const DOWNLOADS_DIR = path.resolve(__dirname, '../../temp/video-downloads');
 if (!fs.existsSync(DOWNLOADS_DIR)) {
@@ -187,7 +197,7 @@ function sanitizeFilename(name) {
  * Cobalt API v10 format: POST / with JSON body
  */
 async function tryCobaltDownload(url, options = {}) {
-  // Working Cobalt instances — community-maintained, shuffled for load balancing
+  // Working Cobalt instances — community-maintained, shuffled for load balancing (2026 updated)
   const ALL_INSTANCES = [
     'https://api.cobalt.tools',         // Official Cobalt API — most reliable
     'https://cobalt.canine.tools',
@@ -203,12 +213,23 @@ async function tryCobaltDownload(url, options = {}) {
     'https://dl.khyernet.xyz',
     'https://cobalt.siri.sh',
     'https://cobalt.rainn.dev',
+    'https://cobalt.nerdvpn.de',
+    'https://cobalt.jemand.live',
+    'https://api.cobalt.lol',
   ];
   // Keep official instance first, shuffle the rest for load balancing
   const [first, ...rest] = ALL_INSTANCES;
-  const COBALT_INSTANCES = [first, ...rest.sort(() => Math.random() - 0.5)];
+  // Sort by health: instances with fewer recent failures come first
+  const healthSorted = rest.sort((a, b) => {
+    const aScore = cobaltHealthMap.get(a)?.failures || 0;
+    const bScore = cobaltHealthMap.get(b)?.failures || 0;
+    if (aScore !== bScore) return aScore - bScore;
+    return Math.random() - 0.5;
+  });
+  const COBALT_INSTANCES = [first, ...healthSorted];
 
-  const body = {
+  // Cobalt API v10 format
+  const bodyV10 = {
     url,
     videoQuality: options.quality || '1080',
     audioFormat: 'mp3',
@@ -216,47 +237,75 @@ async function tryCobaltDownload(url, options = {}) {
     downloadMode: options.audioOnly ? 'audio' : 'auto',
   };
 
-  for (const instance of COBALT_INSTANCES) {
-    try {
-      console.log(`[Cobalt] Trying ${instance}...`);
-      const response = await axios.post(instance, body, {
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        },
-        timeout: 15000,
-      });
-      const data = response.data;
+  // Cobalt API v7 format (older instances)
+  const bodyV7 = {
+    url,
+    vQuality: options.quality || '1080',
+    aFormat: 'mp3',
+    isAudioOnly: !!options.audioOnly,
+  };
 
-      if (data.status === 'tunnel' || data.status === 'redirect') {
-        console.log(`[Cobalt] ✅ Success from ${instance} (${data.status})`);
-        return {
-          success: true,
-          downloadUrl: data.url,
-          filename: data.filename || 'video.mp4',
-          status: data.status,
-        };
+  for (const instance of COBALT_INSTANCES) {
+    // Try v10 API format first
+    for (const [bodyVersion, body] of [['v10', bodyV10], ['v7', bodyV7]]) {
+      try {
+        console.log(`[Cobalt] Trying ${instance} (${bodyVersion})...`);
+        const response = await axios.post(instance, body, {
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          },
+          timeout: 20000,
+          validateStatus: (s) => s < 500,
+        });
+        const data = response.data;
+
+        if (data.status === 'tunnel' || data.status === 'redirect' || data.status === 'stream') {
+          console.log(`[Cobalt] ✅ Success from ${instance} (${data.status})`);
+          cobaltHealthMap.delete(instance);
+          return {
+            success: true,
+            downloadUrl: data.url,
+            filename: data.filename || 'video.mp4',
+            status: data.status,
+          };
+        }
+        if (data.status === 'picker') {
+          console.log(`[Cobalt] ✅ Picker result from ${instance}`);
+          cobaltHealthMap.delete(instance);
+          const items = data.picker || [];
+          return {
+            success: true,
+            downloadUrl: items[0]?.url || data.audio,
+            filename: data.filename || 'video.mp4',
+            status: 'picker',
+            items: items.map(item => ({ url: item.url, thumb: item.thumb, type: item.type || 'video' })),
+            audioUrl: data.audio,
+          };
+        }
+        // v7 success format
+        if (data.url && !data.status) {
+          console.log(`[Cobalt] ✅ Success from ${instance} (v7 direct)`);
+          cobaltHealthMap.delete(instance);
+          return {
+            success: true,
+            downloadUrl: data.url,
+            filename: data.filename || 'video.mp4',
+            status: 'redirect',
+          };
+        }
+        if (data.status === 'error') {
+          console.log(`[Cobalt] Error from ${instance}: ${data.error?.code || data.text || JSON.stringify(data.error)}`);
+          cobaltHealthMap.set(instance, { failures: (cobaltHealthMap.get(instance)?.failures || 0) + 1, lastFail: Date.now() });
+          break; // Don't retry same instance with v7 if v10 returned error
+        }
+      } catch (err) {
+        console.log(`[Cobalt] Failed ${instance} (${bodyVersion}): ${err.response?.status || err.message}`);
+        cobaltHealthMap.set(instance, { failures: (cobaltHealthMap.get(instance)?.failures || 0) + 1, lastFail: Date.now() });
+        if (bodyVersion === 'v10') continue; // try v7 next
+        break; // move to next instance
       }
-      if (data.status === 'picker') {
-        console.log(`[Cobalt] ✅ Picker result from ${instance}`);
-        const items = data.picker || [];
-        return {
-          success: true,
-          downloadUrl: items[0]?.url || data.audio,
-          filename: data.filename || 'video.mp4',
-          status: 'picker',
-          items: items.map(item => ({ url: item.url, thumb: item.thumb, type: item.type || 'video' })),
-          audioUrl: data.audio,
-        };
-      }
-      if (data.status === 'error') {
-        console.log(`[Cobalt] Error from ${instance}: ${data.error?.code || data.text}`);
-        continue;
-      }
-    } catch (err) {
-      console.log(`[Cobalt] Failed ${instance}: ${err.response?.status || err.message}`);
-      continue;
     }
   }
   return { success: false, error: 'All Cobalt instances failed.' };
@@ -364,9 +413,17 @@ async function downloadWithYtDlp(url, quality, outputPath, options = {}) {
       reject(new Error('Download timed out after 5 minutes'));
     }, 300000);
 
-    subprocess.on('close', () => {
+    subprocess.on('close', async () => {
       clearTimeout(timeout);
+      // Add a small delay for filesystem sync on Windows
+      await new Promise(r => setTimeout(r, 500));
       if (fs.existsSync(outputPath)) {
+        const stat = fs.statSync(outputPath);
+        if (stat.size > 500 * 1024 * 1024) {
+          try { fs.unlinkSync(outputPath); } catch {}
+          reject(new Error('File exceeds 500MB limit'));
+          return;
+        }
         return resolve({ success: true });
       }
       // yt-dlp may append different extension
@@ -378,8 +435,19 @@ async function downloadWithYtDlp(url, quality, outputPath, options = {}) {
           if (alt !== outputPath) {
             try { fs.renameSync(alt, outputPath); } catch {}
           }
+          const stat = fs.statSync(outputPath);
+          if (stat.size > 500 * 1024 * 1024) {
+            try { fs.unlinkSync(outputPath); } catch {}
+            reject(new Error('File exceeds 500MB limit'));
+            return;
+          }
           return resolve({ success: true });
         }
+      }
+      // Check for .part files (incomplete downloads)
+      const partFile = outputPath + '.part';
+      if (fs.existsSync(partFile)) {
+        try { fs.unlinkSync(partFile); } catch {}
       }
       reject(new Error('Download completed but file not found'));
     });
@@ -820,9 +888,10 @@ router.post('/youtube-download', async (req, res) => {
       }
     }
 
-    return res.status(500).json({
+    return res.status(422).json({
       success: false,
-      error: 'All download engines failed. This might be due to the video being restricted or a temporary issue. Please try again in a moment.',
+      error: 'All download methods failed. Possible causes: (1) Video is age-restricted or private, (2) Regional restrictions, (3) Temporary server issues. Please try again or try a different video.',
+      engines_tried: ['cobalt', 'yt-dlp', 'invidious', 'piped', 'ytdl-core'],
     });
   } catch (err) {
     console.error('[YouTube Download Error]', err.message);
@@ -954,6 +1023,72 @@ router.post('/terabox-info', async (req, res) => {
           return null;
         },
       },
+      {
+        name: 'TeraboxDL-V5',
+        url: `https://ytshorts.savetube.me/api/v1/terabox-downloader?url=${encodeURIComponent(url)}`,
+        parse: (data) => {
+          if (data && data.data && data.data.file_name) {
+            const d = data.data;
+            return {
+              name: d.file_name, size: d.size || 'Unknown',
+              thumbnail: d.thumb || d.thumbnail || '',
+              downloadLink: d.direct_link || d.download_link || d.dlink || '',
+              isVideo: /\.(mp4|mkv|avi|mov|wmv|flv|webm|m4v|3gp)$/i.test(d.file_name),
+            };
+          }
+          return null;
+        },
+      },
+      {
+        name: 'TeraboxDL-V6',
+        url: `https://teraboxdownloader.nepcoderdevs.com/api/getDownload?url=${encodeURIComponent(url)}`,
+        parse: (data) => {
+          if (data && data.response && data.response.length > 0) {
+            const item = data.response[0];
+            return {
+              name: item.title || item.server_filename || 'Terabox File',
+              size: item.size || 'Unknown',
+              thumbnail: item.thumbs?.url3 || item.thumbs?.url2 || '',
+              downloadLink: item.resolutions?.['720p']?.url || item.resolutions?.['480p']?.url || item.fast_link || '',
+              isVideo: true,
+            };
+          }
+          return null;
+        },
+      },
+      {
+        name: 'TeraboxDL-V7',
+        url: `https://www.saveall.ai/api/terabox?url=${encodeURIComponent(url)}`,
+        parse: (data) => {
+          if (data && data.data) {
+            const d = data.data;
+            return {
+              name: d.file_name || d.title || 'Terabox File',
+              size: d.size || 'Unknown',
+              thumbnail: d.thumb || '',
+              downloadLink: d.direct_link || d.download_link || '',
+              isVideo: true,
+            };
+          }
+          return null;
+        },
+      },
+      {
+        name: 'TeraboxDL-V8',
+        url: `https://terabox.udrop.com/api/get-download?url=${encodeURIComponent(url)}`,
+        parse: (data) => {
+          if (data && (data.file_name || data.name)) {
+            const name = data.file_name || data.name || 'Terabox File';
+            return {
+              name, size: data.size || data.file_size || 'Unknown',
+              thumbnail: data.thumb || data.thumbnail || '',
+              downloadLink: data.direct_link || data.download_link || data.dlink || '',
+              isVideo: /\.(mp4|mkv|avi|mov|wmv|flv|webm|m4v|3gp)$/i.test(name),
+            };
+          }
+          return null;
+        },
+      },
     ];
 
     let fileInfo = null;
@@ -962,6 +1097,7 @@ router.post('/terabox-info', async (req, res) => {
         console.log(`[Terabox Info] Trying ${api.name}...`);
         const resp = await axios.get(api.url, {
           timeout: 20000,
+          signal: AbortSignal.timeout(25000),
           headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
         });
         fileInfo = api.parse(resp.data);
@@ -990,6 +1126,118 @@ router.post('/terabox-info', async (req, res) => {
     return res.status(500).json({ success: false, error: 'Failed to fetch file info. Please try again.' });
   }
 });
+
+
+// ═══════════════════════════════════════════════════════════
+// ── Terabox: Helper — fetch info from third-party APIs ───
+// ═══════════════════════════════════════════════════════════
+async function getTeraboxInfoFromAPIs(url) {
+  const apis = [
+    {
+      name: 'TeraboxDL-Primary',
+      url: `https://terabox-dl-arridha.vercel.app/api?url=${encodeURIComponent(url)}`,
+      parse: (data) => {
+        if (data && (data.file_name || data.name)) {
+          const name = data.file_name || data.name || 'Unknown File';
+          return {
+            name, size: data.size || data.file_size || 'Unknown',
+            thumbnail: data.thumb || data.thumbnail || '',
+            downloadLink: data.direct_link || data.download_link || data.dlink || '',
+            isVideo: /\.(mp4|mkv|avi|mov|wmv|flv|webm|m4v|3gp)$/i.test(name),
+          };
+        }
+        return null;
+      },
+    },
+    {
+      name: 'TeraboxDL-V2',
+      url: `https://teraboxvideodownloader.nepcoderdevs.com/api/getDownload?url=${encodeURIComponent(url)}`,
+      parse: (data) => {
+        if (data && data.response && data.response.length > 0) {
+          const item = data.response[0];
+          return {
+            name: item.title || item.server_filename || 'Terabox File',
+            size: item.size || 'Unknown',
+            thumbnail: item.thumbs?.url3 || item.thumbs?.url2 || '',
+            downloadLink: item.resolutions?.['720p']?.url || item.resolutions?.['480p']?.url || item.fast_link || '',
+            isVideo: true,
+          };
+        }
+        return null;
+      },
+    },
+    {
+      name: 'TeraboxDL-V6',
+      url: `https://teraboxdownloader.nepcoderdevs.com/api/getDownload?url=${encodeURIComponent(url)}`,
+      parse: (data) => {
+        if (data && data.response && data.response.length > 0) {
+          const item = data.response[0];
+          return {
+            name: item.title || item.server_filename || 'Terabox File',
+            size: item.size || 'Unknown',
+            thumbnail: item.thumbs?.url3 || item.thumbs?.url2 || '',
+            downloadLink: item.resolutions?.['720p']?.url || item.resolutions?.['480p']?.url || item.fast_link || '',
+            isVideo: true,
+          };
+        }
+        return null;
+      },
+    },
+    {
+      name: 'TeraboxDL-V7',
+      url: `https://www.saveall.ai/api/terabox?url=${encodeURIComponent(url)}`,
+      parse: (data) => {
+        if (data && data.data) {
+          const d = data.data;
+          return {
+            name: d.file_name || d.title || 'Terabox File',
+            size: d.size || 'Unknown',
+            thumbnail: d.thumb || '',
+            downloadLink: d.direct_link || d.download_link || '',
+            isVideo: true,
+          };
+        }
+        return null;
+      },
+    },
+    {
+      name: 'TeraboxDL-V8',
+      url: `https://terabox.udrop.com/api/get-download?url=${encodeURIComponent(url)}`,
+      parse: (data) => {
+        if (data && (data.file_name || data.name)) {
+          const name = data.file_name || data.name || 'Terabox File';
+          return {
+            name, size: data.size || data.file_size || 'Unknown',
+            thumbnail: data.thumb || data.thumbnail || '',
+            downloadLink: data.direct_link || data.download_link || data.dlink || '',
+            isVideo: /\.(mp4|mkv|avi|mov|wmv|flv|webm|m4v|3gp)$/i.test(name),
+          };
+        }
+        return null;
+      },
+    },
+  ];
+
+  for (const api of apis) {
+    try {
+      console.log(`[Terabox Helper] Trying ${api.name}...`);
+      const resp = await axios.get(api.url, {
+        timeout: 20000,
+        signal: AbortSignal.timeout(25000),
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+      });
+      const result = api.parse(resp.data);
+      if (result && result.downloadLink) {
+        console.log(`[Terabox Helper] ✅ Got download link via ${api.name}`);
+        return result;
+      }
+    } catch (err) {
+      console.log(`[Terabox Helper] ${api.name} failed: ${err.message}`);
+      continue;
+    }
+  }
+  return null;
+}
 
 
 // ═══════════════════════════════════════════════════════════
@@ -1036,6 +1284,19 @@ router.post('/terabox-download', async (req, res) => {
         console.error('[Terabox Download] yt-dlp error:', e.message);
         try { if (fs.existsSync(outputFile)) fs.unlinkSync(outputFile); } catch {}
       }
+    }
+
+    // Method 3: Try third-party APIs for direct download links
+    console.log('[Terabox Download] Trying third-party APIs...');
+    const infoRes = await getTeraboxInfoFromAPIs(url);
+    if (infoRes && infoRes.downloadLink) {
+      console.log('[Terabox Download] ✅ Success via third-party API');
+      return res.json({
+        success: true,
+        downloadUrl: infoRes.downloadLink,
+        filename: infoRes.name || 'terabox_file',
+        isDirect: true,
+      });
     }
 
     return res.status(500).json({ success: false, error: 'Could not download from Terabox. The file may be private or the link may be expired.' });

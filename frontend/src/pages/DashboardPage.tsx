@@ -14,7 +14,7 @@
  */
 
 import { useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { Link } from "react-router-dom";
 import CountUp from "react-countup";
 import Tilt from "react-parallax-tilt";
@@ -86,6 +86,9 @@ const getRelativeTime = (date: string | Date) => {
 };
 
 const DashboardPage = () => {
+  const { scrollY } = useScroll();
+  const bgY = useTransform(scrollY, [0, 2000], [0, -150]);
+
   const { user } = useAuth();
   const { profile, stats, isLoading, statsLoading } = useUserProfile();
   const gridRef = useRef<HTMLDivElement>(null);
@@ -130,6 +133,14 @@ const DashboardPage = () => {
 
   return (
     <div ref={gridRef} className="px-3 py-6 sm:px-4 sm:py-8 md:px-6 lg:px-8 max-w-7xl mx-auto">
+      {/* Dynamic Background Image for Dashboard (Fixed to viewport) */}
+      <motion.div className="fixed inset-0 -z-10 opacity-[0.05] mix-blend-luminosity pointer-events-none scale-[1.15] origin-center" style={{
+        backgroundImage: "url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=2072&q=80')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        y: bgY
+      }} />
+
       {/* ──── Welcome Hero ──── */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}

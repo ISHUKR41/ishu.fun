@@ -11,7 +11,7 @@ import GradientMesh from "@/components/animations/GradientMesh";
 import MorphingBlob from "@/components/animations/MorphingBlob";
 import ShimmerText from "@/components/animations/ShimmerText";
 import HeroScene3D from "@/components/3d/HeroScene3D";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { useState, useMemo, useRef, Suspense, useEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -24,8 +24,10 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { BreadcrumbSchema } from "@/components/seo/JsonLd";
+import SEOHead, { SEO_DATA } from "@/components/seo/SEOHead";
 import jsPDF from "jspdf";
 import toast from "react-hot-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // ─── Confetti Burst ────────────────────────────────────────────────────────────
 const CONFETTI_COLORS = ["#8b5cf6","#3b82f6","#06b6d4","#ec4899","#f59e0b","#10b981","#ef4444"];
@@ -211,6 +213,11 @@ const labelCls = "mb-1.5 block text-[11px] font-semibold uppercase tracking-wide
 
 // ─── Main Component ────────────────────────────────────────────────────────────
 const BioDataPage = () => {
+  const { scrollY } = useScroll();
+  const bgY = useTransform(scrollY, [0, 2000], [0, -150]);
+  const isMobile = useIsMobile();
+  const prefersReducedMotion = useReducedMotion();
+  const disableHeavyEffects = isMobile || prefersReducedMotion;
   // Personal
   const [fullName, setFullName]         = useState("");
   const [dob, setDob]                   = useState("");
@@ -248,6 +255,8 @@ const BioDataPage = () => {
   const formSectionsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (disableHeavyEffects) return;
+    const ctx = gsap.context(() => {
     if (formSectionsRef.current) {
       const sections = formSectionsRef.current.querySelectorAll(".bio-section-gsap");
       sections.forEach((section) => {
@@ -264,8 +273,10 @@ const BioDataPage = () => {
         );
       });
     }
-    return () => { ScrollTrigger.getAll().forEach(t => t.kill()); };
-  }, []);
+    });
+
+    return () => ctx.revert();
+  }, [disableHeavyEffects]);
 
   const completion = useMemo(() => {
     const fields = [fullName, dob, gender, email, phone, education, occupation, fatherName];
@@ -337,15 +348,25 @@ const BioDataPage = () => {
 
   return (
     <Layout>
+      <SEOHead {...SEO_DATA.biodata} />
       <BreadcrumbSchema items={[
-        { name:"Home", url:"https://ishu.dev/" },
-        { name:"CV", url:"https://ishu.dev/cv" },
-        { name:"Bio-Data", url:"https://ishu.dev/cv/bio-data" },
+        { name:"Home", url:"https://ishu.fun/" },
+        { name:"CV", url:"https://ishu.fun/cv" },
+        { name:"Bio-Data", url:"https://ishu.fun/cv/bio-data" },
       ]} />
+
+      {/* Dynamic Background Image */}
+      <motion.div className="fixed inset-0 -z-10 opacity-[0.05] mix-blend-luminosity pointer-events-none scale-[1.15] origin-center" style={{
+        backgroundImage: "url('https://images.unsplash.com/photo-1448932223592-d1fc686e76ea?auto=format&fit=crop&w=2070&q=80')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        y: bgY
+      }} />
+
       <ConfettiBurst active={confetti} onComplete={() => setConfetti(false)} />
 
       <section className="relative overflow-hidden min-h-screen py-16 md:py-20">
-        <div className="opacity-20"><Suspense fallback={null}><HeroScene3D /></Suspense></div>
+        {!disableHeavyEffects && <div className="opacity-20"><Suspense fallback={null}><HeroScene3D /></Suspense></div>}
         <GradientMesh className="opacity-15" />
         <MorphingBlob className="absolute -top-40 -right-40 h-[500px] w-[500px] opacity-10" color="violet" />
         <MorphingBlob className="absolute -bottom-40 -left-40 h-[400px] w-[400px] opacity-8" color="purple" />
