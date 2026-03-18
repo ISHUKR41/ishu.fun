@@ -1003,9 +1003,14 @@ const TVPage = () => {
     let list = langChannels;
     if (activeCat === FAV_CAT) list = list.filter((c) => favorites.has(c.id));
     else if (activeCat !== ALL_CAT) list = list.filter((c) => c.category === activeCat);
-    if (search.trim() && searchResults.length > 0) {
-      const ids = new Set(searchResults.map((r) => r.id));
-      list = list.filter((c) => ids.has(c.id));
+    if (search.trim()) {
+      if (searchResults.length > 0) {
+        const ids = new Set(searchResults.map((r) => r.id));
+        list = list.filter((c) => ids.has(c.id));
+      } else {
+        // Search is active but no matches — show empty list
+        list = [];
+      }
     }
     return list.slice().sort((a, b) => {
       const aF = failedIds.has(a.id) ? 1 : 0;

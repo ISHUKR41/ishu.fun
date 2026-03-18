@@ -20,3 +20,5 @@ services:
         value: /usr/local/bin/yt-dlp
       - key: VIDEO_DOWNLOADS_DIR
         value: /tmp/video-downloads
+      - key: TEMP_DIR
+        value: /tmp
