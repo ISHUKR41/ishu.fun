@@ -222,6 +222,9 @@ const CORS_PROXIES = [
   (url: string) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
   (url: string) => `https://thingproxy.freeboard.io/fetch/${url}`,
 ];
+// Named proxy index constants to avoid magic numbers
+const PROXY_IDX_BACKEND = 0;    // Backend CORS proxy (rewrites M3U8, but has cold-start delay)
+const PROXY_IDX_CORSPROXY = 1;  // corsproxy.io (fast/reliable public proxy, no cold-start)
 
 /* ═══════════════════ STREAM RELIABILITY SCORING ═══════════════════ */
 function scoreStream(s: StreamUrl): number {
@@ -602,15 +605,15 @@ function useRobustPlayer(
       if (isDirectCDN) {
         // Known CORS-friendly CDNs: try direct first, then proxies as fallback
         list.push({ url: s.url, proxyIdx: -1, original: s });
-        list.push({ url: s.url, proxyIdx: 1, original: s }); // corsproxy.io
-        list.push({ url: s.url, proxyIdx: 0, original: s }); // Backend proxy
+        list.push({ url: s.url, proxyIdx: PROXY_IDX_CORSPROXY, original: s }); // corsproxy.io
+        list.push({ url: s.url, proxyIdx: PROXY_IDX_BACKEND, original: s }); // Backend proxy
       } else {
-        // ALL other streams: corsproxy.io first (no cold-start), then direct, then others
-        list.push({ url: s.url, proxyIdx: 1, original: s }); // corsproxy.io (fastest public proxy)
+        // ALL other streams: corsproxy.io first (no cold-start delay), then direct, then others
+        list.push({ url: s.url, proxyIdx: PROXY_IDX_CORSPROXY, original: s }); // corsproxy.io (fastest public proxy)
         list.push({ url: s.url, proxyIdx: -1, original: s }); // Direct as fallback
-        list.push({ url: s.url, proxyIdx: 0, original: s }); // Backend proxy (rewrites M3U8)
+        list.push({ url: s.url, proxyIdx: PROXY_IDX_BACKEND, original: s }); // Backend proxy (rewrites M3U8)
         // Additional public proxies as last resort
-        for (let i = 2; i < CORS_PROXIES.length; i++) {
+        for (let i = PROXY_IDX_CORSPROXY + 1; i < CORS_PROXIES.length; i++) {
           list.push({ url: s.url, proxyIdx: i, original: s });
         }
       }
@@ -651,8 +654,8 @@ function useRobustPlayer(
     // Determine the actual URL to load and whether to use proxy xhrSetup
     const isProxied = attempt.proxyIdx >= 0;
     const loadUrl = isProxied ? CORS_PROXIES[attempt.proxyIdx](attempt.url) : attempt.url;
-    // corsproxy.io (idx 1) and other public proxies: 15s; backend proxy (idx 0): 45s (cold start); direct: 20s
-    const timeout = !isProxied ? 20000 : (attempt.proxyIdx === 0 ? 45000 : 15000);
+    // corsproxy.io and other public proxies: 15s; backend proxy: 45s (cold start); direct: 20s
+    const timeout = !isProxied ? 20000 : (attempt.proxyIdx === PROXY_IDX_BACKEND ? 45000 : 15000);
 
     // Stall detection — 15s timeout (Indian streams can buffer slowly on mobile networks)
     const onTimeUpdate = () => {
