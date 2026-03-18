@@ -51,6 +51,9 @@ const securityRoutes = require('./src/routes/securityRoutes');
 const aiRoutes = require('./src/routes/aiRoutes');
 const videoRoutes = require('./src/routes/videoRoutes');
 const userRoutes = require('./src/routes/userRoutes');
+const youtubeRoutes = require('./src/routes/youtubeRoutes');
+const teraboxRoutes = require('./src/routes/teraboxRoutes');
+const universalDownloadRoutes = require('./src/routes/universalDownloadRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -418,6 +421,9 @@ app.use('/api/tools', convertRoutes);
 app.use('/api/tools', securityRoutes);
 app.use('/api/tools', aiRoutes);
 app.use('/api/tools', videoRoutes);
+app.use('/api/tools', youtubeRoutes);
+app.use('/api/tools', teraboxRoutes);
+app.use('/api/tools', universalDownloadRoutes);
 
 // User profile & settings routes (requires MongoDB)
 app.use('/api/user', userRoutes);
@@ -477,8 +483,8 @@ const startServer = async () => {
             } catch (e) {
                 console.log(`[Keep-Alive] ⚠️ Error: ${e.message}`);
             }
-        }, 5 * 60 * 1000); // Every 5 minutes (Render sleeps after 15 min)
-        console.log(`🔄 Keep-Alive: Self-ping every 5 minutes to prevent sleep`);
+        }, 4 * 60 * 1000); // Every 4 minutes (Render sleeps after 15 min — extra safety margin)
+        console.log(`🔄 Keep-Alive: Self-ping every 4 minutes to prevent sleep`);
     });
 
     // ── Server Stability: Prevent hanging connections ──

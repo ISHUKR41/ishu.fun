@@ -162,13 +162,13 @@ export const GSAP_CONFIG = {
 
 // Video/TV streaming optimization
 export const STREAM_CONFIG = {
-  // HLS.js settings - generous for Indian CDNs + slow mobile networks
-  maxBufferLength: IS_MOBILE ? 18 : 25,
-  maxMaxBufferLength: IS_MOBILE ? 50 : 80,
-  fragLoadingMaxRetry: IS_MOBILE ? 6 : 8,
-  fragLoadingRetryDelay: 400,
-  manifestLoadingMaxRetry: 5,
-  manifestLoadingRetryDelay: 400,
+  // HLS.js settings - optimized for fast initial playback + reliability
+  maxBufferLength: IS_MOBILE ? 12 : 20,
+  maxMaxBufferLength: IS_MOBILE ? 35 : 60,
+  fragLoadingMaxRetry: IS_MOBILE ? 4 : 6,
+  fragLoadingRetryDelay: 300,
+  manifestLoadingMaxRetry: 6,
+  manifestLoadingRetryDelay: 300,
   
   // Preload next channel
   preloadNextChannel: !IS_MOBILE,

@@ -61,10 +61,19 @@
     <meta name="msapplication-TileColor" content="#0070f3" />
     <link rel="manifest" href="/manifest.json" />
     
-    <!-- Preconnect for Performance -->
+    <!-- Preconnect for Performance (critical third-party origins) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://ishu-site.onrender.com" crossorigin />
     <link rel="dns-prefetch" href="https://ishu-site.onrender.com" />
+    <link rel="dns-prefetch" href="https://iptv-org.github.io" />
+    <link rel="dns-prefetch" href="https://img.youtube.com" />
+    <link rel="dns-prefetch" href="https://clerk.ishu.fun" />
+    
+    <!-- Preload critical font CSS (prevents render-blocking) -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" as="style" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" /></noscript>
     
     <!-- Structured Data: WebSite -->
     <script type="application/ld+json">

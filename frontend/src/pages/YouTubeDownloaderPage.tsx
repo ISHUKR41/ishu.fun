@@ -276,7 +276,7 @@ const YouTubeDownloaderPage = () => {
                   <h2 className="font-display text-lg font-semibold text-foreground">Enter YouTube URL</h2>
                 </div>
 
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <div className="flex-1 flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 transition-all focus-within:border-primary/40 focus-within:shadow-glow">
                     <Search size={18} className="text-muted-foreground shrink-0" />
                     <input
@@ -297,7 +297,7 @@ const YouTubeDownloaderPage = () => {
                     whileTap={{ scale: 0.97 }}
                     onClick={fetchVideoInfo}
                     disabled={loading}
-                    className="flex items-center gap-2 rounded-xl bg-red-600 px-6 py-3 font-display text-sm font-semibold text-white transition-all hover:bg-red-700 hover:shadow-glow disabled:opacity-50 shrink-0"
+                    className="flex items-center justify-center gap-2 rounded-xl bg-red-600 px-6 py-3 font-display text-sm font-semibold text-white transition-all hover:bg-red-700 hover:shadow-glow disabled:opacity-50 shrink-0"
                   >
                     {loading ? <><Loader2 size={16} className="animate-spin" /> Fetching...</> : <><Play size={16} /> Fetch</>}
                   </motion.button>

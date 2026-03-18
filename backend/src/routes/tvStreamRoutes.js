@@ -13,10 +13,28 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 const NodeCache = require('node-cache');
+const http = require('http');
+const https = require('https');
 
 // Cache manifests for 30 seconds, segments for 5 minutes
 const manifestCache = new NodeCache({ stdTTL: 30, checkperiod: 10 });
 const segmentCache = new NodeCache({ stdTTL: 300, checkperiod: 60 });
+
+// Connection pooling for better performance
+const httpAgent = new http.Agent({ 
+  keepAlive: true, 
+  maxSockets: 100, 
+  maxFreeSockets: 20,
+  timeout: 60000 
+});
+
+const httpsAgent = new https.Agent({ 
+  keepAlive: true, 
+  maxSockets: 100, 
+  maxFreeSockets: 20,
+  timeout: 60000,
+  rejectUnauthorized: false // Allow self-signed certs for some Indian CDNs
+});
 
 /**
  * GET /stream-proxy — Proxy any IPTV stream URL
@@ -60,13 +78,20 @@ router.get('/stream-proxy', async (req, res) => {
     const response = await axios.get(decodedUrl, {
       timeout: 30000,
       responseType: isManifest ? 'text' : 'arraybuffer',
+      httpAgent: decodedUrl.startsWith('http:') ? httpAgent : undefined,
+      httpsAgent: decodedUrl.startsWith('https:') ? httpsAgent : undefined,
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': '*/*',
         'Accept-Encoding': 'gzip, deflate',
         'Connection': 'keep-alive',
+        'Referer': decodedUrl.includes('jiocinema') ? 'https://www.jiocinema.com/' :
+                   decodedUrl.includes('hotstar') ? 'https://www.hotstar.com/' :
+                   decodedUrl.includes('sonyliv') ? 'https://www.sonyliv.com/' :
+                   decodedUrl.includes('zee5') ? 'https://www.zee5.com/' : undefined,
       },
       validateStatus: (status) => status < 500,
+      maxRedirects: 5,
     });
 
     if (response.status !== 200) {
