@@ -38,8 +38,10 @@ setInterval(() => {
   }
 }, 600000);
 
-// Temp downloads directory
-const DOWNLOADS_DIR = path.resolve(__dirname, '../../temp/video-downloads');
+// Temp downloads directory — use /tmp on Linux/Render (always writable at runtime)
+const DOWNLOADS_DIR = process.platform === 'win32'
+  ? path.resolve(__dirname, '../../temp/video-downloads')
+  : (process.env.VIDEO_DOWNLOADS_DIR || '/tmp/video-downloads');
 if (!fs.existsSync(DOWNLOADS_DIR)) {
   fs.mkdirSync(DOWNLOADS_DIR, { recursive: true });
 }
@@ -56,7 +58,22 @@ try {
 
 // ── yt-dlp-wrap setup ──────────────────────────────────────
 let YTDlpWrap, ytDlpInstance;
-const YTDLP_BINARY_PATH = path.resolve(__dirname, '../../yt-dlp' + (process.platform === 'win32' ? '.exe' : ''));
+
+// Determine yt-dlp binary path:
+// 1. YTDLP_PATH env var (set in render.yaml or local .env)
+// 2. /usr/local/bin/yt-dlp (installed at build time by render.yaml buildCommand)
+// 3. /tmp/yt-dlp (runtime download fallback on Linux)
+// 4. Windows dev path
+function getYtDlpBinaryPath() {
+  if (process.platform === 'win32') return path.resolve(__dirname, '../../yt-dlp.exe');
+  if (process.env.YTDLP_PATH) return process.env.YTDLP_PATH;
+  const systemPath = '/usr/local/bin/yt-dlp';
+  const fs_sync = require('fs');
+  if (fs_sync.existsSync(systemPath)) return systemPath;
+  return '/tmp/yt-dlp';
+}
+const YTDLP_BINARY_PATH = getYtDlpBinaryPath();
+console.log('[Video] yt-dlp binary path:', YTDLP_BINARY_PATH);
 
 let ytDlpInitPromise = null;
 
@@ -68,28 +85,53 @@ async function getYtDlp() {
     try {
       YTDlpWrap = require('yt-dlp-wrap').default || require('yt-dlp-wrap');
 
-      if (!fs.existsSync(YTDLP_BINARY_PATH)) {
-        console.log('[Video] ⬇️ Downloading yt-dlp binary...');
+      const needsDownload = !fs.existsSync(YTDLP_BINARY_PATH) ||
+        fs.statSync(YTDLP_BINARY_PATH).size < 1024; // Corrupt/empty binary
+
+      if (needsDownload) {
+        // Don't try to download to read-only system paths (like /usr/local/bin) at runtime
+        const isSystemPath = YTDLP_BINARY_PATH.startsWith('/usr/');
+        const downloadTarget = isSystemPath ? '/tmp/yt-dlp' : YTDLP_BINARY_PATH;
+        console.log('[Video] ⬇️ Downloading yt-dlp binary to:', downloadTarget);
         try {
-          await YTDlpWrap.downloadFromGithub(YTDLP_BINARY_PATH);
-          console.log('[Video] ✅ yt-dlp binary downloaded to:', YTDLP_BINARY_PATH);
+          await YTDlpWrap.downloadFromGithub(downloadTarget);
+          // Ensure executable permissions on Linux
+          if (process.platform !== 'win32') {
+            fs.chmodSync(downloadTarget, 0o755);
+          }
+          console.log('[Video] ✅ yt-dlp binary downloaded to:', downloadTarget);
+          // Update instance to use the downloaded binary
+          ytDlpInstance = new YTDlpWrap(downloadTarget);
         } catch (downloadErr) {
           console.warn('[Video] ⚠️ yt-dlp binary download failed:', downloadErr.message);
           ytDlpInitPromise = null;
           return null;
         }
+      } else {
+        ytDlpInstance = new YTDlpWrap(YTDLP_BINARY_PATH);
       }
-
-      ytDlpInstance = new YTDlpWrap(YTDLP_BINARY_PATH);
 
       try {
         const version = await ytDlpInstance.execPromise(['--version']);
         console.log('[Video] ✅ yt-dlp version:', version.trim());
       } catch (verifyErr) {
-        console.warn('[Video] ⚠️ yt-dlp binary failed:', verifyErr.message);
-        ytDlpInstance = null;
-        ytDlpInitPromise = null;
-        return null;
+        console.warn('[Video] ⚠️ yt-dlp binary verification failed:', verifyErr.message);
+        // Try re-downloading — use /tmp if the original path is read-only (e.g., /usr/local/bin)
+        const fallbackPath = YTDLP_BINARY_PATH.startsWith('/tmp') ? YTDLP_BINARY_PATH : '/tmp/yt-dlp';
+        try {
+          console.log('[Video] 🔄 Re-downloading yt-dlp binary to:', fallbackPath);
+          if (fs.existsSync(fallbackPath)) fs.unlinkSync(fallbackPath);
+          await YTDlpWrap.downloadFromGithub(fallbackPath);
+          if (process.platform !== 'win32') fs.chmodSync(fallbackPath, 0o755);
+          ytDlpInstance = new YTDlpWrap(fallbackPath);
+          const ver2 = await ytDlpInstance.execPromise(['--version']);
+          console.log('[Video] ✅ yt-dlp re-download successful, version:', ver2.trim());
+        } catch (redownloadErr) {
+          console.warn('[Video] ⚠️ yt-dlp re-download also failed:', redownloadErr.message);
+          ytDlpInstance = null;
+          ytDlpInitPromise = null;
+          return null;
+        }
       }
 
       return ytDlpInstance;
@@ -103,7 +145,7 @@ async function getYtDlp() {
   return ytDlpInitPromise;
 }
 
-// Initialize on module load (non-blocking)
+// Initialize on module load (non-blocking, eager download to reduce first-request latency)
 getYtDlp().catch(e => console.error('[Video] yt-dlp init error:', e.message));
 
 // ── ytdl-core for YouTube (last resort) ────────────────────

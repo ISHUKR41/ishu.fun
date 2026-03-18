@@ -17,9 +17,15 @@ const API_URL = import.meta.env.VITE_API_URL || "https://ishu-site.onrender.com"
 // Shared wake state — so multiple components can await the same wake
 let _wakePromise: Promise<boolean> | null = null;
 let _isBackendReady = false;
+// Expire backend-ready status after 10 minutes (Render free tier sleeps after 15 min)
+let _readyTimestamp = 0;
+const READY_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
 
 export async function wakeBackend(): Promise<boolean> {
-  if (_isBackendReady) return true;
+  // Expire stale "ready" status so we re-verify after inactivity
+  if (_isBackendReady && Date.now() - _readyTimestamp < READY_EXPIRY_MS) return true;
+  _isBackendReady = false;
+
   if (_wakePromise) return _wakePromise;
   
   _wakePromise = (async () => {
@@ -29,7 +35,12 @@ export async function wakeBackend(): Promise<boolean> {
         const tid = setTimeout(() => controller.abort(), 10000);
         const res = await fetch(`${API_URL}/api/wake`, { signal: controller.signal });
         clearTimeout(tid);
-        if (res.ok) { _isBackendReady = true; return true; }
+        if (res.ok) {
+          _isBackendReady = true;
+          _readyTimestamp = Date.now();
+          _wakePromise = null;
+          return true;
+        }
       } catch { /* retry */ }
       await new Promise(r => setTimeout(r, 3000));
     }
@@ -72,6 +83,7 @@ const BackendStatusBar = ({ onReady, compact = false }: BackendStatusBarProps) =
 
       if (res.ok && mountedRef.current) {
         _isBackendReady = true;
+        _readyTimestamp = Date.now();
         setResponseTime(Date.now() - start);
         setStatus("ready");
         if (elapsedRef.current) { clearInterval(elapsedRef.current); elapsedRef.current = null; }
@@ -99,8 +111,8 @@ const BackendStatusBar = ({ onReady, compact = false }: BackendStatusBarProps) =
     mountedRef.current = true;
     startTimeRef.current = Date.now();
     
-    // If already ready from a previous component, skip
-    if (_isBackendReady) {
+    // If already ready from a previous component AND not expired, skip the ping
+    if (_isBackendReady && Date.now() - _readyTimestamp < READY_EXPIRY_MS) {
       setStatus("ready");
       onReady?.();
       return;
