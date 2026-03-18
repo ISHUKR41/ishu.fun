@@ -142,7 +142,7 @@ const Header = () => {
       <AnimatePresence>
         {mobileOpen && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden border-t border-border bg-background md:hidden">
+            className="overflow-hidden border-t border-border bg-background md:hidden max-h-[calc(100vh-64px)] overflow-y-auto">
             <nav className="container flex flex-col gap-1 py-4">
               {/* Navigation links */}
               {navLinks.map((link) => (

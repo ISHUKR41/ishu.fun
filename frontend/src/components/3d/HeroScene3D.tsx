@@ -4,11 +4,13 @@
  * Renders animated 3D shapes as a background decoration for the hero section.
  * Performance: Uses frameloop="demand" + IntersectionObserver to pause when offscreen.
  * All sub-components wrapped in React.memo to prevent unnecessary re-renders.
+ * Automatically disabled on mobile/low-end devices for optimal performance.
  */
 import { useRef, useMemo, Suspense, memo, useState, useEffect } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Float, MeshDistortMaterial, MeshWobbleMaterial, Sphere, Torus, Icosahedron, Octahedron, Box } from "@react-three/drei";
 import * as THREE from "three";
+import { shouldUse3D, SCENE_3D_CONFIG } from "@/config/performance";
 
 const IS_MOBILE = typeof window !== "undefined" && (window.innerWidth < 768 || /Mobi|Android/i.test(navigator.userAgent));
 
@@ -148,6 +150,11 @@ const HeroScene3D = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(true);
 
+  // Early return for mobile/low-end devices
+  if (!shouldUse3D()) {
+    return null;
+  }
+
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -164,11 +171,11 @@ const HeroScene3D = () => {
       {isVisible && (
         <Canvas
           camera={{ position: [0, 0, 5], fov: 60 }}
-          frameloop="demand"
           dpr={[1, IS_MOBILE ? 1 : 1.5]}
           performance={{ min: 0.5 }}
-          gl={{ antialias: false, alpha: true, powerPreference: "high-performance" }}
+          gl={{ antialias: SCENE_3D_CONFIG.antialias, alpha: true, powerPreference: "high-performance", pixelRatio: SCENE_3D_CONFIG.pixelRatio }}
           style={{ background: "transparent" }}
+          frameloop={SCENE_3D_CONFIG.frameloop}
         >
           <Suspense fallback={null}>
             <SceneContent />

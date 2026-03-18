@@ -55,6 +55,33 @@ const userRoutes = require('./src/routes/userRoutes');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// ─── PROCESS ERROR HANDLERS (Prevent Crashes) ───────────────
+process.on('uncaughtException', (err) => {
+    console.error('[FATAL] Uncaught Exception:', err);
+    // Log but don't exit - keep server running
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('[FATAL] Unhandled Rejection at:', promise, 'reason:', reason);
+    // Log but don't exit - keep server running
+});
+
+process.on('SIGTERM', () => {
+    console.log('[SERVER] SIGTERM received, graceful shutdown...');
+    server.close(() => {
+        console.log('[SERVER] Process terminated');
+        process.exit(0);
+    });
+});
+
+process.on('SIGINT', () => {
+    console.log('[SERVER] SIGINT received, graceful shutdown...');
+    server.close(() => {
+        console.log('[SERVER] Process terminated');
+        process.exit(0);
+    });
+});
+
 // ─── MIDDLEWARE ──────────────────────────────────────────────
 
 // CORS — Allow requests from multiple local dev origins + production
@@ -98,6 +125,10 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 // This must come before the general rate limiter so it uses its own limit
 const http = require('http');
 const https = require('https');
+
+// Connection pooling agents for better stream reliability
+const httpAgent = new http.Agent({ keepAlive: true, maxSockets: 100, maxFreeSockets: 20, timeout: 90000 });
+const httpsAgent = new https.Agent({ keepAlive: true, maxSockets: 100, maxFreeSockets: 20, timeout: 90000, rejectUnauthorized: false });
 
 const streamLimiter = rateLimit({
     windowMs: 1 * 60 * 1000,
@@ -196,7 +227,7 @@ app.get('/api/stream-proxy', streamLimiter, (req, res) => {
     }
 
     let redirectCount = 0;
-    const MAX_REDIRECTS = 12;
+    const MAX_REDIRECTS = 15;
     let finished = false;
 
     // Rotate User-Agents for better compatibility with different CDNs
@@ -204,6 +235,9 @@ app.get('/api/stream-proxy', streamLimiter, (req, res) => {
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
         'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0',
+        'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+        'Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36',
     ];
     const randomUA = USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
 
@@ -224,14 +258,15 @@ app.get('/api/stream-proxy', streamLimiter, (req, res) => {
                 'Referer': referer,
                 'Origin': referer,
                 'Accept': '*/*',
+                'Accept-Encoding': 'gzip, deflate, identity',
                 'Accept-Language': 'en-US,en;q=0.9,hi;q=0.8',
                 'Connection': 'keep-alive',
                 'Sec-Fetch-Dest': 'empty',
                 'Sec-Fetch-Mode': 'cors',
                 'Sec-Fetch-Site': 'cross-site',
             },
-            timeout: 45000,
-            ...(isHttps ? { rejectUnauthorized: false } : {}),
+            timeout: 90000,
+            agent: isHttps ? httpsAgent : httpAgent,
         }, (proxyRes) => {
             if (finished) { proxyRes.destroy(); return; }
 
@@ -303,8 +338,8 @@ app.get('/api/stream-proxy', streamLimiter, (req, res) => {
         proxyReq.on('error', (err) => {
             if (finished) return;
             console.error('[Stream Proxy] Error:', err.code || err.message, 'URL:', url.substring(0, 100));
-            if (retryCount < 5 && ['ECONNRESET', 'ETIMEDOUT', 'ECONNREFUSED', 'ENOTFOUND', 'EHOSTUNREACH', 'EPIPE', 'ERR_TLS_CERT_ALTNAME_INVALID', 'EAI_AGAIN', 'ECONNABORTED', 'ERR_SOCKET_CLOSED', 'ERR_TLS_HANDSHAKE_TIMEOUT'].includes(err.code)) {
-                setTimeout(() => doProxy(url, retryCount + 1), 500 * (retryCount + 1));
+            if (retryCount < 6 && ['ECONNRESET', 'ETIMEDOUT', 'ECONNREFUSED', 'ENOTFOUND', 'EHOSTUNREACH', 'EPIPE', 'ERR_TLS_CERT_ALTNAME_INVALID', 'EAI_AGAIN', 'ECONNABORTED', 'ERR_SOCKET_CLOSED', 'ERR_TLS_HANDSHAKE_TIMEOUT', 'DEPTH_ZERO_SELF_SIGNED_CERT', 'UNABLE_TO_VERIFY_LEAF_SIGNATURE', 'CERT_HAS_EXPIRED', 'HPE_INVALID_CONSTANT', 'ERR_SSL_WRONG_VERSION_NUMBER', 'EPROTO'].includes(err.code)) {
+                setTimeout(() => doProxy(url, retryCount + 1), 400 * (retryCount + 1));
                 return;
             }
             if (!res.headersSent) res.status(502).json({ error: 'Stream proxy error' });
@@ -365,6 +400,17 @@ app.get('/api/wake', (_req, res) => {
     res.json({ ok: true, ts: Date.now() });
 });
 
+// Detailed status for frontend monitoring
+app.get('/api/status', (_req, res) => {
+    res.json({
+        ok: true,
+        status: 'running',
+        uptime: Math.floor(process.uptime()),
+        memory: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+        ts: Date.now(),
+    });
+});
+
 // Mount all tool route groups under /api/tools
 app.use('/api/tools', organizeRoutes);
 app.use('/api/tools', editRoutes);
@@ -384,7 +430,7 @@ const startServer = async () => {
     // Connect to MongoDB (non-blocking — PDF tools work without it)
     await connectDB();
 
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
         console.log(`\n🚀 ISHU Backend running on http://localhost:${PORT}`);
         console.log(`📋 Health: http://localhost:${PORT}/api/health`);
         console.log(`🔧 Tools:  http://localhost:${PORT}/api/tools/*`);
@@ -404,23 +450,71 @@ const startServer = async () => {
 
         // ── Self-ping keep-alive (prevents Render free tier from sleeping) ──
         const SELF_URL = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
+        let pingFailures = 0;
         setInterval(async () => {
             try {
                 const https = require('https');
                 const http = require('http');
                 const client = SELF_URL.startsWith('https') ? https : http;
-                client.get(`${SELF_URL}/api/wake`, (res) => {
+                client.get(`${SELF_URL}/api/wake`, { timeout: 10000 }, (res) => {
                     res.resume();
+                    pingFailures = 0;
                     console.log(`[Keep-Alive] ✅ Pinged ${SELF_URL}/api/wake at ${new Date().toISOString()}`);
                 }).on('error', (e) => {
-                    console.log(`[Keep-Alive] ⚠️ Ping failed: ${e.message}`);
+                    pingFailures++;
+                    console.log(`[Keep-Alive] ⚠️ Ping failed (${pingFailures}x): ${e.message}`);
+                    // Retry immediately on first failure
+                    if (pingFailures <= 2) {
+                        setTimeout(() => {
+                            client.get(`${SELF_URL}/api/wake`, { timeout: 10000 }, (r) => {
+                                r.resume();
+                                pingFailures = 0;
+                                console.log(`[Keep-Alive] ✅ Retry ping succeeded`);
+                            }).on('error', () => {});
+                        }, 3000);
+                    }
                 });
             } catch (e) {
                 console.log(`[Keep-Alive] ⚠️ Error: ${e.message}`);
             }
-        }, 10 * 60 * 1000); // Every 10 minutes (Render sleeps after 15 min)
-        console.log(`🔄 Keep-Alive: Self-ping every 10 minutes to prevent sleep`);
+        }, 5 * 60 * 1000); // Every 5 minutes (Render sleeps after 15 min)
+        console.log(`🔄 Keep-Alive: Self-ping every 5 minutes to prevent sleep`);
     });
+
+    // ── Server Stability: Prevent hanging connections ──
+    server.keepAliveTimeout = 65000; // 65 seconds (must be > load balancer timeout)
+    server.headersTimeout = 66000; // 66 seconds (must be > keepAliveTimeout)
+    server.requestTimeout = 120000; // 2 minutes for large file uploads
+
+    // ── Graceful Shutdown Handlers ──
+    const gracefulShutdown = (signal) => {
+        console.log(`\n[SERVER] ${signal} received, graceful shutdown...`);
+        server.close(() => {
+            console.log('[SERVER] All connections closed, exiting');
+            process.exit(0);
+        });
+        // Force exit after 30 seconds if graceful shutdown fails
+        setTimeout(() => {
+            console.error('[SERVER] Forced shutdown after timeout');
+            process.exit(1);
+        }, 30000);
+    };
+
+    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+    // ── Prevent Crashes from Unhandled Errors ──
+    process.on('uncaughtException', (err) => {
+        console.error('[FATAL] Uncaught Exception:', err);
+        // Log but don't exit - keep server running
+    });
+
+    process.on('unhandledRejection', (reason, promise) => {
+        console.error('[FATAL] Unhandled Rejection at:', promise, 'reason:', reason);
+        // Log but don't exit - keep server running
+    });
+
+    console.log('🛡️  Process error handlers registered (uncaughtException, unhandledRejection)');
 };
 
 startServer();

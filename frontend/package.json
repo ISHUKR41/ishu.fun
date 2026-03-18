@@ -80,6 +80,7 @@
     "next-themes": "^0.3.0",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "3.11.174",
+    "plyr": "^3.8.4",
     "pptxgenjs": "^4.0.1",
     "react": "^18.3.1",
     "react-countup": "^6.5.3",
@@ -102,6 +103,9 @@
     "tesseract.js": "5.1.1",
     "three": "^0.160.0",
     "vaul": "^0.9.9",
+    "video.js": "^8.23.7",
+    "videojs-contrib-quality-levels": "^4.1.0",
+    "videojs-hls-quality-selector": "^2.0.0",
     "xlsx": "^0.18.5",
     "zod": "^3.25.76",
     "zustand": "^5.0.11"

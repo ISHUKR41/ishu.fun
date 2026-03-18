@@ -12,15 +12,54 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
   },
-  plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
+  plugins: [
+    react({
+      // Use automatic JSX runtime for smaller bundle
+      jsxRuntime: 'automatic',
+      // Fast Refresh for better DX
+      fastRefresh: true,
+      // Babel plugins for optimization
+      babel: {
+        plugins: [
+          // Remove console.log in production
+          mode === 'production' && ['transform-remove-console', { exclude: ['error', 'warn'] }],
+        ].filter(Boolean),
+      },
+    }), 
+    mode === "development" && componentTagger()
+  ].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // Optimize dependencies
+  optimizeDeps: {
+    include: [
+      'react',
+      'react-dom',
+      'react-router-dom',
+      'framer-motion',
+      'gsap',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-tooltip',
+    ],
+    exclude: ['@react-three/fiber', '@react-three/drei', 'three'],
+  },
   build: {
     target: "es2020",
     cssMinify: true,
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.info', 'console.debug'],
+      },
+    },
+    // Increase chunk size warning limit
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
         manualChunks: (id) => {

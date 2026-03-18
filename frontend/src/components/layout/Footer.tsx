@@ -103,7 +103,7 @@ const Footer = () => {
 
       {/* ====== Newsletter / WhatsApp CTA Strip ====== */}
       <div className="border-b border-border">
-        <div className="container flex flex-col items-center justify-between gap-6 py-10 md:flex-row">
+        <div className="container flex flex-col items-center justify-between gap-4 sm:gap-6 py-8 sm:py-10 md:flex-row">
           <div className="flex items-center gap-4">
             {/* Animated sparkle icon */}
             
@@ -248,14 +248,14 @@ const Footer = () => {
         </div>
 
         {/* ====== Bottom Bar ====== */}
-        <div className="mt-14 rounded-2xl border border-border bg-secondary/30 px-8 py-6">
+        <div className="mt-10 sm:mt-14 rounded-2xl border border-border bg-secondary/30 px-4 sm:px-8 py-4 sm:py-6">
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             {/* Copyright */}
             <p className="text-sm text-muted-foreground">
               © {new Date().getFullYear()} <span className="font-semibold text-foreground">ISHU — Indian StudentHub University</span>. All rights reserved.
             </p>
             {/* Legal links */}
-            <div className="flex gap-6 text-sm text-muted-foreground">
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-6 text-sm text-muted-foreground">
               <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
               <Link to="/terms" className="hover:text-foreground transition-colors">Terms of Use</Link>
               <Link to="/about" className="hover:text-foreground transition-colors">About Us</Link>

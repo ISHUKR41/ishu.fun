@@ -38,15 +38,19 @@ import Fuse from "fuse.js";
 import Tilt from "react-parallax-tilt";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { 
+  IS_MOBILE, 
+  IS_LOW_END, 
+  PREFERS_REDUCED_MOTION, 
+  shouldEnableAnimation,
+  STREAM_CONFIG,
+  ANIMATION_CONFIG,
+} from "@/config/performance";
 
 gsap.registerPlugin(ScrollTrigger);
 
 // Lazy load ParticleField - heavy canvas component
 const ParticleField = lazy(() => import("@/components/animations/ParticleField"));
-
-// Detect mobile/reduced motion for disabling heavy effects
-const IS_MOBILE = typeof window !== "undefined" && (window.matchMedia("(max-width: 768px)").matches || navigator.maxTouchPoints > 0);
-const PREFERS_REDUCED_MOTION = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /* ═══════════════════ TYPES ═══════════════════ */
 interface ApiChannel {
@@ -552,7 +556,7 @@ function useRobustPlayer(
 
   const startSkipCountdown = useCallback(() => {
     if (skipRef.current) return;
-    let c = 5;
+    let c = 8;
     setSkipIn(c);
     skipRef.current = setInterval(() => {
       c--;
@@ -583,25 +587,26 @@ function useRobustPlayer(
     }
   }, []);
 
-  // Build expanded attempt list: try DIRECT first for known CDNs with CORS headers,
-  // then proxy for everything else, with multiple proxy fallbacks
+  // Build expanded attempt list: PROXY-FIRST for most streams (faster connection)
+  // Most Indian TV streams need CORS bypass, so going proxy-first saves 5-10s
   const buildAttemptList = useCallback((streamList: StreamUrl[]) => {
     const list: { url: string; proxyIdx: number; original: StreamUrl }[] = [];
-    const directCDNs = ["akamaized.net", "cloudfront.net", "youtube.com", "googlevideo.com", "dai.google.com", "amagi.tv", "amagimedia.com", "cdn.jwplayer.com"];
+    const directCDNs = ["akamaized.net", "cloudfront.net", "youtube.com", "googlevideo.com", "dai.google.com", "amagi.tv", "amagimedia.com", "cdn.jwplayer.com", "fastly.net", "fastly.com", "edgecastcdn.net", "limelight.com", "llnwd.net"];
     for (const s of streamList) {
       const urlLower = s.url.toLowerCase();
       const isDirectCDN = directCDNs.some(cdn => urlLower.includes(cdn));
       if (isDirectCDN) {
-        // Try direct first for CDNs with CORS support
+        // Known CORS-friendly CDNs: try direct first, then proxy as fallback
         list.push({ url: s.url, proxyIdx: -1, original: s });
-      }
-      // Backend proxy (handles CORS + M3U8 URL rewriting)
-      for (let i = 0; i < CORS_PROXIES.length; i++) {
-        list.push({ url: s.url, proxyIdx: i, original: s });
-      }
-      // Direct attempt as fallback for non-CDN streams
-      if (!isDirectCDN) {
-        list.push({ url: s.url, proxyIdx: -1, original: s });
+        list.push({ url: s.url, proxyIdx: 0, original: s }); // Backend proxy fallback
+      } else {
+        // ALL other streams: proxy first (most Indian streams need CORS bypass)
+        list.push({ url: s.url, proxyIdx: 0, original: s }); // Backend proxy first
+        list.push({ url: s.url, proxyIdx: -1, original: s }); // Direct as fallback
+        // Additional public proxies as last resort
+        for (let i = 1; i < CORS_PROXIES.length; i++) {
+          list.push({ url: s.url, proxyIdx: i, original: s });
+        }
       }
     }
     return list;
@@ -640,12 +645,12 @@ function useRobustPlayer(
     // Determine the actual URL to load and whether to use proxy xhrSetup
     const isProxied = attempt.proxyIdx >= 0;
     const loadUrl = isProxied ? CORS_PROXIES[attempt.proxyIdx](attempt.url) : attempt.url;
-    const timeout = isProxied ? 35000 : 20000; // Generous timeouts for stream loading
+    const timeout = isProxied ? 60000 : 35000; // Very generous timeouts - Render cold starts can take 30s+
 
-    // Stall detection
+    // Stall detection — 15s timeout (Indian streams can buffer slowly on mobile networks)
     const onTimeUpdate = () => {
       if (stallRef.current) clearTimeout(stallRef.current);
-      stallRef.current = setTimeout(() => tryAttempt(idx + 1), 8000);
+      stallRef.current = setTimeout(() => tryAttempt(idx + 1), 15000);
     };
     timeUpdateRef.current = onTimeUpdate;
     video.addEventListener("timeupdate", onTimeUpdate);
@@ -668,29 +673,39 @@ function useRobustPlayer(
     const hlsConfig: Partial<any> = {
       enableWorker: true,
       lowLatencyMode: false,
-      maxBufferLength: 30,
-      maxMaxBufferLength: 60,
+      maxBufferLength: STREAM_CONFIG.maxBufferLength,
+      maxMaxBufferLength: STREAM_CONFIG.maxMaxBufferLength,
       startLevel: -1,
-      fragLoadingMaxRetry: 6,
-      fragLoadingRetryDelay: 1000,
+      fragLoadingMaxRetry: STREAM_CONFIG.fragLoadingMaxRetry,
+      fragLoadingRetryDelay: STREAM_CONFIG.fragLoadingRetryDelay,
       fragLoadingMaxRetryTimeout: 15000,
-      manifestLoadingMaxRetry: 5,
-      manifestLoadingRetryDelay: 1000,
+      manifestLoadingMaxRetry: STREAM_CONFIG.manifestLoadingMaxRetry,
+      manifestLoadingRetryDelay: STREAM_CONFIG.manifestLoadingRetryDelay,
       manifestLoadingMaxRetryTimeout: timeout,
-      levelLoadingMaxRetry: 5,
-      levelLoadingRetryDelay: 1000,
+      levelLoadingMaxRetry: 4,
+      levelLoadingRetryDelay: 500,
       levelLoadingMaxRetryTimeout: 15000,
-      backBufferLength: 30,
+      backBufferLength: IS_MOBILE ? 15 : 20,
       capLevelToPlayerSize: true,
       progressive: true,
       testBandwidth: true,
       abrEwmaDefaultEstimate: 500000,
       abrBandWidthFactor: 0.8,
       abrBandWidthUpFactor: 0.5,
-      appendErrorMaxRetry: 5,
+      appendErrorMaxRetry: 4,
       enableSoftwareAES: true,
-      // Better error recovery
-      fragLoadPolicy: { default: { maxTimeToFirstByteMs: 15000, maxLoadTimeMs: 60000, timeoutRetry: { maxNumRetry: 4, retryDelayMs: 1000, maxRetryDelayMs: 8000 }, errorRetry: { maxNumRetry: 6, retryDelayMs: 1000, maxRetryDelayMs: 8000 } } },
+      // Optimized for faster channel switching and failover
+      fragLoadPolicy: { 
+        default: { 
+          maxTimeToFirstByteMs: 10000,
+          maxLoadTimeMs: 60000,
+          timeoutRetry: { maxNumRetry: 3, retryDelayMs: 500, maxRetryDelayMs: 5000 },
+          errorRetry: { maxNumRetry: 4, retryDelayMs: 500, maxRetryDelayMs: 5000 }
+        } 
+      },
+      // Additional optimizations for faster startup
+      startFragPrefetch: true,
+      initialLiveManifestSize: 1,
     };
 
     // For proxied streams, route ALL XHR requests through the proxy
@@ -756,14 +771,14 @@ function useRobustPlayer(
 
     hls.on(Hls.Events.ERROR, (_e: any, data: any) => {
       if (!data.fatal) return;
-      if (data.type === Hls.ErrorTypes.MEDIA_ERROR && retryRef.current < 5) {
+      if (data.type === Hls.ErrorTypes.MEDIA_ERROR && retryRef.current < 8) {
         retryRef.current++;
-        if (retryRef.current <= 2) hls.recoverMediaError();
-        else if (retryRef.current <= 4) { hls.swapAudioCodec(); hls.recoverMediaError(); }
+        if (retryRef.current <= 3) hls.recoverMediaError();
+        else if (retryRef.current <= 6) { hls.swapAudioCodec(); hls.recoverMediaError(); }
         else { hls.recoverMediaError(); }
         return;
       }
-      if (data.type === Hls.ErrorTypes.NETWORK_ERROR && retryRef.current < 4) {
+      if (data.type === Hls.ErrorTypes.NETWORK_ERROR && retryRef.current < 8) {
         retryRef.current++;
         hls.startLoad();
         return;
@@ -949,10 +964,11 @@ const TVPage = () => {
           { name: "categoryLabel", weight: 0.1 },
           { name: "network", weight: 0.15 },
         ],
-        threshold: 0.4,
+        threshold: 0.3,
         includeScore: true,
         minMatchCharLength: 1,
         ignoreLocation: true,
+        findAllMatches: true,
       });
       fuseChannelsRef.current = channels;
     }

@@ -535,7 +535,7 @@ async function summarizePdf(req, res, next) {
         if (process.env.GEMINI_API_KEY) {
             const { GoogleGenerativeAI } = require('@google/generative-ai');
             const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-            const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+            const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
             const result = await model.generateContent(
                 `Summarize the following document in ${language} in about ${maxLength} words. Be concise and informative:\n\n${text}`
             );
@@ -621,7 +621,7 @@ async function chatAsk(req, res, next) {
         if (process.env.GEMINI_API_KEY) {
             const { GoogleGenerativeAI } = require('@google/generative-ai');
             const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-            const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+            const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
             const result = await model.generateContent(
                 `Based on this document:\n\n${context.substring(0, 15000)}\n\nAnswer: ${question}`
             );
@@ -678,7 +678,7 @@ async function translatePdf(req, res, next) {
         if (process.env.GEMINI_API_KEY) {
             const { GoogleGenerativeAI } = require('@google/generative-ai');
             const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-            const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+            const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
             const result = await model.generateContent(`Translate to ${targetLang}:\n\n${text}`);
             translatedText = result.response.text();
             provider = 'gemini';
