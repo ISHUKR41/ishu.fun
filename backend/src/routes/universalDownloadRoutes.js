@@ -18,7 +18,20 @@ const fs = require('fs-extra');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 
-const TEMP_DIR = process.env.TEMP_DIR || path.join(__dirname, '../../../temp');
+// Use /tmp on Linux/Render for writable runtime storage
+const TEMP_DIR = process.platform === 'win32'
+  ? (process.env.TEMP_DIR || path.join(__dirname, '../../../temp'))
+  : '/tmp';
+
+// yt-dlp binary path: prefer system install (from render.yaml buildCommand), then /tmp
+function getYtDlpPath() {
+  if (process.platform === 'win32') return path.join(TEMP_DIR, 'yt-dlp.exe');
+  if (process.env.YTDLP_PATH) return process.env.YTDLP_PATH;
+  const systemPath = '/usr/local/bin/yt-dlp';
+  if (fs.existsSync(systemPath)) return systemPath;
+  return '/tmp/yt-dlp';
+}
+const YTDLP_UNIVERSAL_PATH = getYtDlpPath();
 
 // Initialize yt-dlp
 let ytDlpPath;
@@ -26,9 +39,19 @@ let ytDlpReady = false;
 
 (async () => {
     try {
-        ytDlpPath = await YTDlpWrap.downloadFromGithub();
-        ytDlpReady = true;
-        console.log('[Universal Download] yt-dlp initialized successfully');
+        // Check if binary already exists (shared with videoRoutes.js)
+        if (fs.existsSync(YTDLP_UNIVERSAL_PATH) && fs.statSync(YTDLP_UNIVERSAL_PATH).size > 1024) {
+            ytDlpPath = YTDLP_UNIVERSAL_PATH;
+            ytDlpReady = true;
+            console.log('[Universal Download] yt-dlp binary found at:', ytDlpPath);
+        } else {
+            console.log('[Universal Download] Downloading yt-dlp binary to:', YTDLP_UNIVERSAL_PATH);
+            await YTDlpWrap.downloadFromGithub(YTDLP_UNIVERSAL_PATH);
+            if (process.platform !== 'win32') fs.chmodSync(YTDLP_UNIVERSAL_PATH, 0o755);
+            ytDlpPath = YTDLP_UNIVERSAL_PATH;
+            ytDlpReady = true;
+            console.log('[Universal Download] yt-dlp initialized successfully');
+        }
     } catch (err) {
         console.error('[Universal Download] Failed to initialize yt-dlp:', err.message);
     }
