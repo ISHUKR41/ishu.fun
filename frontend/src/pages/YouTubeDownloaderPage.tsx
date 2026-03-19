@@ -129,7 +129,8 @@ const YouTubeDownloaderPage = () => {
         url: d.url,
         duration: d.duration,
         views: d.views,
-      });
+        ...(d.cobaltUrl ? { cobaltUrl: d.cobaltUrl } : {}),
+      } as any);
       setFormats((d.qualityOptions || []).map((q: any) => ({ quality: q.quality, height: parseInt(q.quality) || 720, itag: q.itag })));
     } catch (err: any) {
       if (err?.name === "AbortError") {
@@ -151,39 +152,55 @@ const YouTubeDownloaderPage = () => {
     setDownloadReady(null);
 
     try {
-      // Build download URL - backend streams the video directly
       const quality = selectedQuality || "720";
-      // The download endpoint streams directly so we open it in a link
-      const downloadUrl = `${API_URL}/api/tools/youtube-download`;
 
-      // For streaming downloads, we POST and redirect the browser
-      // Create a form and submit it to trigger the file download
-      const form = document.createElement("form");
-      form.method = "POST";
-      form.action = downloadUrl;
-      form.style.display = "none";
-
-      const urlField = document.createElement("input");
-      urlField.type = "hidden";
-      urlField.name = "url";
-      urlField.value = url.trim();
-      form.appendChild(urlField);
-
-      const qualityField = document.createElement("input");
-      qualityField.type = "hidden";
-      qualityField.name = "quality";
-      qualityField.value = quality;
-      form.appendChild(qualityField);
-
-      document.body.appendChild(form);
-      form.submit();
-      document.body.removeChild(form);
-
-      setDownloadReady({
-        url: downloadUrl,
-        filename: `${videoInfo.title || "video"}.mp4`,
-        filesize: undefined,
+      // POST to backend download endpoint
+      const res = await fetchWithRetry(`${API_URL}/api/tools/youtube-download`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          url: url.trim(),
+          quality,
+          cobaltUrl: (videoInfo as any).cobaltUrl || undefined,
+        }),
       });
+
+      const data = await res.json();
+
+      if (data.success) {
+        if (data.redirectUrl) {
+          // cobalt.tools redirect - open direct download link in new tab
+          window.open(data.redirectUrl, "_blank", "noopener");
+          setDownloadReady({
+            url: data.redirectUrl,
+            filename: `${videoInfo.title || "video"}.mp4`,
+            filesize: undefined,
+          });
+        } else {
+          // ytdl streaming - use form POST to trigger browser download
+          const form = document.createElement("form");
+          form.method = "POST";
+          form.action = `${API_URL}/api/tools/youtube-download`;
+          form.style.display = "none";
+          const addField = (n: string, v: string) => {
+            const f = document.createElement("input");
+            f.type = "hidden"; f.name = n; f.value = v;
+            form.appendChild(f);
+          };
+          addField("url", url.trim());
+          addField("quality", quality);
+          document.body.appendChild(form);
+          form.submit();
+          document.body.removeChild(form);
+          setDownloadReady({
+            url: `${API_URL}/api/tools/youtube-download`,
+            filename: `${videoInfo.title || "video"}.mp4`,
+            filesize: undefined,
+          });
+        }
+      } else {
+        setError(data.error || "Download failed. Please try again.");
+      }
 
       setTimeout(() => setDownloading(false), 3000);
     } catch (err: any) {
