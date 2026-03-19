@@ -219,7 +219,11 @@ const CORS_PROXIES = [
   (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
   // 1: corsproxy.io - another reliable public proxy
   (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-  // 2: backend proxy (last resort — may be sleeping on Render free tier)
+  // 2: cors-proxy.htmldriven.com - additional public proxy
+  (url: string) => `https://cors-proxy.htmldriven.com/?url=${encodeURIComponent(url)}`,
+  // 3: cors.bridged.cc - fast CDN-based proxy
+  (url: string) => `https://cors.bridged.cc/${url}`,
+  // 4: backend proxy (last resort — may be sleeping on Render free tier)
   (url: string) => `${BACKEND_PROXY}?url=${encodeURIComponent(url)}`,
 ];
 
@@ -655,7 +659,8 @@ function useRobustPlayer(
     retryRef.current = 0;
 
     // Calculate which original URL # we're on (for UI display)
-    const originalUrlIdx = Math.floor(idx / (1 + CORS_PROXIES.length));
+    const attemptsPerUrl = 1 + CORS_PROXIES.length;
+    const originalUrlIdx = Math.floor(idx / attemptsPerUrl);
     setUrlAttempt(originalUrlIdx + 1);
     // Show proxy label: 0=allorigins, 1=corsproxy.io, 2=backend
     const proxyNames = ["allorigins", "corsproxy", "backend"];
@@ -1645,13 +1650,13 @@ const TVPage = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none sm:flex-wrap">
                     <button onClick={() => setActiveCat(ALL_CAT)}
-                      className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs sm:text-sm font-medium transition-all ${activeCat === ALL_CAT ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25" : "glass border border-border/40 text-muted-foreground hover:text-foreground"}`}>
+                      className={`flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-xs sm:text-sm font-medium transition-all ${activeCat === ALL_CAT ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25" : "glass border border-border/40 text-muted-foreground hover:text-foreground"}`}>
                       <Globe className="h-3.5 w-3.5" /> All <span className="text-[10px] opacity-60">({catCounts[ALL_CAT] || 0})</span>
                     </button>
                     <button onClick={() => setActiveCat(FAV_CAT)}
-                      className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs sm:text-sm font-medium transition-all ${activeCat === FAV_CAT ? "bg-yellow-500 text-black shadow-lg" : "glass border border-border/40 text-muted-foreground hover:text-foreground"}`}>
+                      className={`flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-xs sm:text-sm font-medium transition-all ${activeCat === FAV_CAT ? "bg-yellow-500 text-black shadow-lg" : "glass border border-border/40 text-muted-foreground hover:text-foreground"}`}>
                       <Star className="h-3.5 w-3.5" /> Favs <span className="text-[10px] opacity-60">({catCounts[FAV_CAT] || 0})</span>
                     </button>
                     {CAT_ORDER.map((key) => {
@@ -1660,7 +1665,7 @@ const TVPage = () => {
                       const { label, icon: Icon, gradient } = CAT_META[key];
                       return (
                         <button key={key} onClick={() => setActiveCat(key)}
-                          className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs sm:text-sm font-medium transition-all ${activeCat === key ? `bg-gradient-to-r ${gradient} text-white shadow-lg` : "glass border border-border/40 text-muted-foreground hover:text-foreground"}`}>
+                          className={`flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-xs sm:text-sm font-medium transition-all ${activeCat === key ? `bg-gradient-to-r ${gradient} text-white shadow-lg` : "glass border border-border/40 text-muted-foreground hover:text-foreground"}`}>
                           <Icon className="h-3.5 w-3.5" /> {label} <span className="text-[10px] opacity-60">({count})</span>
                         </button>
                       );
@@ -1699,7 +1704,7 @@ const TVPage = () => {
                                 {/* Category section header */}
                                 <div className="mb-4 flex items-center gap-3">
                                   <div className={`flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br ${meta?.gradient || "from-gray-500 to-gray-600"} shadow-md`}>
-                                    <Icon className="h-4.5 w-4.5 text-white" />
+                                    <Icon className="h-4 w-4 text-white" />
                                   </div>
                                   <div>
                                     <h3 className="text-base sm:text-lg font-bold text-foreground">{meta?.label || key}</h3>
