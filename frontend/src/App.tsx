@@ -227,7 +227,7 @@ const App = () => {
           <ServerStatusBanner />
           <Toaster />
           <Sonner />
-          <BrowserRouter>
+          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             {authProvider}
           </BrowserRouter>
         </TooltipProvider>

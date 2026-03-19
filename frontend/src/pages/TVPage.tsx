@@ -1,17 +1,19 @@
 /**
- * TVPage.tsx - Live Indian TV (v4 - Ultra-Fast Failover)
+ * TVPage.tsx - Live Indian TV (v5 - Backend-First Ultra Reliability)
  *
  * Flow: Language Selection → Category-Grouped Channels → Player
  *
- * Key Improvements v4:
- * - Language-first: user picks language, then sees ALL channels organized by category
- * - FAST failover: direct 2.5s timeout, proxied 4s timeout, stall 5s — 3-5x faster than v3
- * - Limited proxy attempts per URL (5 max) — reduces worst-case from minutes to ~25s
- * - 12 CORS proxies including new: codetabs, jsonp, bridged.cc
- * - 800+ channels from iptv-org + 50+ M3U sources including new curated India repos
- * - Quality selector with real HLS level switching
+ * Key Improvements v5:
+ * - Backend proxy moved to 2nd priority (after direct) for maximum reliability
+ * - LocalStorage per-channel success cache: channels that worked before load instantly
+ * - Backend proxy timeout extended to 6s (proper CORS + referrer support)
+ * - Timeout: direct 2.5s, backend 6s, public proxies 4s, stall 5s
+ * - Language-first: user picks language, sees ALL channels organized by category
+ * - 12 CORS proxies + backend: allorigins, corsproxy.io, etc + backend as #2 choice
+ * - 800+ channels from iptv-org + 55+ M3U sources (added more India repos)
+ * - Quality selector with real HLS level switching + ABR
  * - Fuzzy search with live suggestions, keyboard navigation, highlight matching
- * - Modern 3D/animated UI with responsive design
+ * - Modern 3D/animated UI with fully responsive design (mobile to 4K)
  */
 import Layout from "@/components/layout/Layout";
 import FadeInView from "@/components/animations/FadeInView";
@@ -168,8 +170,39 @@ const ALL_CAT = "all";
 const FAV_CAT = "favorites";
 
 /* ═══════════════════ SESSION STORAGE CACHE ═══════════════════ */
-const TV_CACHE_KEY = "ishu_tv_channels_v8";
+const TV_CACHE_KEY = "ishu_tv_channels_v9";
 const TV_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+
+/* ═══════════════════ STREAM SUCCESS CACHE ═══════════════════
+   Stores working stream URL + proxy index per channel in localStorage.
+   When a channel is selected, the last working attempt is tried FIRST — instant load!
+   Cache expires after 4 hours to handle dead links rotating.
+═══════════════════════════════════════════════════════════════ */
+const STREAM_SUCCESS_CACHE_KEY = "ishu_tv_stream_success_v2";
+const STREAM_SUCCESS_TTL = 4 * 60 * 60 * 1000; // 4 hours
+
+function readStreamSuccessCache(): Record<string, { url: string; proxyIdx: number; ts: number }> {
+  try {
+    const s = localStorage.getItem(STREAM_SUCCESS_CACHE_KEY);
+    if (!s) return {};
+    const parsed = JSON.parse(s);
+    const now = Date.now();
+    // Prune expired entries
+    const cleaned: Record<string, { url: string; proxyIdx: number; ts: number }> = {};
+    for (const [k, v] of Object.entries(parsed) as [string, any][]) {
+      if (now - v.ts < STREAM_SUCCESS_TTL) cleaned[k] = v;
+    }
+    return cleaned;
+  } catch { return {}; }
+}
+
+function saveStreamSuccess(channelId: string, url: string, proxyIdx: number) {
+  try {
+    const cache = readStreamSuccessCache();
+    cache[channelId] = { url, proxyIdx, ts: Date.now() };
+    localStorage.setItem(STREAM_SUCCESS_CACHE_KEY, JSON.stringify(cache));
+  } catch {}
+}
 const Q_ORDER: Record<string, number> = { "2160p": 6, "1080p": 5, "720p": 4, "576p": 3, "480p": 2, "360p": 1, "240p": 0 };
 
 /* ═══════════════════ M3U PARSER ═══════════════════ */
@@ -439,6 +472,28 @@ async function fetchAllChannels(
     { url: "https://raw.githubusercontent.com/Aayush2111/Indian-IPTV/main/India.m3u", lang: "Hindi" },
     // Tata Play / JioCinema / SonyLIV channels via iptv-org specific country streams
     { url: "https://iptv-org.github.io/iptv/countries/in.m3u", lang: "Hindi" },
+    // Additional curated Indian IPTV repos with active maintenance
+    { url: "https://raw.githubusercontent.com/imSourav1992/India-Free-IPTV/main/India_Free_IPTV.m3u", lang: "Hindi" },
+    { url: "https://raw.githubusercontent.com/sriramhms/IndianIPTV/main/india.m3u", lang: "Hindi" },
+    { url: "https://raw.githubusercontent.com/gauravsarma1992/iptv-playlist/main/playlists/india.m3u", lang: "Hindi" },
+    { url: "https://raw.githubusercontent.com/sydul9/Bangladesh-India-Live-TV/main/india.m3u", lang: "Hindi" },
+    { url: "https://raw.githubusercontent.com/byte-capsule/Toffee-Channels-Link-Headers/main/toffee_OTT_Live_channels.m3u", lang: "Bengali" },
+    { url: "https://raw.githubusercontent.com/Kry9tN/IPTV-India/main/index.m3u", lang: "Hindi" },
+    { url: "https://raw.githubusercontent.com/KailashSatkari/India-IPTV/main/India.m3u", lang: "Hindi" },
+    { url: "https://raw.githubusercontent.com/IPTV-INDIA/IPTV/main/india.m3u", lang: "Hindi" },
+    { url: "https://raw.githubusercontent.com/shahprogrammer/Indian-IPTV-Playlist/main/Indian-IPTV-Playlist.m3u", lang: "Hindi" },
+    { url: "https://raw.githubusercontent.com/HimDek/IPTV-Playlist/main/India.m3u", lang: "Hindi" },
+    { url: "https://raw.githubusercontent.com/tamilrockers/india-iptv-free-channels/main/india_iptv.m3u", lang: "Tamil" },
+    { url: "https://raw.githubusercontent.com/Sujayr321/Indian-Channels/main/channels.m3u", lang: "Hindi" },
+    { url: "https://raw.githubusercontent.com/punitkmryh/indian-iptv-m3u/main/india.m3u", lang: "Hindi" },
+    { url: "https://raw.githubusercontent.com/masterentertainmentofficial/MasterEntertainment/main/MasterEntertainment.m3u", lang: "Hindi" },
+    // Doordarshan & DD National free-to-air streams
+    { url: "https://iptv-org.github.io/iptv/categories/legislative.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/categories/weather.m3u", lang: "Hindi" },
+    // More Santali, Maithili, Sindhi, Konkani language streams
+    { url: "https://iptv-org.github.io/iptv/languages/snd.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/languages/gom.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/languages/lus.m3u", lang: "Hindi" },
   ];
 
   // Fetch each M3U source with individual 12s timeout to avoid slow sources blocking everything
@@ -583,19 +638,25 @@ interface QualityLevel {
 
 /* ═══════════════════ ROBUST HLS PLAYER HOOK ═══════════════════
    Multi-URL cascade with CORS proxy fallback:
-   1. For each stream URL: try DIRECT first (5s timeout)
-   2. If direct fails → try through CORS proxies (6s each)
-   3. All proxies fail → move to next URL
-   4. All URLs exhausted → show error + auto-skip countdown
+   1. Check localStorage success cache — if channel worked before, try that FIRST
+   2. For each stream URL: try DIRECT (2.5s) → Backend proxy (6s) → public CORS proxies (4s)
+   3. All attempts exhausted → show error + auto-skip countdown
+
+   Backend proxy (index 11) is now 2nd priority (after direct) because:
+   - No rate limits, no CORS issues, proper referrer support for Hotstar/JioCinema/Zee5
+   - Has connection pooling + manifest caching for faster repeated loads
+   - Runs on Render free tier but keep-alive ping keeps it awake
 
    HLS recovery: recoverMediaError → swapAudioCodec → next attempt
-   Stall detection: 8s freeze → next attempt
-   Quality: auto by default, manual override with real HLS level switching
+   Stall detection: 5s freeze → next attempt
+   Quality: auto ABR + manual HLS level override
+   Success cache: working attempt saved to localStorage (4h TTL) for instant reloads
    ═══════════════════════════════════════════════════════════════ */
 function useRobustPlayer(
   videoRef: React.RefObject<HTMLVideoElement | null>,
   streams: StreamUrl[] | null,
   onAutoSkip: () => void,
+  channelId?: string,
 ) {
   const hlsRef = useRef<Hls | null>(null);
   const retryRef = useRef(0);
@@ -664,11 +725,21 @@ function useRobustPlayer(
     }
   }, []);
 
-  // Build optimized attempt list: DIRECT first → best proxies per URL
-  // Strategy: limit proxy attempts per URL for FAST failover
-  // Max ~5 attempts per URL = direct + 4 best proxies
-  const buildAttemptList = useCallback((streamList: StreamUrl[]) => {
+  // Build optimized attempt list: DIRECT → BACKEND → public proxies per URL
+  // Strategy: backend proxy is 2nd (best CORS handling + caching, no rate limits)
+  // Max ~5 attempts per URL (direct + backend + 3 public proxies)
+  // BACKEND PROXY = index 11 in CORS_PROXIES
+  const buildAttemptList = useCallback((streamList: StreamUrl[], cachedAttempt?: { url: string; proxyIdx: number } | null) => {
     const list: { url: string; proxyIdx: number; original: StreamUrl }[] = [];
+
+    // Prepend cached successful attempt FIRST (instant channel load on revisit)
+    if (cachedAttempt) {
+      const cached = streamList.find(s => s.url === cachedAttempt.url) ?? streamList[0];
+      if (cached) {
+        list.push({ url: cachedAttempt.url, proxyIdx: cachedAttempt.proxyIdx, original: cached });
+      }
+    }
+
     // These CDNs serve CORS headers natively — direct always works
     const directCDNs = [
       "akamaized.net", "cloudfront.net", "youtube.com", "googlevideo.com",
@@ -684,25 +755,34 @@ function useRobustPlayer(
       const urlLower = s.url.toLowerCase();
       const isDirectCDN = directCDNs.some(cdn => urlLower.includes(cdn));
       if (isDirectCDN) {
-        // CDN streams: direct should work, just 2 proxy fallbacks
-        list.push({ url: s.url, proxyIdx: -1, original: s }); // direct
-        list.push({ url: s.url, proxyIdx: 0, original: s }); // allorigins
-        list.push({ url: s.url, proxyIdx: 1, original: s }); // corsproxy.io
+        // CDN streams: direct, then backend proxy (has caching), then allorigins
+        list.push({ url: s.url, proxyIdx: -1,  original: s }); // direct
+        list.push({ url: s.url, proxyIdx: 11,  original: s }); // backend (CORS + referrer + cache)
+        list.push({ url: s.url, proxyIdx: 0,   original: s }); // allorigins
+        list.push({ url: s.url, proxyIdx: 1,   original: s }); // corsproxy.io
       } else {
-        // Other streams: direct + 4 best proxies
-        list.push({ url: s.url, proxyIdx: -1, original: s }); // direct
-        list.push({ url: s.url, proxyIdx: 0, original: s }); // allorigins
-        list.push({ url: s.url, proxyIdx: 1, original: s }); // corsproxy.io
-        list.push({ url: s.url, proxyIdx: 2, original: s }); // corsproxy.org
-        list.push({ url: s.url, proxyIdx: 3, original: s }); // cors.sh
+        // Other streams: direct → backend → 3 public CORS proxies
+        list.push({ url: s.url, proxyIdx: -1,  original: s }); // direct
+        list.push({ url: s.url, proxyIdx: 11,  original: s }); // backend (most reliable proxy)
+        list.push({ url: s.url, proxyIdx: 0,   original: s }); // allorigins
+        list.push({ url: s.url, proxyIdx: 1,   original: s }); // corsproxy.io
+        list.push({ url: s.url, proxyIdx: 2,   original: s }); // corsproxy.org
       }
     }
-    // Also include remaining streams (beyond top 5) with direct-only attempts
+    // Remaining streams (beyond top 5): direct + backend only
     for (const s of streamList.slice(5)) {
-      list.push({ url: s.url, proxyIdx: -1, original: s }); // direct only
-      list.push({ url: s.url, proxyIdx: 0, original: s }); // allorigins
+      list.push({ url: s.url, proxyIdx: -1,  original: s }); // direct
+      list.push({ url: s.url, proxyIdx: 11,  original: s }); // backend
     }
-    return list;
+
+    // Remove duplicate entries (same url+proxyIdx) while preserving order
+    const seen = new Set<string>();
+    return list.filter(a => {
+      const key = `${a.url}::${a.proxyIdx}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   }, []);
 
   const tryAttempt = useCallback((idx: number) => {
@@ -741,8 +821,11 @@ function useRobustPlayer(
     // Determine the actual URL to load and whether to use proxy xhrSetup
     const isProxied = attempt.proxyIdx >= 0;
     const loadUrl = isProxied ? CORS_PROXIES[attempt.proxyIdx](attempt.url) : attempt.url;
-    // FAST failover: direct 2.5s, proxied 4s — fail fast, try next source quickly
-    const timeout = isProxied ? 4000 : 2500;
+    // Timeout strategy:
+    //   direct  → 2.5s (fail fast)
+    //   backend → 6.0s (most reliable, may need Render cold-start buffer)
+    //   public CORS proxies → 4.0s
+    const timeout = !isProxied ? 2500 : (attempt.proxyIdx === 11 ? 6000 : 4000);
 
     // Stall detection — if video freezes for 5s, try next source
     const onTimeUpdate = () => {
@@ -841,6 +924,11 @@ function useRobustPlayer(
       setState("playing");
       retryRef.current = 0;
 
+      // Save working attempt to localStorage so next visit loads this channel instantly
+      if (channelId) {
+        saveStreamSuccess(channelId, attempt.url, attempt.proxyIdx);
+      }
+
       if (data.levels.length > 0) {
         const levels: QualityLevel[] = data.levels.map((lvl: any, i: number) => ({
           index: i,
@@ -897,13 +985,15 @@ function useRobustPlayer(
 
   useEffect(() => {
     if (!streams || streams.length === 0) { cleanup(); setState("idle"); return; }
-    const expandedList = buildAttemptList(streams);
+    // Check success cache — if this channel worked before, prepend that attempt first
+    const cached = channelId ? readStreamSuccessCache()[channelId] ?? null : null;
+    const expandedList = buildAttemptList(streams, cached);
     attemptListRef.current = expandedList;
     attemptIdxRef.current = 0;
     setTotalUrls(streams.length);
     tryAttempt(0);
     return cleanup;
-  }, [streams]);
+  }, [streams, channelId]);
 
   return { state, quality, urlAttempt, totalUrls, skipIn, retry, cancelSkip, hlsLevels, currentLevel, isAutoQuality, setQualityLevel, proxyActive };
 }
@@ -1166,7 +1256,7 @@ const TVPage = () => {
     retry: pRetry, cancelSkip, hlsLevels, currentLevel,
     isAutoQuality, setQualityLevel,
     proxyActive,
-  } = useRobustPlayer(videoRef, playingStreams, playNext);
+  } = useRobustPlayer(videoRef, playingStreams, playNext, playing?.id);
 
   useEffect(() => {
     if (pState === "playing" && playing) {
