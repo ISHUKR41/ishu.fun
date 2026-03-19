@@ -1590,7 +1590,7 @@ const TVPage = () => {
                 <section className="container mb-6">
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-3 flex-wrap">
-                      <button onClick={() => { setSelectedLang(null); setActiveCat(ALL_CAT); setSearch(""); }}
+                      <button onClick={() => { setSelectedLang(null); setActiveCat(ALL_CAT); setSearchInput(""); setSearch(""); }}
                         className="flex items-center gap-1.5 rounded-xl border border-border/40 glass px-3 py-2 text-sm font-medium text-foreground hover:border-primary/30 transition-all">
                         <ChevronLeft className="h-4 w-4" /> Languages
                       </button>
@@ -1674,7 +1674,7 @@ const TVPage = () => {
                     <div className="flex flex-col items-center justify-center py-24 gap-4">
                       <Tv className="h-12 w-12 text-muted-foreground" />
                       <p className="font-medium text-foreground">No channels found</p>
-                      <button onClick={() => { setSearch(""); setActiveCat(ALL_CAT); }}
+                      <button onClick={() => { setSearchInput(""); setSearch(""); setActiveCat(ALL_CAT); }}
                         className="rounded-xl border border-border px-5 py-2.5 text-sm text-foreground hover:bg-secondary">Clear Filters</button>
                     </div>
                   ) : (

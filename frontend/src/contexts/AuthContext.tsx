@@ -1,41 +1,31 @@
 /**
- * AuthContext.tsx - Authentication State Manager (Clerk + Supabase Hybrid)
+ * AuthContext.tsx - Authentication State Manager
  * 
- * This context wraps Clerk authentication and provides a unified auth interface
- * for the entire app. Any component can use the `useAuth()` hook to access
- * the current user, check admin status, or trigger auth actions.
+ * Provides auth state via two providers:
+ * - AuthProvider: Clerk-backed (used when VITE_CLERK_PUBLISHABLE_KEY is set)
+ * - NoAuthProvider: No-op fallback (used when Clerk key is missing)
  * 
- * Architecture:
- * - Clerk handles all authentication (sign in, sign up, sign out, sessions)
- * - Supabase is still used for database operations (contacts, results, etc.)
- * - Admin check uses Clerk's public metadata or falls back to Supabase RPC
- * 
- * How it works:
- * 1. ClerkProvider (in App.tsx) manages the auth session
- * 2. This context reads Clerk's user state and exposes it in a simple interface
- * 3. Components use useAuth() to get user info, admin status, etc.
+ * Both implement the same AuthContextType so all components work unchanged.
  */
 
 import { createContext, useContext, useEffect, useMemo, useState, ReactNode } from "react";
 import { useUser as useClerkUser, useAuth as useClerkAuth, useClerk } from "@clerk/clerk-react";
 
-// Shape of the auth data available to all components
 interface AuthContextType {
-  user: any | null;              // Current logged-in user (null if not logged in)
-  session: any | null;           // Current auth session  
-  loading: boolean;              // True while checking initial auth state
-  isAdmin: boolean;              // True if user has "admin" role
+  user: any | null;
+  session: any | null;
+  loading: boolean;
+  isAdmin: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, displayName?: string, phone?: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 }
 
-// Create the context (undefined until AuthProvider wraps the app)
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 /**
- * AuthProvider - Wraps the app and provides auth state to all children.
- * Uses Clerk's hooks internally but exposes a simple interface.
+ * AuthProvider - Must be placed inside ClerkProvider.
+ * Used only when VITE_CLERK_PUBLISHABLE_KEY is set.
  */
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { user: clerkUser, isLoaded } = useClerkUser();
@@ -43,10 +33,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const clerk = useClerk();
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Check admin status from Clerk's public metadata
   useEffect(() => {
     if (clerkUser) {
-      // Check publicMetadata for admin role
       const role = (clerkUser.publicMetadata as any)?.role;
       setIsAdmin(role === "admin");
     } else {
@@ -54,17 +42,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [clerkUser]);
 
-  /**
-   * Sign in with email and password via Clerk.
-   * Clerk handles this through its own UI components,
-   * but this method is kept for backward compatibility.
-   */
   const signIn = async (email: string, password: string) => {
     try {
-      const result = await clerk.client?.signIn.create({
-        identifier: email,
-        password,
-      });
+      const result = await clerk.client?.signIn.create({ identifier: email, password });
       if (result?.status === "complete") {
         await clerk.setActive({ session: result.createdSessionId });
         return { error: null };
@@ -75,10 +55,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  /**
-   * Create a new account with email and password via Clerk.
-   */
-  const signUp = async (email: string, password: string, displayName?: string, phone?: string) => {
+  const signUp = async (email: string, password: string, displayName?: string, _phone?: string) => {
     try {
       const result = await clerk.client?.signUp.create({
         emailAddress: email,
@@ -90,7 +67,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         await clerk.setActive({ session: result.createdSessionId });
         return { error: null };
       }
-      // If email verification is needed
       if (result?.status === "missing_requirements") {
         await result.prepareEmailAddressVerification({ strategy: "email_code" });
         return { error: { message: "Please check your email for a verification code." } };
@@ -101,12 +77,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  /** Sign out the current user */
-  const signOut = async () => {
-    await clerk.signOut();
-  };
+  const signOut = async () => { await clerk.signOut(); };
 
-  // Build a stable user object so consumers don't re-render on every provider render
   const user = useMemo(() => {
     if (!clerkUser) return null;
     return {
@@ -125,27 +97,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     loading: !isLoaded,
     isAdmin,
     signIn,
-    signUp,
     signOut,
+    signUp,
   }), [isSignedIn, user, isLoaded, isAdmin]);
 
-  return (
-    <AuthContext.Provider value={contextValue}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
+};
+
+/**
+ * NoAuthProvider - No-op auth provider used when Clerk is not configured.
+ * All public pages work normally; protected routes redirect to sign-in.
+ */
+export const NoAuthProvider = ({ children }: { children: ReactNode }) => {
+  const value: AuthContextType = useMemo(() => ({
+    user: null,
+    session: null,
+    loading: false,
+    isAdmin: false,
+    signIn: async () => ({ error: { message: "Auth not configured." } }),
+    signUp: async () => ({ error: { message: "Auth not configured." } }),
+    signOut: async () => {},
+  }), []);
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 /**
  * useAuth() - Hook to access auth state from any component.
- * Must be used inside an AuthProvider (which is inside ClerkProvider).
- * 
- * Example usage:
- *   const { user, isAdmin, signOut } = useAuth();
- *   if (!user) return <LoginPage />;
  */
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider or NoAuthProvider");
   return ctx;
 };
