@@ -23,6 +23,6 @@ if (rootElement) {
     </HelmetProvider>
   );
   console.log("[v0] App rendered to root");
-}else {
+} else {
   console.error("[v0] Root element not found!");
 }

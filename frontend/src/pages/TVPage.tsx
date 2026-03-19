@@ -245,58 +245,72 @@ function parseM3U(text: string, defaultLang: string): { name: string; logo: stri
 // Backend proxy for CORS bypass (runs on your Express backend via Vite proxy)
 const BACKEND_PROXY = `${CENTRAL_API_URL}/api/stream-proxy`;
 
-// Backend proxy is always the LAST entry — update BACKEND_PROXY_IDX if adding more proxies
-const BACKEND_PROXY_IDX = 22;
+// Backend proxy index — MUST match position in CORS_PROXIES array
+const BACKEND_PROXY_IDX = 0;
 
 // Proxy fallbacks in PRIORITY order (index 0 = highest priority)
-// 22 public CORS proxies + our backend = 23 total fallback layers
+// Backend first, then 29 public CORS proxies = 30 total fallback layers
 const CORS_PROXIES = [
-  // 0: allorigins - fast & reliable, most widely used
-  (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-  // 1: corsproxy.io - high performance public proxy
-  (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-  // 2: corsproxy.org - very reliable
-  (url: string) => `https://www.corsproxy.org/?${encodeURIComponent(url)}`,
-  // 3: cors.lol - reliable & fast
-  (url: string) => `https://api.cors.lol/?url=${encodeURIComponent(url)}`,
-  // 4: cors.sh - fast alternative
-  (url: string) => `https://proxy.cors.sh/${url}`,
-  // 5: thingproxy - alternative
-  (url: string) => `https://thingproxy.freeboard.io/fetch/${url}`,
-  // 6: crossorigin.me
-  (url: string) => `https://crossorigin.me/${url}`,
-  // 7: jsonp.afeld.me - another public proxy
-  (url: string) => `https://jsonp.afeld.me/?url=${encodeURIComponent(url)}`,
-  // 8: api.codetabs.com - fast & reliable CORS proxy
-  (url: string) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
-  // 9: cors-anywhere heroku
-  (url: string) => `https://cors-anywhere.herokuapp.com/${url}`,
-  // 10: yacdn.org CORS proxy
-  (url: string) => `https://yacdn.org/proxy/${url}`,
-  // 11: cors.bridged.cc
-  (url: string) => `https://cors.bridged.cc/${url}`,
-  // 12: bypass.cors.sh - additional bypass option
-  (url: string) => `https://bypass.cors.sh/?url=${encodeURIComponent(url)}`,
-  // 13: cors.proxy.tools
-  (url: string) => `https://cors.proxy.tools/?url=${encodeURIComponent(url)}`,
-  // 14: corsproxy.github.io
-  (url: string) => `https://corsproxy.github.io/?${encodeURIComponent(url)}`,
-  // 15: gobetween CORS worker
-  (url: string) => `https://worker.bridged.cc/${url}`,
-  // 16: cors.eu.org free proxy
-  (url: string) => `https://cors.eu.org/${url}`,
-  // 17: htmldriven cors proxy
-  (url: string) => `https://cors-proxy.htmldriven.com/?url=${encodeURIComponent(url)}`,
-  // 18: any-cors worker
-  (url: string) => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}&callback=cb`,
-  // 19: supersimple cors everywhere
-  (url: string) => `https://supersimple.io/cors-proxy/?url=${encodeURIComponent(url)}`,
-  // 20: cors-bypass using xhook
-  (url: string) => `https://nhcorsanywhere.vercel.app/${url}`,
-  // 21: proxy.techfree.workers.dev
-  (url: string) => `https://proxy.techfree.workers.dev/?url=${encodeURIComponent(url)}`,
-  // 22: backend proxy — most reliable (caching + Indian OTT referrers + smart UA)
+  // 0: backend proxy — most reliable (caching + Indian OTT referrers + smart UA)
   (url: string) => `${BACKEND_PROXY}?url=${encodeURIComponent(url)}`,
+  // 1: allorigins - fast & reliable, most widely used
+  (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  // 2: corsproxy.io - high performance public proxy
+  (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+  // 3: corsproxy.org - very reliable
+  (url: string) => `https://www.corsproxy.org/?${encodeURIComponent(url)}`,
+  // 4: cors.lol - reliable & fast
+  (url: string) => `https://api.cors.lol/?url=${encodeURIComponent(url)}`,
+  // 5: cors.sh - fast alternative
+  (url: string) => `https://proxy.cors.sh/${url}`,
+  // 6: thingproxy - alternative
+  (url: string) => `https://thingproxy.freeboard.io/fetch/${url}`,
+  // 7: crossorigin.me
+  (url: string) => `https://crossorigin.me/${url}`,
+  // 8: jsonp.afeld.me - another public proxy
+  (url: string) => `https://jsonp.afeld.me/?url=${encodeURIComponent(url)}`,
+  // 9: api.codetabs.com - fast & reliable CORS proxy
+  (url: string) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+  // 10: cors-anywhere heroku
+  (url: string) => `https://cors-anywhere.herokuapp.com/${url}`,
+  // 11: yacdn.org CORS proxy
+  (url: string) => `https://yacdn.org/proxy/${url}`,
+  // 12: cors.bridged.cc
+  (url: string) => `https://cors.bridged.cc/${url}`,
+  // 13: bypass.cors.sh - additional bypass option
+  (url: string) => `https://bypass.cors.sh/?url=${encodeURIComponent(url)}`,
+  // 14: cors.proxy.tools
+  (url: string) => `https://cors.proxy.tools/?url=${encodeURIComponent(url)}`,
+  // 15: corsproxy.github.io
+  (url: string) => `https://corsproxy.github.io/?${encodeURIComponent(url)}`,
+  // 16: gobetween CORS worker
+  (url: string) => `https://worker.bridged.cc/${url}`,
+  // 17: cors.eu.org free proxy
+  (url: string) => `https://cors.eu.org/${url}`,
+  // 18: htmldriven cors proxy
+  (url: string) => `https://cors-proxy.htmldriven.com/?url=${encodeURIComponent(url)}`,
+  // 19: allorigins JSONP fallback
+  (url: string) => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}&callback=cb`,
+  // 20: supersimple cors everywhere
+  (url: string) => `https://supersimple.io/cors-proxy/?url=${encodeURIComponent(url)}`,
+  // 21: cors-bypass using xhook
+  (url: string) => `https://nhcorsanywhere.vercel.app/${url}`,
+  // 22: proxy.techfree.workers.dev
+  (url: string) => `https://proxy.techfree.workers.dev/?url=${encodeURIComponent(url)}`,
+  // 23: corsproxy.cc - additional proxy
+  (url: string) => `https://corsproxy.cc/?${encodeURIComponent(url)}`,
+  // 24: cors-anywhere alternative
+  (url: string) => `https://corsproxy.herokuapp.com/?${encodeURIComponent(url)}`,
+  // 25: noCORSE proxy (new addition)
+  (url: string) => `https://nocorse.com/api?url=${encodeURIComponent(url)}`,
+  // 26: corss.io proxy (new addition)
+  (url: string) => `https://corss.io/?url=${encodeURIComponent(url)}`,
+  // 27: cors.zimjs.com (new addition)
+  (url: string) => `https://cors.zimjs.com/${url}`,
+  // 28: allow-any-origin (new addition)
+  (url: string) => `https://allow-any-origin.appspot.com/${url}`,
+  // 29: cors-proxy-server (new addition)
+  (url: string) => `https://cors-proxy.fringe.zone/${url}`,
 ];
 
 /* ═══════════════════ STREAM RELIABILITY SCORING ═══════════════════ */
@@ -797,7 +811,7 @@ function useRobustPlayer(
 
   const startSkipCountdown = useCallback(() => {
     if (skipRef.current) return;
-    let c = 3;
+    let c = 2;
     setSkipIn(c);
     skipRef.current = setInterval(() => {
       c--;
@@ -860,13 +874,14 @@ function useRobustPlayer(
       if (isDirectCDN) {
         // CDN streams: direct, then backend proxy (has caching), then allorigins
         list.push({ url: s.url, proxyIdx: -1,  original: s }); // direct
-        list.push({ url: s.url, proxyIdx: 12,  original: s }); // backend (CORS + referrer + cache)
+        list.push({ url: s.url, proxyIdx: BACKEND_PROXY_IDX,  original: s }); // backend (CORS + referrer + cache)
         list.push({ url: s.url, proxyIdx: 0,   original: s }); // allorigins
         list.push({ url: s.url, proxyIdx: 1,   original: s }); // corsproxy.io
+        list.push({ url: s.url, proxyIdx: 2,   original: s }); // corsproxy.org
       } else {
         // Other streams: direct → backend → 3 public CORS proxies
         list.push({ url: s.url, proxyIdx: -1,  original: s }); // direct
-        list.push({ url: s.url, proxyIdx: 12,  original: s }); // backend (most reliable proxy)
+        list.push({ url: s.url, proxyIdx: BACKEND_PROXY_IDX,  original: s }); // backend (most reliable proxy)
         list.push({ url: s.url, proxyIdx: 0,   original: s }); // allorigins
         list.push({ url: s.url, proxyIdx: 1,   original: s }); // corsproxy.io
         list.push({ url: s.url, proxyIdx: 2,   original: s }); // corsproxy.org
@@ -875,7 +890,7 @@ function useRobustPlayer(
     // Remaining streams (beyond top 5): direct + backend only
     for (const s of streamList.slice(5)) {
       list.push({ url: s.url, proxyIdx: -1,  original: s }); // direct
-      list.push({ url: s.url, proxyIdx: 12,  original: s }); // backend
+      list.push({ url: s.url, proxyIdx: BACKEND_PROXY_IDX,  original: s }); // backend
     }
 
     // Remove duplicate entries (same url+proxyIdx) while preserving order
@@ -915,7 +930,7 @@ function useRobustPlayer(
     const originalUrlIdx = Math.floor(idx / attemptsPerUrl);
     setUrlAttempt(originalUrlIdx + 1);
     // Show proxy label
-    const proxyNames = ["allorigins", "corsproxy.io", "corsproxy.org", "cors.lol", "cors.sh", "thingproxy", "crossorigin.me", "jsonp", "codetabs", "cors-anywhere", "yacdn.org", "bridged", "backend"];
+    const proxyNames = ["backend", "allorigins", "corsproxy.io", "corsproxy.org", "cors.lol", "cors.sh", "thingproxy", "crossorigin.me", "jsonp", "codetabs", "cors-anywhere", "yacdn.org", "bridged", "bypass.cors", "cors.tools", "corsproxy.gh", "worker.bridged", "cors.eu.org", "htmldriven", "allorigins.js", "supersimple", "nhcors", "techfree", "corsproxy.cc", "corsproxy.heroku", "nocorse", "corss.io", "zimjs", "allow-origin", "fringe"];
     setProxyActive(attempt.proxyIdx >= 0 ? (proxyNames[attempt.proxyIdx] || "proxy") : false);
 
     setState(idx === 0 ? "loading" : "switching");
@@ -926,14 +941,14 @@ function useRobustPlayer(
     const loadUrl = isProxied ? CORS_PROXIES[attempt.proxyIdx](attempt.url) : attempt.url;
     // Timeout strategy (ultra-aggressive fail-fast for instant switching):
     //   direct  → 900ms (fail fast, native CDN)
-    //   backend → 1500ms (most reliable proxy, slight buffer)
-    //   public CORS proxies → 1000ms (fast public proxies)
-    const timeout = !isProxied ? 900 : (attempt.proxyIdx === BACKEND_PROXY_IDX ? 1500 : 1000);
+    //   backend → 1200ms (most reliable proxy, slight buffer)
+    //   public CORS proxies → 800ms (fast public proxies)
+    const timeout = !isProxied ? 600 : (attempt.proxyIdx === BACKEND_PROXY_IDX ? 1200 : 800);
 
-    // Stall detection — if video freezes for 1.5s, try next source (faster switching)
+    // Stall detection — if video freezes for 1s, try next source (faster switching)
     const onTimeUpdate = () => {
       if (stallRef.current) clearTimeout(stallRef.current);
-      stallRef.current = setTimeout(() => tryAttempt(idx + 1), 1500);
+      stallRef.current = setTimeout(() => tryAttempt(idx + 1), 1000);
     };
     timeUpdateRef.current = onTimeUpdate;
     video.addEventListener("timeupdate", onTimeUpdate);
@@ -981,8 +996,8 @@ function useRobustPlayer(
       // Ultra fast-fail policy — instant move to next source
       fragLoadPolicy: { 
         default: { 
-          maxTimeToFirstByteMs: isProxied ? 900 : 600,
-          maxLoadTimeMs: isProxied ? 1000 : 800,
+          maxTimeToFirstByteMs: isProxied ? 700 : 400,
+          maxLoadTimeMs: isProxied ? 800 : 600,
           timeoutRetry: { maxNumRetry: 0, retryDelayMs: 50, maxRetryDelayMs: 100 },
           errorRetry: { maxNumRetry: 0, retryDelayMs: 50, maxRetryDelayMs: 100 }
         } 
@@ -994,7 +1009,7 @@ function useRobustPlayer(
     // For proxied streams, route ALL XHR requests through the proxy
     if (isProxied) {
       const proxyFn = CORS_PROXIES[attempt.proxyIdx];
-      const proxyDomains = ['allorigins.win', 'corsproxy.io', 'corsproxy.org', 'cors.lol', 'proxy.cors.sh', 'thingproxy.freeboard.io', 'crossorigin.me', 'jsonp.afeld.me', 'codetabs.com', 'cors-anywhere.herokuapp.com', 'yacdn.org', 'cors.bridged.cc', '/api/stream-proxy'];
+      const proxyDomains = ['/api/stream-proxy', 'allorigins.win', 'corsproxy.io', 'corsproxy.org', 'cors.lol', 'proxy.cors.sh', 'thingproxy.freeboard.io', 'crossorigin.me', 'jsonp.afeld.me', 'codetabs.com', 'cors-anywhere.herokuapp.com', 'yacdn.org', 'cors.bridged.cc', 'bypass.cors.sh', 'cors.proxy.tools', 'corsproxy.github.io', 'worker.bridged.cc', 'cors.eu.org', 'cors-proxy.htmldriven.com', 'supersimple.io', 'nhcorsanywhere.vercel.app', 'proxy.techfree.workers.dev', 'corsproxy.cc', 'corsproxy.herokuapp.com', 'nocorse.com', 'corss.io', 'cors.zimjs.com', 'allow-any-origin.appspot.com', 'cors-proxy.fringe.zone'];
       hlsConfig.xhrSetup = (xhr: XMLHttpRequest, url: string) => {
         // Don't double-wrap if already proxied
         if (proxyDomains.some(d => url.includes(d))) return;
@@ -1099,18 +1114,18 @@ function useRobustPlayer(
       return cleanup;
     }
 
-    // Parallel probe: test top 4 attempts simultaneously with 700ms timeout
+    // Parallel probe: test top 10 attempts simultaneously with 350ms timeout
     // Jump to first server that responds — eliminates sequential wait time
     let cancelled = false;
     const probeControllers: AbortController[] = [];
     setState("loading");
 
-    const toProbe = expandedList.slice(0, Math.min(6, expandedList.length));
+    const toProbe = expandedList.slice(0, Math.min(10, expandedList.length));
     Promise.any(
       toProbe.map((attempt, i) => new Promise<number>((resolve, reject) => {
         const ctrl = new AbortController();
         probeControllers.push(ctrl);
-        const timer = setTimeout(() => { ctrl.abort(); reject(new Error("probe timeout")); }, 700);
+        const timer = setTimeout(() => { ctrl.abort(); reject(new Error("probe timeout")); }, 350);
         const loadUrl = attempt.proxyIdx >= 0
           ? CORS_PROXIES[attempt.proxyIdx](attempt.url)
           : attempt.url;
@@ -2020,7 +2035,7 @@ const TVPage = () => {
                                   </div>
                                 </div>
                                 {/* Channel grid */}
-                                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8" style={{ contentVisibility: "auto", containIntrinsicSize: "auto 200px", willChange: "auto" }}>
+                                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8">
                                   {visibleChannels.map((ch) => (
                                     <ChannelCard
                                       key={ch.id} ch={ch}

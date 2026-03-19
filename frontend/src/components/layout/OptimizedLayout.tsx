@@ -173,14 +173,18 @@ export const OptimizedSection = ({
       data-parallax-speed={parallax ? parallaxSpeed : undefined}
       data-animate={animate ? 'true' : undefined}
       style={{
-        contain: 'layout style paint',
-        contentVisibility: lazy ? 'auto' : 'visible',
+        /* contain: layout style for perf, but NO paint containment (causes content to disappear) */
+        contain: 'layout style',
+        /* contentVisibility DISABLED — it causes below-fold sections to render late */
+        /* contentVisibility: lazy ? 'auto' : 'visible', */
+        contentVisibility: 'visible',
       }}
     >
       {children}
     </section>
   );
 };
+
 
 // Optimized Image Component
 interface OptimizedImageProps {

@@ -24,6 +24,8 @@ import Footer from "./Footer";
 import ScrollProgress from "../animations/ScrollProgress";
 import ScrollToTop from "../animations/ScrollToTop";
 import FloatingElements from "../animations/FloatingElements";
+import ScrollFixer from "./ScrollFixer";
+import SmoothScroll from "./SmoothScroll";
 
 // Lazy load CursorSpotlight since it's only needed on desktop
 const CursorSpotlight = lazy(() => import("../animations/CursorSpotlight"));
@@ -39,7 +41,11 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   return (
-    <div className="relative flex min-h-screen flex-col overflow-x-hidden">
+    <div className="relative flex min-h-screen flex-col">
+      {/* Nuclear JS-based scroll fix — forces scrolling to work regardless of CSS */}
+      <ScrollFixer />
+      {/* Lenis smooth scroll — 120fps butter-smooth scrolling on all devices */}
+      <SmoothScroll />
       {/* Fixed background layers - creates depth effect */}
       <div className="pointer-events-none fixed inset-0 bg-gradient-to-b from-background via-background to-background z-0" />
       <div className="pointer-events-none fixed inset-0 mesh-gradient-advanced opacity-50 z-0" />
@@ -64,7 +70,6 @@ const Layout = ({ children }: LayoutProps) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
         className="relative flex-1 pt-16 z-10"
-        style={{ contain: "layout style", willChange: "transform, opacity", backfaceVisibility: "hidden" }}
       >
         <div className="border-b border-border/60 bg-card/40">
           <div className="container py-2 text-center text-[8px] font-medium uppercase tracking-[0.14em] text-muted-foreground sm:text-[10px] md:text-xs">
