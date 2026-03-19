@@ -13,12 +13,21 @@ const router = express.Router();
 const ytdl = require('@distube/ytdl-core');
 const axios = require('axios');
 
-// cobalt.tools API v10+ endpoint
+// cobalt.tools API v10+ endpoint - with fallback instances
 const COBALT_API_URL = 'https://api.cobalt.tools/';
 const COBALT_HEADERS = {
   'Accept': 'application/json',
   'Content-Type': 'application/json',
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
 };
+
+// List of cobalt.tools community instances to try as fallback
+const COBALT_FALLBACK_INSTANCES = [
+  'https://api.cobalt.tools/',
+  'https://cbl.tnix.dev/',
+  'https://cobalt.api.timelessnesses.me/',
+  'https://cobalt-api.rlhf.fun/',
+];
 
 const SUPPORTED_PLATFORMS = [
   { name: 'YouTube', domains: ['youtube.com', 'youtu.be'], icon: '🎥' },
@@ -78,6 +87,7 @@ function formatViews(n) {
 
 /**
  * Call cobalt.tools API (v10) — works for YouTube + 1000+ platforms
+ * Tries multiple fallback instances to maximize success rate
  */
 async function callCobalt(url, audioOnly = false, quality = 'max') {
   const payload = {
@@ -88,15 +98,29 @@ async function callCobalt(url, audioOnly = false, quality = 'max') {
     filenameStyle: 'pretty',
   };
 
-  // Try v10 API first
+  let lastError = null;
+
+  // Try each cobalt instance in order
+  for (const instance of COBALT_FALLBACK_INSTANCES) {
+    try {
+      const res = await axios.post(instance, payload, {
+        headers: COBALT_HEADERS,
+        timeout: 20000,
+      });
+      if (res.data && res.data.status !== 'error') {
+        return res.data;
+      }
+      // If it returned an error, keep trying other instances
+      lastError = new Error(res.data?.error?.code || res.data?.text || 'Instance returned error');
+    } catch (e) {
+      lastError = e;
+      console.warn(`[Cobalt] Instance ${instance} failed: ${e.message}`);
+      continue;
+    }
+  }
+
+  // All v10 instances failed — try legacy cobalt.tools endpoint
   try {
-    const res = await axios.post(COBALT_API_URL, payload, {
-      headers: COBALT_HEADERS,
-      timeout: 25000,
-    });
-    return res.data;
-  } catch (e) {
-    // Fall back to older endpoint
     const res2 = await axios.post('https://cobalt.tools/api/json', {
       url,
       isNoTTWatermark: true,
@@ -104,9 +128,11 @@ async function callCobalt(url, audioOnly = false, quality = 'max') {
       vQuality: quality === 'best' ? 'max' : String(parseInt(quality) || 'max'),
     }, {
       headers: COBALT_HEADERS,
-      timeout: 25000,
+      timeout: 20000,
     });
     return res2.data;
+  } catch (e2) {
+    throw lastError || e2;
   }
 }
 

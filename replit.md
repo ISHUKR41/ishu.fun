@@ -64,8 +64,17 @@ Attempt order per stream URL (to maximize channels working even when backend is 
 1. **Direct** — no proxy (works for CDN streams with CORS headers)
 2. **allorigins** (`api.allorigins.win`) — fast public CORS proxy
 3. **corsproxy.io** — backup public CORS proxy
-4. **Backend proxy** (`/api/stream-proxy`) — last resort (may be sleeping)
+4. **corsproxy.org** — backup
+5. **cors.sh** — backup
+6. **thingproxy.freeboard.io** — backup
+7. **crossorigin.me** — backup
+8. **cors-anywhere.herokuapp.com** — backup
+9. **yacdn.org** — backup
+10. **Backend proxy** (`/api/stream-proxy`) — last resort (may be sleeping)
 
+M3U sources: 80+ Indian-specific playlists (countries, languages, subdivisions, curated repos).
+Each M3U fetch has a 12s individual timeout via Promise.race to prevent slow sources blocking loading.
+TV cache key: `ishu_tv_channels_v6` (30 min TTL in sessionStorage).
 HLS timeouts: 8s direct, 14s proxied (fail fast, try next source quickly).
 FragLoadPolicy: 8s TTFB, 20s max load.
 
@@ -78,6 +87,8 @@ FragLoadPolicy: 8s TTFB, 20s max load.
 - All show `BackendStatusBar` which auto-wakes backend on mount
 - `fetchWithRetry` with 240s first-attempt timeout (Render cold start can take 60s)
 - Graceful error messages on timeout/network failure
+- YouTube: `@distube/ytdl-core` with enhanced browser-like request headers to bypass bot protection
+- Universal: cobalt.tools API v10 with 4 fallback community instances tried in order
 
 ## Replit Migration Notes
 - Frontend port changed from 3000 → 5000 (Replit webview requirement)

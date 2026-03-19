@@ -168,7 +168,7 @@ const ALL_CAT = "all";
 const FAV_CAT = "favorites";
 
 /* ═══════════════════ SESSION STORAGE CACHE ═══════════════════ */
-const TV_CACHE_KEY = "ishu_tv_channels_v5";
+const TV_CACHE_KEY = "ishu_tv_channels_v6";
 const TV_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
 const Q_ORDER: Record<string, number> = { "2160p": 6, "1080p": 5, "720p": 4, "576p": 3, "480p": 2, "360p": 1, "240p": 0 };
 
@@ -224,7 +224,13 @@ const CORS_PROXIES = [
   (url: string) => `https://proxy.cors.sh/${url}`,
   // 4: thingproxy - alternative public proxy
   (url: string) => `https://thingproxy.freeboard.io/fetch/${url}`,
-  // 5: backend proxy (last resort — may be sleeping on Render free tier)
+  // 5: crossorigin.me - another reliable proxy
+  (url: string) => `https://crossorigin.me/${url}`,
+  // 6: cors-anywhere via herokuapp mirror
+  (url: string) => `https://cors-anywhere.herokuapp.com/${url}`,
+  // 7: yacdn.org CORS proxy
+  (url: string) => `https://yacdn.org/proxy/${url}`,
+  // 8: backend proxy (last resort — may be sleeping on Render free tier)
   (url: string) => `${BACKEND_PROXY}?url=${encodeURIComponent(url)}`,
 ];
 
@@ -317,6 +323,7 @@ async function fetchAllChannels(
   onProgress(70, "Fetching M3U sources for logos & extras...");
 
   // M3U sources: India country + all language + regional subdivisions + Free-TV
+  // Each fetch gets its own 10s timeout via Promise.race so slow sources don't block loading
   const m3uSources = [
     { url: "https://iptv-org.github.io/iptv/countries/in.m3u", lang: "Hindi" },
     { url: "https://iptv-org.github.io/iptv/languages/hin.m3u", lang: "Hindi" },
@@ -397,14 +404,40 @@ async function fetchAllChannels(
     { url: "https://iptv-org.github.io/iptv/categories/business.m3u", lang: "Hindi" },
     { url: "https://iptv-org.github.io/iptv/categories/family.m3u", lang: "Hindi" },
     { url: "https://iptv-org.github.io/iptv/categories/cooking.m3u", lang: "Hindi" },
+    // Extra curated lists with high reliability Indian channels
+    { url: "https://raw.githubusercontent.com/iptv-org/iptv/master/streams/in.m3u", lang: "Hindi" },
+    { url: "https://raw.githubusercontent.com/techblog-info/live-streaming/main/channels/in.m3u", lang: "Hindi" },
+    { url: "https://raw.githubusercontent.com/IPTV-India/IPTV/main/india.m3u", lang: "Hindi" },
+    { url: "https://raw.githubusercontent.com/atifshahab/iptv/main/india.m3u", lang: "Hindi" },
+    { url: "https://raw.githubusercontent.com/bimalpanta/Free-IPTV/main/India%20TV.m3u", lang: "Hindi" },
+    // More regional language sources
+    { url: "https://iptv-org.github.io/iptv/languages/raj.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/languages/cgg.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/languages/mni.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/languages/kas.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/languages/doi.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/languages/san.m3u", lang: "Hindi" },
+    // Sports-specific channels
+    { url: "https://iptv-org.github.io/iptv/categories/outdoor.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/categories/classic.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/categories/travel.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/categories/culture.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/categories/series.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/categories/shop.m3u", lang: "Hindi" },
   ];
 
+  // Fetch each M3U source with individual 12s timeout to avoid slow sources blocking everything
   const m3uResults = await Promise.allSettled(
     m3uSources.map(async (src) => {
       try {
-        const r = await fetch(src.url, { signal });
-        if (!r.ok) return [];
-        return parseM3U(await r.text(), src.lang);
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("timeout")), 12000),
+        );
+        const fetchPromise = fetch(src.url, { signal }).then(async (r) => {
+          if (!r.ok) return [];
+          return parseM3U(await r.text(), src.lang);
+        });
+        return await Promise.race([fetchPromise, timeoutPromise]);
       } catch { return []; }
     }),
   );
@@ -620,23 +653,24 @@ function useRobustPlayer(
   // This way channels work even when the Render backend is sleeping
   const buildAttemptList = useCallback((streamList: StreamUrl[]) => {
     const list: { url: string; proxyIdx: number; original: StreamUrl }[] = [];
-    // These CDNs serve CORS headers natively — always try direct
+    // These CDNs serve CORS headers natively — always try direct first
     const directCDNs = [
       "akamaized.net", "cloudfront.net", "youtube.com", "googlevideo.com",
       "dai.google.com", "amagi.tv", "amagimedia.com", "cdn.jwplayer.com",
       "fastly.net", "fastly.com", "edgecastcdn.net", "limelight.com",
       "llnwd.net", "jprdigital.in", "wiseplayout.com", "pishow.tv",
       "tangotv.in", "smartplaytv.in", "5centscdn.com", "ottlive.co.in",
+      "wmncdn.net", "livebox.co.in", "legitpro.co.in", "mediaops.in",
     ];
     for (const s of streamList) {
       const urlLower = s.url.toLowerCase();
       const isDirectCDN = directCDNs.some(cdn => urlLower.includes(cdn));
       if (isDirectCDN) {
-        // CDN streams: direct first, then public proxy fallback
-        list.push({ url: s.url, proxyIdx: -1, original: s });
+        // CDN streams: direct first, then top proxies
+        list.push({ url: s.url, proxyIdx: -1, original: s }); // direct
         list.push({ url: s.url, proxyIdx: 0, original: s }); // allorigins
         list.push({ url: s.url, proxyIdx: 1, original: s }); // corsproxy.io
-        list.push({ url: s.url, proxyIdx: 5, original: s }); // backend
+        list.push({ url: s.url, proxyIdx: 8, original: s }); // backend
       } else {
         // Other streams: direct first, then all public proxies, backend last
         list.push({ url: s.url, proxyIdx: -1, original: s }); // direct
@@ -644,7 +678,9 @@ function useRobustPlayer(
         list.push({ url: s.url, proxyIdx: 1, original: s }); // corsproxy.io
         list.push({ url: s.url, proxyIdx: 2, original: s }); // corsproxy.org
         list.push({ url: s.url, proxyIdx: 3, original: s }); // cors.sh
-        list.push({ url: s.url, proxyIdx: 5, original: s }); // backend (last)
+        list.push({ url: s.url, proxyIdx: 4, original: s }); // thingproxy
+        list.push({ url: s.url, proxyIdx: 5, original: s }); // crossorigin.me
+        list.push({ url: s.url, proxyIdx: 8, original: s }); // backend (last)
       }
     }
     return list;
@@ -677,7 +713,7 @@ function useRobustPlayer(
     const originalUrlIdx = Math.floor(idx / attemptsPerUrl);
     setUrlAttempt(originalUrlIdx + 1);
     // Show proxy label
-    const proxyNames = ["allorigins", "corsproxy.io", "corsproxy.org", "cors.sh", "thingproxy", "backend"];
+    const proxyNames = ["allorigins", "corsproxy.io", "corsproxy.org", "cors.sh", "thingproxy", "crossorigin.me", "cors-anywhere", "yacdn.org", "backend"];
     setProxyActive(attempt.proxyIdx >= 0 ? (proxyNames[attempt.proxyIdx] || "proxy") : false);
 
     setState(idx === 0 ? "loading" : "switching");
