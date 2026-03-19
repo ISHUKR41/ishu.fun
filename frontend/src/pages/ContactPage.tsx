@@ -99,24 +99,33 @@ const ContactPage = () => {
   const heroSpotlightY = useSpring(useTransform(mouseY, [0, 1], [0, 100]), { stiffness: 100, damping: 30 });
 
   useEffect(() => {
-    if (!sectionRef.current) return;
     const ctx = gsap.context(() => {
-      gsap.fromTo(".contact-stat",
-        { y: 40, opacity: 0, scale: 0.8, rotateX: 15 },
-        { scrollTrigger: { trigger: ".contact-stats-row", start: "top 85%", toggleActions: "play none none none" },
-          y: 0, opacity: 1, scale: 1, rotateX: 0, duration: 0.7, stagger: 0.12, ease: "back.out(1.7)", clearProps: "all" }
-      );
-      gsap.fromTo(".faq-item",
-        { y: 30, opacity: 0, x: -20 },
-        { scrollTrigger: { trigger: faqRef.current, start: "top 80%", toggleActions: "play none none none" },
-          y: 0, opacity: 1, x: 0, stagger: 0.1, duration: 0.6, ease: "power3.out", clearProps: "all" }
-      );
-      gsap.fromTo(".testimonial-card",
-        { scale: 0.85, opacity: 0, rotateY: 10 },
-        { scrollTrigger: { trigger: ".testimonials-grid", start: "top 80%", toggleActions: "play none none none" },
-          scale: 1, opacity: 1, rotateY: 0, stagger: 0.12, duration: 0.7, ease: "back.out(1.7)", clearProps: "all" }
-      );
-    }, sectionRef);
+      const statsRow = document.querySelector(".contact-stats-row");
+      if (statsRow) {
+        gsap.fromTo(".contact-stat",
+          { y: 40, opacity: 0, scale: 0.8, rotateX: 15 },
+          { scrollTrigger: { trigger: statsRow, start: "top 85%", toggleActions: "play none none none" },
+            y: 0, opacity: 1, scale: 1, rotateX: 0, duration: 0.7, stagger: 0.12, ease: "back.out(1.7)", clearProps: "all" }
+        );
+      }
+      const faqItems = document.querySelectorAll(".faq-item");
+      if (faqItems.length > 0 && faqRef.current) {
+        gsap.fromTo(faqItems,
+          { y: 30, opacity: 0, x: -20 },
+          { scrollTrigger: { trigger: faqRef.current, start: "top 80%", toggleActions: "play none none none" },
+            y: 0, opacity: 1, x: 0, stagger: 0.1, duration: 0.6, ease: "power3.out", clearProps: "all" }
+        );
+      }
+      const testimonialsGrid = document.querySelector(".testimonials-grid");
+      const testimonialCards = document.querySelectorAll(".testimonial-card");
+      if (testimonialsGrid && testimonialCards.length > 0) {
+        gsap.fromTo(testimonialCards,
+          { scale: 0.85, opacity: 0, rotateY: 10 },
+          { scrollTrigger: { trigger: testimonialsGrid, start: "top 80%", toggleActions: "play none none none" },
+            scale: 1, opacity: 1, rotateY: 0, stagger: 0.12, duration: 0.7, ease: "back.out(1.7)", clearProps: "all" }
+        );
+      }
+    });
     return () => ctx.revert();
   }, []);
 

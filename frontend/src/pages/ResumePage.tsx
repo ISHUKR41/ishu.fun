@@ -35,7 +35,12 @@ const SectionCard: React.FC<SectionCardProps> = ({
     id={`section-${id}`}
     className="rounded-xl border border-border bg-card transition-all duration-300 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5"
   >
-    <button onClick={onToggle} className="flex w-full items-center justify-between p-4 sm:p-5 group">
+    <div
+      role="button" tabIndex={0}
+      onClick={onToggle}
+      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onToggle()}
+      className="flex w-full cursor-pointer items-center justify-between p-4 sm:p-5 group"
+    >
       <div className="flex items-center gap-3">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ backgroundColor: `${accentColor}15` }}>
           <Icon className="h-4 w-4" style={{ color: accentColor }} />
@@ -48,7 +53,7 @@ const SectionCard: React.FC<SectionCardProps> = ({
           <ChevronUp className="h-4 w-4 text-muted-foreground" />
         </motion.div>
       </div>
-    </button>
+    </div>
     <AnimatePresence initial={false}>
       {!collapsed && (
         <motion.div

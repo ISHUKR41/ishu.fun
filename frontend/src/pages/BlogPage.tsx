@@ -80,16 +80,24 @@ const BlogPage = () => {
   const statsRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    if (!heroRef.current) return;
     const ctx = gsap.context(() => {
-      gsap.fromTo(".blog-hero-title", { y: 50, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: "power3.out", clearProps: "all" });
-      gsap.fromTo(".blog-cat-pill", { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, stagger: 0.03, duration: 0.4, delay: 0.5, ease: "back.out(2)", clearProps: "all" });
-      gsap.fromTo(".blog-stat-card",
-        { y: 30, opacity: 0 },
-        { scrollTrigger: { trigger: statsRef.current, start: "top 85%", toggleActions: "play none none none" },
-          y: 0, opacity: 1, stagger: 0.1, duration: 0.5, ease: "power3.out", clearProps: "all" }
-      );
-    }, heroRef);
+      const heroTitles = document.querySelectorAll(".blog-hero-title");
+      if (heroTitles.length > 0) {
+        gsap.fromTo(heroTitles, { y: 50, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: "power3.out", clearProps: "all" });
+      }
+      const catPills = document.querySelectorAll(".blog-cat-pill");
+      if (catPills.length > 0) {
+        gsap.fromTo(catPills, { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, stagger: 0.03, duration: 0.4, delay: 0.5, ease: "back.out(2)", clearProps: "all" });
+      }
+      const statCards = document.querySelectorAll(".blog-stat-card");
+      if (statCards.length > 0 && statsRef.current) {
+        gsap.fromTo(statCards,
+          { y: 30, opacity: 0 },
+          { scrollTrigger: { trigger: statsRef.current, start: "top 85%", toggleActions: "play none none none" },
+            y: 0, opacity: 1, stagger: 0.1, duration: 0.5, ease: "power3.out", clearProps: "all" }
+        );
+      }
+    });
     return () => ctx.revert();
   }, []);
 

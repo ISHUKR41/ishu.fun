@@ -90,7 +90,41 @@ async function extractTeraboxInfo(url) {
     }
   }
 
-  // Method 2: Scrape the share page
+  // Method 2: Use terabox.fun unofficial API (no login required)
+  if (shortUrl) {
+    try {
+      const apiUrl = `https://terabox.fun/api/get-info?url=https://www.terabox.com/s/${shortUrl}`;
+      const r = await axios.get(apiUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Accept': 'application/json',
+          'Origin': 'https://terabox.fun',
+          'Referer': 'https://terabox.fun/',
+        },
+        timeout: 15000,
+      });
+      const data = r.data;
+      if (data && (data.ok || data.success) && data.data) {
+        const file = Array.isArray(data.data) ? data.data[0] : data.data;
+        if (file) {
+          return {
+            filename: file.filename || file.name || 'file',
+            size: parseInt(file.size || 0),
+            sizeFormatted: formatBytes(parseInt(file.size || 0)),
+            fileType: file.category || 0,
+            thumbnail: file.thumbs?.url3 || file.thumbs?.url2 || file.thumb || null,
+            downloadUrl: file.dlink || file.download_url || null,
+            isVideo: (file.category === 1) || (file.filename || '').match(/\.(mp4|mkv|avi|mov|webm)$/i) !== null,
+            isImage: (file.category === 3) || (file.filename || '').match(/\.(jpg|jpeg|png|gif|webp)$/i) !== null,
+          };
+        }
+      }
+    } catch (e) {
+      console.warn('[Terabox] API method 2 (terabox.fun) failed:', e.message);
+    }
+  }
+
+  // Method 3: Scrape the share page
   try {
     const shareUrl = shortUrl
       ? `https://www.terabox.com/s/${shortUrl}`

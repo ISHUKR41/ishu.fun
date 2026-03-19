@@ -20,8 +20,7 @@ import MorphingBlob from "@/components/animations/MorphingBlob";
 import AnimatedCounter from "@/components/animations/AnimatedCounter";
 import { BreadcrumbSchema } from "@/components/seo/JsonLd";
 import SEOHead, { SEO_DATA } from "@/components/seo/SEOHead";
-import { useState, useEffect, useRef, useMemo, useCallback, memo, lazy, Suspense, forwardRef } from "react";
-import { VirtuosoGrid } from "react-virtuoso";
+import { useState, useEffect, useRef, useMemo, useCallback, memo, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Tv, Search, X, Play, Loader2, Radio, Film, Music, Newspaper, Baby,
@@ -169,7 +168,7 @@ const ALL_CAT = "all";
 const FAV_CAT = "favorites";
 
 /* ═══════════════════ SESSION STORAGE CACHE ═══════════════════ */
-const TV_CACHE_KEY = "ishu_tv_channels_v4";
+const TV_CACHE_KEY = "ishu_tv_channels_v5";
 const TV_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
 const Q_ORDER: Record<string, number> = { "2160p": 6, "1080p": 5, "720p": 4, "576p": 3, "480p": 2, "360p": 1, "240p": 0 };
 
@@ -219,11 +218,13 @@ const CORS_PROXIES = [
   (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
   // 1: corsproxy.io - another reliable public proxy
   (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-  // 2: cors-proxy.htmldriven.com - additional public proxy
-  (url: string) => `https://cors-proxy.htmldriven.com/?url=${encodeURIComponent(url)}`,
-  // 3: cors.bridged.cc - fast CDN-based proxy
-  (url: string) => `https://cors.bridged.cc/${url}`,
-  // 4: backend proxy (last resort — may be sleeping on Render free tier)
+  // 2: corsproxy.org - additional reliable proxy
+  (url: string) => `https://www.corsproxy.org/?${encodeURIComponent(url)}`,
+  // 3: cors.sh - fast alternative
+  (url: string) => `https://proxy.cors.sh/${url}`,
+  // 4: thingproxy - alternative public proxy
+  (url: string) => `https://thingproxy.freeboard.io/fetch/${url}`,
+  // 5: backend proxy (last resort — may be sleeping on Render free tier)
   (url: string) => `${BACKEND_PROXY}?url=${encodeURIComponent(url)}`,
 ];
 
@@ -386,6 +387,16 @@ async function fetchAllChannels(
     { url: "https://iptv-org.github.io/iptv/languages/kok.m3u", lang: "Hindi" },
     { url: "https://iptv-org.github.io/iptv/languages/nep.m3u", lang: "Hindi" },
     { url: "https://iptv-org.github.io/iptv/languages/sat.m3u", lang: "Hindi" },
+    // Additional curated Indian IPTV playlists
+    { url: "https://raw.githubusercontent.com/Ankit-Slnk/flutter-iptv/master/iptv.m3u", lang: "Hindi" },
+    { url: "https://raw.githubusercontent.com/JigarM/IndiaTVChannels/main/India.m3u", lang: "Hindi" },
+    { url: "https://raw.githubusercontent.com/rashedul-alam-raju/bdix-playlist/main/India.m3u", lang: "Hindi" },
+    // More category-specific playlists  
+    { url: "https://iptv-org.github.io/iptv/categories/general.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/categories/lifestyle.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/categories/business.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/categories/family.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/categories/cooking.m3u", lang: "Hindi" },
   ];
 
   const m3uResults = await Promise.allSettled(
@@ -624,13 +635,16 @@ function useRobustPlayer(
         // CDN streams: direct first, then public proxy fallback
         list.push({ url: s.url, proxyIdx: -1, original: s });
         list.push({ url: s.url, proxyIdx: 0, original: s }); // allorigins
-        list.push({ url: s.url, proxyIdx: 1, original: s }); // corsproxy
+        list.push({ url: s.url, proxyIdx: 1, original: s }); // corsproxy.io
+        list.push({ url: s.url, proxyIdx: 5, original: s }); // backend
       } else {
-        // Other streams: direct first, then public proxies, backend proxy last
+        // Other streams: direct first, then all public proxies, backend last
         list.push({ url: s.url, proxyIdx: -1, original: s }); // direct
         list.push({ url: s.url, proxyIdx: 0, original: s }); // allorigins
         list.push({ url: s.url, proxyIdx: 1, original: s }); // corsproxy.io
-        list.push({ url: s.url, proxyIdx: 2, original: s }); // backend (last)
+        list.push({ url: s.url, proxyIdx: 2, original: s }); // corsproxy.org
+        list.push({ url: s.url, proxyIdx: 3, original: s }); // cors.sh
+        list.push({ url: s.url, proxyIdx: 5, original: s }); // backend (last)
       }
     }
     return list;
@@ -662,8 +676,8 @@ function useRobustPlayer(
     const attemptsPerUrl = 1 + CORS_PROXIES.length;
     const originalUrlIdx = Math.floor(idx / attemptsPerUrl);
     setUrlAttempt(originalUrlIdx + 1);
-    // Show proxy label: 0=allorigins, 1=corsproxy.io, 2=backend
-    const proxyNames = ["allorigins", "corsproxy", "backend"];
+    // Show proxy label
+    const proxyNames = ["allorigins", "corsproxy.io", "corsproxy.org", "cors.sh", "thingproxy", "backend"];
     setProxyActive(attempt.proxyIdx >= 0 ? (proxyNames[attempt.proxyIdx] || "proxy") : false);
 
     setState(idx === 0 ? "loading" : "switching");
@@ -911,17 +925,8 @@ const ChannelCard = memo(({
   );
 });
 
-/* ═══════════════════ VIRTUOSO GRID COMPONENTS ═══════════════════ */
-const VirtuosoGridList = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ style, children, ...props }, ref) => (
-    <div ref={ref} {...props} style={{ ...style, willChange: "transform" }}
-      className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8" />
-  ),
-);
-const VirtuosoGridItem = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ children, ...props }, ref) => <div ref={ref} {...props}>{children}</div>,
-);
-const virtuosoGridComponents = { List: VirtuosoGridList, Item: VirtuosoGridItem };
+/* ═══════════════════ PAGINATED FLAT GRID ═══════════════════ */
+const FLAT_PAGE_SIZE = 100;
 
 /* ═══════════════════ MAIN COMPONENT ═══════════════════ */
 const TVPage = () => {
@@ -963,6 +968,8 @@ const TVPage = () => {
 
   // Track which categories have been expanded (for "Show More" optimization)
   const [expandedCats, setExpandedCats] = useState<Set<string>>(new Set());
+  // Paginated flat grid page counter (used when specific category is active)
+  const [flatPage, setFlatPage] = useState(1);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const playerRef = useRef<HTMLDivElement | null>(null);
@@ -1035,8 +1042,8 @@ const TVPage = () => {
     });
   }, [langChannels, activeCat, search, searchResults, favorites, failedIds]);
 
-  // Reset expanded categories when language or category filter changes
-  useEffect(() => { setExpandedCats(new Set()); }, [selectedLang, activeCat]);
+  // Reset expanded categories and flat page when language or category filter changes
+  useEffect(() => { setExpandedCats(new Set()); setFlatPage(1); }, [selectedLang, activeCat, search]);
 
   /* ── Category-grouped channels for section view ── */
   const categoryGroups = useMemo(() => {
@@ -1749,15 +1756,10 @@ const TVPage = () => {
                           })}
                         </div>
                       ) : viewMode === "grid" ? (
-                        /* Flat grid when specific category selected - virtualized */
-                        <VirtuosoGrid
-                          useWindowScroll
-                          totalCount={filtered.length}
-                          overscan={200}
-                          components={virtuosoGridComponents}
-                          itemContent={(index) => {
-                            const ch = filtered[index];
-                            return (
+                        /* Flat grid when specific category selected - paginated */
+                        <>
+                          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8">
+                            {filtered.slice(0, flatPage * FLAT_PAGE_SIZE).map((ch) => (
                               <ChannelCard
                                 key={ch.id} ch={ch}
                                 isPlaying={playing?.id === ch.id}
@@ -1767,9 +1769,20 @@ const TVPage = () => {
                                 onPlay={() => playChannel(ch)}
                                 onToggleFav={() => toggleFav(ch.id)}
                               />
-                            );
-                          }}
-                        />
+                            ))}
+                          </div>
+                          {filtered.length > flatPage * FLAT_PAGE_SIZE && (
+                            <div className="mt-6 text-center">
+                              <button
+                                onClick={() => setFlatPage(p => p + 1)}
+                                className="inline-flex items-center gap-2 rounded-xl border border-border/40 glass px-6 py-3 text-sm font-medium text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all"
+                              >
+                                <ChevronDown className="h-4 w-4" />
+                                Load More ({filtered.length - flatPage * FLAT_PAGE_SIZE} remaining)
+                              </button>
+                            </div>
+                          )}
+                        </>
                       ) : (
                         /* List view */
                         <div className="space-y-1.5">
