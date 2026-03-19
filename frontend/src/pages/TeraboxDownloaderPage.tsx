@@ -95,19 +95,26 @@ const TeraboxDownloaderPage = () => {
     setDownloadReady(null);
 
     try {
-      const res = await fetchWithRetry(`${API_URL}/api/tools/terabox-info`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: url.trim() }),
-      });
+      const res = await fetchWithRetry(
+        `${API_URL}/api/tools/terabox-info?url=${encodeURIComponent(url.trim())}`,
+        { method: "GET" }
+      );
 
       const data = await res.json();
-      if (!data.success || !data.file) {
+      if (!data.success || !data.data) {
         const msg = data.error || "Failed to fetch file info.";
-        setError(msg.includes("Could not extract file info") ? msg + " Please check that the link is valid and not expired." : msg);
+        setError(msg + " Please check that the link is valid and publicly shared.");
         return;
       }
-      setFileInfo(data.file);
+      const d = data.data;
+      setFileInfo({
+        name: d.filename || "Unknown File",
+        size: d.sizeFormatted || "Unknown size",
+        thumbnail: d.thumbnail || "",
+        downloadLink: "",
+        isVideo: d.isVideo || false,
+        useBackendDownload: true,
+      });
     } catch (err: any) {
       if (err?.name === "AbortError") {
         setError("Request timed out. The server might be waking up — please try again in a few seconds.");

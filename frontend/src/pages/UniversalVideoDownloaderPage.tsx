@@ -123,7 +123,7 @@ const UniversalVideoDownloaderPage = () => {
     setResult(null);
 
     try {
-      const res = await fetchWithRetry(`${API_URL}/api/tools/video-download`, {
+      const res = await fetchWithRetry(`${API_URL}/api/tools/universal-download`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -134,23 +134,39 @@ const UniversalVideoDownloaderPage = () => {
       });
 
       const data = await res.json();
-      if (!res.ok || !data.success) { setError(data.error || `Download failed (HTTP ${res.status}).`); return; }
+      if (!res.ok || !data.success) { setError(data.error || `Download failed (HTTP ${res.status}). ${data.details || ""}`); return; }
 
-      // Fix download URL: prepend API_URL for relative backend paths
-      if (data.downloadUrl && !data.downloadUrl.startsWith("http")) {
-        data.downloadUrl = `${API_URL}${data.downloadUrl}`;
+      const d = data.data || data;
+
+      setResult({
+        success: true,
+        filename: d.filename || "video.mp4",
+        downloadUrl: d.directUrl || d.downloadUrl || "",
+        isDirect: true,
+        platform: d.platform,
+        message: d.message || "Download ready!",
+      });
+
+      // Trigger download
+      const downloadUrl = d.directUrl || d.downloadUrl;
+      if (downloadUrl) {
+        const a = document.createElement("a");
+        a.href = downloadUrl;
+        a.download = d.filename || "video.mp4";
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
       }
 
-      setResult(data);
-      // Trigger proper file download via hidden anchor
-      if (data.downloadUrl) {
+      // For picker results (multiple streams)
+      if (d.picker && d.picker.length > 0) {
+        const first = d.picker[0];
         const a = document.createElement("a");
-        a.href = data.downloadUrl;
-        a.download = data.filename || "video.mp4";
-        if (data.isDirect) {
-          a.target = "_blank";
-          a.rel = "noopener noreferrer";
-        }
+        a.href = first.url || first.thumb;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);

@@ -1,300 +1,290 @@
 /**
  * teraboxRoutes.js - Terabox File Downloader API
- * 
- * Features:
- * - Extract direct download links from Terabox share URLs
- * - Preview file information
- * - Support for videos, images, documents
- * - Progress tracking
- * 
- * Terabox URL formats:
- * - https://terabox.com/s/xxxxx
- * - https://www.terabox.com/sharing/link?surl=xxxxx
- * - https://1024terabox.com/s/xxxxx
+ *
+ * Uses Terabox unofficial API + scraping as fallback.
  */
 
 const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 const cheerio = require('cheerio');
-const fs = require('fs-extra');
 const path = require('path');
-const { v4: uuidv4 } = require('uuid');
 
-const TEMP_DIR = process.env.TEMP_DIR || path.join(__dirname, '../../../temp');
+const TERABOX_DOMAINS = ['terabox.com', '1024terabox.com', 'teraboxapp.com', 'terasharelink.com', 'terafileshare.com'];
+
+function isTeraboxUrl(url) {
+  try {
+    const hostname = new URL(url).hostname.replace('www.', '');
+    return TERABOX_DOMAINS.some(d => hostname.includes(d));
+  } catch { return false; }
+}
+
+function formatBytes(bytes, decimals = 2) {
+  if (!bytes || bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(Math.max(0, decimals))) + ' ' + sizes[i];
+}
+
+function normalizeTeraboxUrl(url) {
+  try {
+    const u = new URL(url);
+    // Convert different domain formats to main terabox.com
+    const pathname = u.pathname;
+    const search = u.search;
+    return `https://www.terabox.com${pathname}${search}`;
+  } catch {
+    return url;
+  }
+}
+
+function extractShortUrl(url) {
+  // Handle /s/XXXXX pattern
+  const match = url.match(/\/s\/([A-Za-z0-9_-]+)/);
+  if (match) return match[1];
+  // Handle surl= pattern
+  const surlMatch = url.match(/[?&]surl=([^&]+)/);
+  if (surlMatch) return surlMatch[1];
+  return null;
+}
 
 /**
- * Extract Terabox file information
+ * Try multiple methods to extract Terabox file info
  */
 async function extractTeraboxInfo(url) {
+  const shortUrl = extractShortUrl(url);
+
+  // Method 1: Use terabox API endpoint directly
+  if (shortUrl) {
     try {
-        // Normalize URL
-        let shareUrl = url;
-        if (url.includes('surl=')) {
-            const match = url.match(/surl=([^&]+)/);
-            if (match) {
-                shareUrl = `https://www.terabox.com/s/1${match[1]}`;
-            }
+      const apiUrl = `https://www.terabox.com/api/shorturlinfo?shorturl=${shortUrl}`;
+      const r = await axios.get(apiUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+          'Referer': 'https://www.terabox.com/',
+          'Accept': 'application/json',
+        },
+        timeout: 15000,
+      });
+
+      const data = r.data;
+      if (data && data.errno === 0 && data.info) {
+        const files = data.info.files || data.info.file_list || [];
+        if (files.length > 0) {
+          const file = files[0];
+          return {
+            filename: file.server_filename || file.filename || 'file',
+            size: parseInt(file.size || 0),
+            sizeFormatted: formatBytes(parseInt(file.size || 0)),
+            fileType: file.category || 1,
+            thumbnail: file.thumbs?.url3 || file.thumbs?.url2 || file.thumbs?.url1 || null,
+            downloadUrl: file.dlink || null,
+            isVideo: file.category === 1,
+            isImage: file.category === 3,
+          };
         }
-
-        console.log(`[Terabox] Fetching info from: ${shareUrl}`);
-
-        // Fetch the share page
-        const response = await axios.get(shareUrl, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.5',
-                'Referer': 'https://www.terabox.com/',
-            },
-            timeout: 15000,
-        });
-
-        const html = response.data;
-        const $ = cheerio.load(html);
-
-        // Extract file information from page data
-        // Terabox embeds file info in JavaScript variables
-        const scriptContent = $('script').text();
-        
-        // Try to extract file info from window.locals or similar
-        let fileInfo = null;
-        
-        // Method 1: Extract from window.locals
-        const localsMatch = scriptContent.match(/window\.locals\s*=\s*({[\s\S]*?});/);
-        if (localsMatch) {
-            try {
-                const localsData = JSON.parse(localsMatch[1]);
-                if (localsData.file_list && localsData.file_list.length > 0) {
-                    const file = localsData.file_list[0];
-                    fileInfo = {
-                        filename: file.server_filename || file.filename,
-                        size: file.size,
-                        fileType: file.category,
-                        thumbnail: file.thumbs?.url3 || file.thumbs?.url2 || file.thumbs?.url1,
-                        downloadUrl: file.dlink,
-                        fsId: file.fs_id,
-                    };
-                }
-            } catch (e) {
-                console.warn('[Terabox] Failed to parse locals data:', e.message);
-            }
-        }
-
-        // Method 2: Extract from yunData
-        if (!fileInfo) {
-            const yunDataMatch = scriptContent.match(/yunData\.setData\(({[\s\S]*?})\)/);
-            if (yunDataMatch) {
-                try {
-                    const yunData = JSON.parse(yunDataMatch[1]);
-                    if (yunData.file_list && yunData.file_list.length > 0) {
-                        const file = yunData.file_list[0];
-                        fileInfo = {
-                            filename: file.server_filename || file.filename,
-                            size: file.size,
-                            fileType: file.category,
-                            thumbnail: file.thumbs?.url3 || file.thumbs?.url2 || file.thumbs?.url1,
-                            downloadUrl: file.dlink,
-                            fsId: file.fs_id,
-                        };
-                    }
-                } catch (e) {
-                    console.warn('[Terabox] Failed to parse yunData:', e.message);
-                }
-            }
-        }
-
-        // Method 3: Try API endpoint (if available)
-        if (!fileInfo) {
-            // Extract shorturl from the page
-            const shorturlMatch = shareUrl.match(/\/s\/1([A-Za-z0-9_-]+)/);
-            if (shorturlMatch) {
-                const shorturl = shorturlMatch[1];
-                try {
-                    const apiUrl = `https://www.terabox.com/share/list?shorturl=${shorturl}&root=1`;
-                    const apiResponse = await axios.get(apiUrl, {
-                        headers: {
-                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                            'Referer': shareUrl,
-                        },
-                        timeout: 10000,
-                    });
-
-                    if (apiResponse.data && apiResponse.data.list && apiResponse.data.list.length > 0) {
-                        const file = apiResponse.data.list[0];
-                        fileInfo = {
-                            filename: file.server_filename || file.filename,
-                            size: file.size,
-                            fileType: file.category,
-                            thumbnail: file.thumbs?.url3 || file.thumbs?.url2 || file.thumbs?.url1,
-                            downloadUrl: file.dlink,
-                            fsId: file.fs_id,
-                        };
-                    }
-                } catch (apiError) {
-                    console.warn('[Terabox] API request failed:', apiError.message);
-                }
-            }
-        }
-
-        if (!fileInfo) {
-            throw new Error('Could not extract file information from Terabox page');
-        }
-
-        return fileInfo;
-
-    } catch (error) {
-        console.error('[Terabox] Extraction error:', error.message);
-        throw error;
+      }
+    } catch (e) {
+      console.warn('[Terabox] API method 1 failed:', e.message);
     }
+  }
+
+  // Method 2: Scrape the share page
+  try {
+    const shareUrl = shortUrl
+      ? `https://www.terabox.com/s/${shortUrl}`
+      : normalizeTeraboxUrl(url);
+
+    console.log(`[Terabox] Scraping: ${shareUrl}`);
+
+    const response = await axios.get(shareUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Referer': 'https://www.google.com/',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+      },
+      timeout: 20000,
+      maxRedirects: 10,
+    });
+
+    const html = response.data;
+    const $ = cheerio.load(html);
+    const scriptContent = $('script').text();
+
+    // Try window.locals
+    const localsMatch = scriptContent.match(/window\.locals\s*=\s*({[\s\S]*?});/);
+    if (localsMatch) {
+      try {
+        const locals = JSON.parse(localsMatch[1]);
+        const files = locals.file_list || locals.fileList || [];
+        if (files.length > 0) {
+          const file = files[0];
+          return {
+            filename: file.server_filename || file.filename || 'file',
+            size: parseInt(file.size || 0),
+            sizeFormatted: formatBytes(parseInt(file.size || 0)),
+            fileType: file.category,
+            thumbnail: file.thumbs?.url3 || file.thumbs?.url2 || null,
+            downloadUrl: file.dlink || null,
+            isVideo: file.category === 1,
+            isImage: file.category === 3,
+          };
+        }
+      } catch (e) { console.warn('[Terabox] locals parse fail:', e.message); }
+    }
+
+    // Try yunData.setData
+    const yunMatch = scriptContent.match(/yunData\.setData\(({[\s\S]*?})\)/);
+    if (yunMatch) {
+      try {
+        const yun = JSON.parse(yunMatch[1]);
+        const files = yun.file_list || [];
+        if (files.length > 0) {
+          const file = files[0];
+          return {
+            filename: file.server_filename || file.filename || 'file',
+            size: parseInt(file.size || 0),
+            sizeFormatted: formatBytes(parseInt(file.size || 0)),
+            fileType: file.category,
+            thumbnail: file.thumbs?.url3 || file.thumbs?.url2 || null,
+            downloadUrl: file.dlink || null,
+            isVideo: file.category === 1,
+            isImage: file.category === 3,
+          };
+        }
+      } catch (e) { console.warn('[Terabox] yunData parse fail:', e.message); }
+    }
+
+    // Try to find any JSON with file data
+    const jsonMatches = scriptContent.matchAll(/\{[^{}]*"filename"[^{}]*\}/g);
+    for (const match of jsonMatches) {
+      try {
+        const obj = JSON.parse(match[0]);
+        if (obj.filename || obj.server_filename) {
+          return {
+            filename: obj.server_filename || obj.filename || 'file',
+            size: parseInt(obj.size || 0),
+            sizeFormatted: formatBytes(parseInt(obj.size || 0)),
+            fileType: obj.category || 0,
+            thumbnail: obj.thumbs?.url3 || null,
+            downloadUrl: obj.dlink || null,
+            isVideo: obj.category === 1,
+            isImage: obj.category === 3,
+          };
+        }
+      } catch { }
+    }
+
+    // Extract title from page
+    const pageTitle = $('title').text() || '';
+    const h1 = $('h1, .file-name, .filename').first().text() || '';
+    const filename = h1 || pageTitle.replace(' - Terabox', '').trim() || 'Unknown file';
+
+    return {
+      filename,
+      size: 0,
+      sizeFormatted: 'Unknown size',
+      fileType: 0,
+      thumbnail: null,
+      downloadUrl: null,
+      isVideo: false,
+      isImage: false,
+      requiresLogin: html.includes('login') || html.includes('sign in'),
+    };
+
+  } catch (error) {
+    console.error('[Terabox] Scraping error:', error.message);
+    throw new Error(`Could not access Terabox file: ${error.message}`);
+  }
 }
 
 /**
  * GET /api/tools/terabox-info
- * Extract file information without downloading
  */
 router.get('/terabox-info', async (req, res) => {
-    try {
-        const { url } = req.query;
-        
-        if (!url) {
-            return res.status(400).json({ success: false, error: 'URL is required' });
-        }
-
-        // Validate Terabox URL
-        if (!url.includes('terabox.com') && !url.includes('1024terabox.com')) {
-            return res.status(400).json({ success: false, error: 'Invalid Terabox URL' });
-        }
-
-        console.log(`[Terabox Info] Fetching info for: ${url}`);
-
-        const fileInfo = await extractTeraboxInfo(url);
-
-        res.json({ 
-            success: true, 
-            data: {
-                filename: fileInfo.filename,
-                size: fileInfo.size,
-                sizeFormatted: formatBytes(fileInfo.size),
-                fileType: fileInfo.fileType,
-                thumbnail: fileInfo.thumbnail,
-                canDownload: !!fileInfo.downloadUrl,
-            }
-        });
-
-    } catch (error) {
-        console.error('[Terabox Info] Error:', error.message);
-        res.status(500).json({ 
-            success: false, 
-            error: 'Failed to fetch file information',
-            details: error.message 
-        });
+  try {
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ success: false, error: 'URL is required' });
+    if (!isTeraboxUrl(url)) {
+      return res.status(400).json({ success: false, error: 'Please provide a valid Terabox share URL' });
     }
+
+    console.log(`[Terabox Info] Fetching: ${url}`);
+    const info = await extractTeraboxInfo(url);
+
+    res.json({
+      success: true,
+      data: {
+        filename: info.filename,
+        size: info.size,
+        sizeFormatted: info.sizeFormatted || formatBytes(info.size),
+        fileType: info.fileType,
+        thumbnail: info.thumbnail,
+        canDownload: !!info.downloadUrl,
+        isVideo: info.isVideo,
+        isImage: info.isImage,
+        requiresLogin: info.requiresLogin || false,
+      },
+    });
+  } catch (error) {
+    console.error('[Terabox Info] Error:', error.message);
+    res.status(500).json({
+      success: false,
+      error: 'Could not fetch file info. The link may be expired, private, or require login.',
+      details: error.message,
+    });
+  }
 });
 
 /**
  * POST /api/tools/terabox-download
- * Download file from Terabox
+ * Redirects to direct download URL (can't proxy large files on free tier)
  */
 router.post('/terabox-download', async (req, res) => {
-    let outputPath = null;
-    
-    try {
-        const { url } = req.body;
-        
-        if (!url) {
-            return res.status(400).json({ success: false, error: 'URL is required' });
-        }
-
-        if (!url.includes('terabox.com') && !url.includes('1024terabox.com')) {
-            return res.status(400).json({ success: false, error: 'Invalid Terabox URL' });
-        }
-
-        console.log(`[Terabox Download] Starting download: ${url}`);
-
-        // Extract file info
-        const fileInfo = await extractTeraboxInfo(url);
-
-        if (!fileInfo.downloadUrl) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'Direct download link not available. File may require authentication.' 
-            });
-        }
-
-        // Ensure temp directory exists
-        await fs.ensureDir(TEMP_DIR);
-
-        // Generate output path
-        const fileId = uuidv4();
-        const ext = path.extname(fileInfo.filename) || '.bin';
-        const safeFilename = `terabox_${fileId}${ext}`;
-        outputPath = path.join(TEMP_DIR, safeFilename);
-
-        // Download the file
-        const downloadResponse = await axios({
-            method: 'GET',
-            url: fileInfo.downloadUrl,
-            responseType: 'stream',
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                'Referer': url,
-            },
-            timeout: 120000, // 2 minutes
-        });
-
-        // Pipe to file
-        const writer = fs.createWriteStream(outputPath);
-        downloadResponse.data.pipe(writer);
-
-        await new Promise((resolve, reject) => {
-            writer.on('finish', resolve);
-            writer.on('error', reject);
-            downloadResponse.data.on('error', reject);
-        });
-
-        console.log(`[Terabox Download] Success: ${outputPath}`);
-
-        // Get file stats
-        const stats = await fs.stat(outputPath);
-
-        res.json({
-            success: true,
-            data: {
-                filename: safeFilename,
-                originalFilename: fileInfo.filename,
-                size: stats.size,
-                downloadUrl: `/api/downloads/${safeFilename}`,
-                message: 'File downloaded successfully',
-            },
-        });
-
-    } catch (error) {
-        console.error('[Terabox Download] Error:', error.message);
-        
-        // Cleanup on error
-        if (outputPath && await fs.pathExists(outputPath)) {
-            await fs.remove(outputPath).catch(() => {});
-        }
-
-        res.status(500).json({ 
-            success: false, 
-            error: 'Failed to download file',
-            details: error.message 
-        });
+  try {
+    const { url } = req.body;
+    if (!url) return res.status(400).json({ success: false, error: 'URL is required' });
+    if (!isTeraboxUrl(url)) {
+      return res.status(400).json({ success: false, error: 'Please provide a valid Terabox share URL' });
     }
-});
 
-/**
- * Helper: Format bytes to human-readable string
- */
-function formatBytes(bytes, decimals = 2) {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const dm = decimals < 0 ? 0 : decimals;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-}
+    console.log(`[Terabox Download] ${url}`);
+    const info = await extractTeraboxInfo(url);
+
+    if (!info.downloadUrl) {
+      return res.status(400).json({
+        success: false,
+        error: 'Direct download link not available. The file may require Terabox login or is not publicly shared.',
+        requiresLogin: info.requiresLogin || false,
+      });
+    }
+
+    // For large files, redirect to the direct link rather than proxying
+    // This is more reliable and doesn't strain the server
+    res.json({
+      success: true,
+      data: {
+        filename: info.filename,
+        size: info.size,
+        sizeFormatted: info.sizeFormatted,
+        downloadUrl: info.downloadUrl,
+        directLink: info.downloadUrl,
+        message: 'Use the direct download link to download the file.',
+      },
+    });
+  } catch (error) {
+    console.error('[Terabox Download] Error:', error.message);
+    res.status(500).json({
+      success: false,
+      error: 'Download failed. The Terabox link may be expired or invalid.',
+      details: error.message,
+    });
+  }
+});
 
 module.exports = router;

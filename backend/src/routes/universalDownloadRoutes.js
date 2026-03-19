@@ -1,293 +1,338 @@
 /**
  * universalDownloadRoutes.js - Universal Video Downloader API
- * 
- * Supports 1000+ websites including:
- * - YouTube, Facebook, Instagram, Twitter/X, TikTok
- * - Vimeo, Dailymotion, Twitch, Reddit
- * - LinkedIn, Pinterest, Tumblr
- * - And many more...
- * 
- * Uses yt-dlp as backend (most comprehensive video downloader)
+ *
+ * Strategy:
+ * - YouTube/YoutubeShort: uses @distube/ytdl-core (pure JS, reliable)
+ *   - Returns direct URL (redirect) instead of streaming to avoid memory issues
+ *   - Falls back to cobalt.tools if ytdl-core fails
+ * - Other platforms: uses cobalt.tools API (free, no API key needed, supports 1000+ sites)
  */
 
 const express = require('express');
 const router = express.Router();
-const YTDlpWrap = require('yt-dlp-wrap').default;
+const ytdl = require('@distube/ytdl-core');
 const axios = require('axios');
-const fs = require('fs-extra');
-const path = require('path');
-const { v4: uuidv4 } = require('uuid');
 
-const TEMP_DIR = process.env.TEMP_DIR || path.join(__dirname, '../../../temp');
+// cobalt.tools API v10+ endpoint
+const COBALT_API_URL = 'https://api.cobalt.tools/';
+const COBALT_HEADERS = {
+  'Accept': 'application/json',
+  'Content-Type': 'application/json',
+};
 
-// Initialize yt-dlp
-let ytDlpPath;
-let ytDlpReady = false;
-
-(async () => {
-    try {
-        ytDlpPath = await YTDlpWrap.downloadFromGithub();
-        ytDlpReady = true;
-        console.log('[Universal Download] yt-dlp initialized successfully');
-    } catch (err) {
-        console.error('[Universal Download] Failed to initialize yt-dlp:', err.message);
-    }
-})();
-
-/**
- * Supported platforms (partial list - yt-dlp supports 1000+)
- */
 const SUPPORTED_PLATFORMS = [
-    { name: 'YouTube', domains: ['youtube.com', 'youtu.be'], icon: '🎥' },
-    { name: 'Facebook', domains: ['facebook.com', 'fb.watch'], icon: '📘' },
-    { name: 'Instagram', domains: ['instagram.com'], icon: '📷' },
-    { name: 'Twitter/X', domains: ['twitter.com', 'x.com'], icon: '🐦' },
-    { name: 'TikTok', domains: ['tiktok.com'], icon: '🎵' },
-    { name: 'Vimeo', domains: ['vimeo.com'], icon: '🎬' },
-    { name: 'Dailymotion', domains: ['dailymotion.com'], icon: '📹' },
-    { name: 'Twitch', domains: ['twitch.tv'], icon: '🎮' },
-    { name: 'Reddit', domains: ['reddit.com', 'redd.it'], icon: '🤖' },
-    { name: 'LinkedIn', domains: ['linkedin.com'], icon: '💼' },
-    { name: 'Pinterest', domains: ['pinterest.com'], icon: '📌' },
-    { name: 'Tumblr', domains: ['tumblr.com'], icon: '📝' },
-    { name: 'Soundcloud', domains: ['soundcloud.com'], icon: '🎧' },
-    { name: 'Mixcloud', domains: ['mixcloud.com'], icon: '🎶' },
-    { name: 'Bandcamp', domains: ['bandcamp.com'], icon: '🎸' },
-    { name: 'Streamable', domains: ['streamable.com'], icon: '📺' },
-    { name: 'Imgur', domains: ['imgur.com'], icon: '🖼️' },
-    { name: 'Flickr', domains: ['flickr.com'], icon: '📸' },
-    { name: 'Bilibili', domains: ['bilibili.com'], icon: '🎭' },
-    { name: 'Niconico', domains: ['nicovideo.jp'], icon: '🎌' },
+  { name: 'YouTube', domains: ['youtube.com', 'youtu.be'], icon: '🎥' },
+  { name: 'Instagram', domains: ['instagram.com'], icon: '📷' },
+  { name: 'Twitter/X', domains: ['twitter.com', 'x.com'], icon: '🐦' },
+  { name: 'TikTok', domains: ['tiktok.com'], icon: '🎵' },
+  { name: 'Facebook', domains: ['facebook.com', 'fb.watch'], icon: '📘' },
+  { name: 'Vimeo', domains: ['vimeo.com'], icon: '🎬' },
+  { name: 'Dailymotion', domains: ['dailymotion.com'], icon: '📹' },
+  { name: 'Twitch', domains: ['twitch.tv'], icon: '🎮' },
+  { name: 'Reddit', domains: ['reddit.com', 'redd.it'], icon: '🤖' },
+  { name: 'Soundcloud', domains: ['soundcloud.com'], icon: '🎧' },
+  { name: 'Pinterest', domains: ['pinterest.com'], icon: '📌' },
+  { name: 'Tumblr', domains: ['tumblr.com'], icon: '📝' },
+  { name: 'Streamable', domains: ['streamable.com'], icon: '📺' },
+  { name: 'Bilibili', domains: ['bilibili.com'], icon: '🎭' },
+  { name: 'Bandcamp', domains: ['bandcamp.com'], icon: '🎸' },
+  { name: 'Rutube', domains: ['rutube.ru'], icon: '📡' },
+  { name: 'VK', domains: ['vk.com', 'vkvideo.ru'], icon: '🇷🇺' },
+  { name: 'Niconico', domains: ['nicovideo.jp'], icon: '🎌' },
+  { name: 'Bluesky', domains: ['bsky.app'], icon: '🦋' },
+  { name: 'Loom', domains: ['loom.com'], icon: '🎥' },
 ];
 
-/**
- * Detect platform from URL
- */
 function detectPlatform(url) {
-    try {
-        const urlObj = new URL(url);
-        const hostname = urlObj.hostname.replace('www.', '');
-        
-        for (const platform of SUPPORTED_PLATFORMS) {
-            if (platform.domains.some(domain => hostname.includes(domain))) {
-                return platform;
-            }
-        }
-        
-        return { name: 'Unknown', domains: [hostname], icon: '🌐' };
-    } catch {
-        return null;
+  try {
+    const hostname = new URL(url).hostname.replace('www.', '');
+    for (const p of SUPPORTED_PLATFORMS) {
+      if (p.domains.some(d => hostname.includes(d))) return p;
     }
+    return { name: hostname, domains: [hostname], icon: '🌐' };
+  } catch { return null; }
+}
+
+function isYouTubeUrl(url) {
+  try {
+    const h = new URL(url).hostname.replace('www.', '');
+    return h === 'youtube.com' || h === 'youtu.be';
+  } catch { return false; }
+}
+
+function formatDuration(sec) {
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = sec % 60;
+  if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+function formatViews(n) {
+  if (!n || n === 0) return '0';
+  if (n >= 1e9) return (n / 1e9).toFixed(1) + 'B';
+  if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+  return String(n);
 }
 
 /**
+ * Call cobalt.tools API (v10) — works for YouTube + 1000+ platforms
+ */
+async function callCobalt(url, audioOnly = false, quality = 'max') {
+  const payload = {
+    url,
+    downloadMode: audioOnly ? 'audio' : 'auto',
+    videoQuality: quality === 'best' || quality === 'max' ? '1080' : String(parseInt(quality) || '1080'),
+    audioFormat: 'mp3',
+    filenameStyle: 'pretty',
+  };
+
+  // Try v10 API first
+  try {
+    const res = await axios.post(COBALT_API_URL, payload, {
+      headers: COBALT_HEADERS,
+      timeout: 25000,
+    });
+    return res.data;
+  } catch (e) {
+    // Fall back to older endpoint
+    const res2 = await axios.post('https://cobalt.tools/api/json', {
+      url,
+      isNoTTWatermark: true,
+      isAudioOnly: audioOnly,
+      vQuality: quality === 'best' ? 'max' : String(parseInt(quality) || 'max'),
+    }, {
+      headers: COBALT_HEADERS,
+      timeout: 25000,
+    });
+    return res2.data;
+  }
+}
+
+/**
+ * GET /api/tools/supported-platforms
+ */
+router.get('/supported-platforms', (req, res) => {
+  res.json({ success: true, data: { platforms: SUPPORTED_PLATFORMS } });
+});
+
+/**
  * GET /api/tools/universal-info
- * Extract video information from any supported platform
  */
 router.get('/universal-info', async (req, res) => {
-    try {
-        const { url } = req.query;
-        
-        if (!url) {
-            return res.status(400).json({ success: false, error: 'URL is required' });
-        }
+  try {
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ success: false, error: 'URL is required' });
 
-        if (!ytDlpReady) {
-            return res.status(503).json({ 
-                success: false, 
-                error: 'Video downloader is initializing. Please try again in a moment.' 
-            });
-        }
+    const platform = detectPlatform(url);
+    if (!platform) return res.status(400).json({ success: false, error: 'Invalid URL' });
 
-        const platform = detectPlatform(url);
-        if (!platform) {
-            return res.status(400).json({ success: false, error: 'Invalid URL' });
-        }
+    console.log(`[Universal Info] ${platform.name}: ${url}`);
 
-        console.log(`[Universal Info] Fetching info from ${platform.name}: ${url}`);
-
-        const ytDlp = new YTDlpWrap(ytDlpPath);
-
-        // Extract video info using yt-dlp
-        const info = await ytDlp.getVideoInfo(url);
-
-        // Parse formats
-        const formats = (info.formats || [])
-            .filter(f => f.vcodec !== 'none' || f.acodec !== 'none') // Has video or audio
-            .map(f => ({
-                formatId: f.format_id,
-                ext: f.ext,
-                quality: f.format_note || f.quality || 'unknown',
-                filesize: f.filesize || f.filesize_approx || null,
-                hasVideo: f.vcodec !== 'none',
-                hasAudio: f.acodec !== 'none',
-                width: f.width,
-                height: f.height,
-                fps: f.fps,
-                vcodec: f.vcodec,
-                acodec: f.acodec,
-                tbr: f.tbr, // Total bitrate
-            }))
-            .sort((a, b) => {
-                // Prioritize combined video+audio formats
-                if (a.hasVideo && a.hasAudio && !(b.hasVideo && b.hasAudio)) return -1;
-                if (b.hasVideo && b.hasAudio && !(a.hasVideo && a.hasAudio)) return 1;
-                // Then sort by quality (height)
-                return (b.height || 0) - (a.height || 0);
-            });
-
-        const videoDetails = {
-            platform: platform.name,
-            platformIcon: platform.icon,
-            title: info.title || 'Untitled',
-            uploader: info.uploader || info.channel || 'Unknown',
-            duration: info.duration || null,
-            thumbnail: info.thumbnail || null,
-            description: info.description || '',
-            viewCount: info.view_count || null,
-            uploadDate: info.upload_date || null,
-            formats: formats.slice(0, 15), // Top 15 formats
-            bestFormat: formats[0] || null,
-        };
-
-        res.json({ success: true, data: videoDetails });
-
-    } catch (error) {
-        console.error('[Universal Info] Error:', error.message);
-        res.status(500).json({ 
-            success: false, 
-            error: 'Failed to fetch video information',
-            details: error.message 
+    // YouTube: use ytdl-core for rich metadata
+    if (isYouTubeUrl(url) && ytdl.validateURL(url)) {
+      try {
+        const info = await ytdl.getInfo(url, {
+          requestOptions: { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36' } },
         });
+        const d = info.videoDetails;
+        const thumbs = d.thumbnails || [];
+        const thumb = thumbs[thumbs.length - 1]?.url || '';
+        const combined = info.formats.filter(f => f.hasVideo && f.hasAudio);
+        const qualities = [...new Set(combined.map(f => f.qualityLabel).filter(Boolean))];
+
+        return res.json({
+          success: true,
+          data: {
+            platform: 'YouTube',
+            platformIcon: '🎥',
+            title: d.title,
+            author: d.author?.name || 'Unknown',
+            thumbnail: thumb,
+            duration: formatDuration(parseInt(d.lengthSeconds || 0)),
+            durationSeconds: parseInt(d.lengthSeconds || 0),
+            views: formatViews(parseInt(d.viewCount || 0)),
+            qualities: qualities.length > 0 ? qualities : ['720p', '480p', '360p'],
+            isLive: d.isLiveContent || false,
+            formats: combined.slice(0, 6).map(f => ({
+              quality: f.qualityLabel,
+              container: f.container,
+              itag: f.itag,
+            })),
+          },
+        });
+      } catch (ytErr) {
+        console.warn('[Universal Info] ytdl-core failed, trying cobalt:', ytErr.message);
+        // Fall through to cobalt
+      }
     }
+
+    // Other platforms (or YouTube fallback): use cobalt.tools
+    try {
+      const cobalt = await callCobalt(url);
+
+      if (cobalt.status === 'error') {
+        return res.status(400).json({ success: false, error: cobalt.text || cobalt.error?.code || 'Platform not supported' });
+      }
+
+      return res.json({
+        success: true,
+        data: {
+          platform: platform.name,
+          platformIcon: platform.icon,
+          title: cobalt.filename || cobalt.text || 'Video from ' + platform.name,
+          author: platform.name,
+          thumbnail: null,
+          duration: null,
+          qualities: ['Best Quality'],
+          directUrl: cobalt.url || null,
+          cobaltStatus: cobalt.status,
+        },
+      });
+    } catch (cobaltErr) {
+      console.warn('[Universal Info] Cobalt failed:', cobaltErr.message);
+      return res.json({
+        success: true,
+        data: {
+          platform: platform.name,
+          platformIcon: platform.icon,
+          title: 'Video from ' + platform.name,
+          author: platform.name,
+          thumbnail: null,
+          duration: null,
+          qualities: ['Best'],
+          canDownload: true,
+          message: 'Click download to fetch the video',
+        },
+      });
+    }
+
+  } catch (err) {
+    console.error('[Universal Info] Error:', err.message);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch video information. The URL may be invalid or unsupported.',
+      details: err.message,
+    });
+  }
 });
 
 /**
  * POST /api/tools/universal-download
- * Download video from any supported platform
+ * Returns a direct download URL (redirect) — avoids streaming through backend
  */
 router.post('/universal-download', async (req, res) => {
-    let outputPath = null;
-    
-    try {
-        const { url, formatId = 'best', audioOnly = false } = req.body;
-        
-        if (!url) {
-            return res.status(400).json({ success: false, error: 'URL is required' });
-        }
+  try {
+    const { url, quality = '720p', audioOnly = false } = req.body;
+    if (!url) return res.status(400).json({ success: false, error: 'URL is required' });
 
-        if (!ytDlpReady) {
-            return res.status(503).json({ 
-                success: false, 
-                error: 'Video downloader is initializing. Please try again in a moment.' 
-            });
-        }
+    const platform = detectPlatform(url);
+    console.log(`[Universal Download] ${platform?.name || 'Unknown'}: ${url}`);
 
-        const platform = detectPlatform(url);
-        if (!platform) {
-            return res.status(400).json({ success: false, error: 'Invalid URL' });
-        }
+    // YouTube: try ytdl-core first (get direct URL), fallback to cobalt
+    if (isYouTubeUrl(url) && ytdl.validateURL(url)) {
+      try {
+        const info = await ytdl.getInfo(url, {
+          requestOptions: { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36' } },
+        });
 
-        console.log(`[Universal Download] Starting download from ${platform.name}: ${url}`);
-
-        // Ensure temp directory exists
-        await fs.ensureDir(TEMP_DIR);
-
-        // Generate unique filename
-        const fileId = uuidv4();
-        const ext = audioOnly ? 'mp3' : 'mp4';
-        outputPath = path.join(TEMP_DIR, `universal_${fileId}.${ext}`);
-
-        const ytDlp = new YTDlpWrap(ytDlpPath);
-
-        const options = [
-            '--no-playlist',
-            '--no-warnings',
-            '--no-check-certificate',
-            '--prefer-free-formats',
-            '--add-metadata',
-            '--embed-thumbnail',
-        ];
-
+        let format;
         if (audioOnly) {
-            options.push(
-                '--extract-audio',
-                '--audio-format', 'mp3',
-                '--audio-quality', '0',
-            );
+          format = ytdl.chooseFormat(info.formats, { quality: 'highestaudio', filter: 'audioonly' });
         } else {
-            if (formatId === 'best') {
-                options.push('--format', 'bestvideo+bestaudio/best');
-            } else {
-                options.push('--format', formatId);
-            }
-            options.push('--merge-output-format', 'mp4');
+          const targetH = parseInt(quality) || 720;
+          const combined = info.formats
+            .filter(f => f.hasVideo && f.hasAudio && f.url)
+            .sort((a, b) => Math.abs((a.height || 0) - targetH) - Math.abs((b.height || 0) - targetH));
+          format = combined[0];
+          if (!format) {
+            format = info.formats.filter(f => f.url).find(f => f.hasVideo && f.hasAudio);
+          }
         }
 
-        options.push('--output', outputPath);
-
-        // Download with progress tracking
-        await ytDlp.execPromise([url, ...options]);
-
-        console.log(`[Universal Download] Success: ${outputPath}`);
-
-        // Get file stats
-        const stats = await fs.stat(outputPath);
-        const filename = path.basename(outputPath);
-
-        res.json({
+        if (format && format.url) {
+          const safeTitle = info.videoDetails.title.replace(/[^a-z0-9\s\-_]/gi, '').trim().substring(0, 60) || 'video';
+          const ext = audioOnly ? 'mp3' : (format.container || 'mp4');
+          return res.json({
             success: true,
             data: {
-                filename,
-                size: stats.size,
-                sizeFormatted: formatBytes(stats.size),
-                downloadUrl: `/api/downloads/${filename}`,
-                platform: platform.name,
-                message: 'Video downloaded successfully',
+              directUrl: format.url,
+              filename: `${safeTitle}.${ext}`,
+              quality: format.qualityLabel || quality,
+              platform: 'YouTube',
+              message: 'Click to download',
             },
-        });
-
-    } catch (error) {
-        console.error('[Universal Download] Error:', error.message);
-        
-        // Cleanup on error
-        if (outputPath && await fs.pathExists(outputPath)) {
-            await fs.remove(outputPath).catch(() => {});
+          });
         }
-
-        res.status(500).json({ 
-            success: false, 
-            error: 'Failed to download video',
-            details: error.message 
-        });
+      } catch (ytErr) {
+        console.warn('[Universal Download] ytdl-core failed, trying cobalt:', ytErr.message);
+      }
+      // Fall through to cobalt for YouTube
     }
-});
 
-/**
- * GET /api/tools/universal-platforms
- * Get list of supported platforms
- */
-router.get('/universal-platforms', (req, res) => {
-    res.json({
-        success: true,
-        data: {
-            platforms: SUPPORTED_PLATFORMS,
-            total: SUPPORTED_PLATFORMS.length,
-            note: 'yt-dlp supports 1000+ websites. This is a partial list of popular platforms.',
-        },
-    });
-});
+    // All other platforms + YouTube fallback: use cobalt.tools
+    try {
+      const cobalt = await callCobalt(url, audioOnly, quality);
 
-/**
- * Helper: Format bytes to human-readable string
- */
-function formatBytes(bytes, decimals = 2) {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const dm = decimals < 0 ? 0 : decimals;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-}
+      if (cobalt.status === 'error') {
+        return res.status(400).json({
+          success: false,
+          error: cobalt.text || cobalt.error?.code || 'Could not process this URL',
+          details: 'The platform may not be fully supported or the content is restricted.',
+        });
+      }
+
+      if (cobalt.url) {
+        return res.json({
+          success: true,
+          data: {
+            directUrl: cobalt.url,
+            audioUrl: cobalt.audio || null,
+            filename: cobalt.filename || 'download.mp4',
+            message: 'Download ready',
+          },
+        });
+      }
+
+      if (cobalt.status === 'picker' && cobalt.picker?.length > 0) {
+        return res.json({
+          success: true,
+          data: {
+            picker: cobalt.picker,
+            directUrl: cobalt.picker[0]?.url,
+            filename: cobalt.filename || 'download.mp4',
+            message: 'Multiple streams available',
+          },
+        });
+      }
+
+      return res.status(400).json({
+        success: false,
+        error: 'Could not get download link for this URL',
+        cobaltStatus: cobalt.status,
+        details: cobalt.text || cobalt.error?.code || '',
+      });
+
+    } catch (cobaltErr) {
+      console.error('[Universal] Cobalt error:', cobaltErr.message);
+      return res.status(503).json({
+        success: false,
+        error: 'Video download service is temporarily unavailable. Please try again in a moment.',
+        platform: platform?.name,
+      });
+    }
+
+  } catch (err) {
+    console.error('[Universal Download] Error:', err.message);
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: 'Download failed. Please check the URL and try again.',
+        details: err.message,
+      });
+    }
+  }
+});
 
 module.exports = router;

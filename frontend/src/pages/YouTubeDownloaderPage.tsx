@@ -112,16 +112,25 @@ const YouTubeDownloaderPage = () => {
         else { setError("Backend server is starting up. Please wait 30-60 seconds and try again."); setLoading(false); return; }
       }
 
-      const res = await fetchWithRetry(`${API_URL}/api/tools/youtube-info`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: url.trim() }),
-      });
+      const res = await fetchWithRetry(
+        `${API_URL}/api/tools/youtube-info?url=${encodeURIComponent(url.trim())}`,
+        { method: "GET" }
+      );
 
       const data = await res.json();
       if (!data.success) { setError(data.error || "Failed to fetch video info."); return; }
-      setVideoInfo(data.video);
-      setFormats(data.formats || []);
+      const d = data.data;
+      setVideoInfo({
+        title: d.title,
+        channel: d.channel,
+        thumbnail: d.thumbnail,
+        thumbnailHQ: d.thumbnailHQ,
+        videoId: d.videoId,
+        url: d.url,
+        duration: d.duration,
+        views: d.views,
+      });
+      setFormats((d.qualityOptions || []).map((q: any) => ({ quality: q.quality, height: parseInt(q.quality) || 720, itag: q.itag })));
     } catch (err: any) {
       if (err?.name === "AbortError") {
         setError("Request timed out. The backend server might be starting up (takes ~30-60s on free tier). Please wait and try again.");
@@ -136,48 +145,49 @@ const YouTubeDownloaderPage = () => {
   };
 
   const handleDownload = async () => {
+    if (!videoInfo) return;
     setDownloading(true);
     setError(null);
     setDownloadReady(null);
 
     try {
-      const res = await fetchWithRetry(`${API_URL}/api/tools/youtube-download`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: url.trim(), quality: selectedQuality }),
+      // Build download URL - backend streams the video directly
+      const quality = selectedQuality || "720";
+      // The download endpoint streams directly so we open it in a link
+      const downloadUrl = `${API_URL}/api/tools/youtube-download`;
+
+      // For streaming downloads, we POST and redirect the browser
+      // Create a form and submit it to trigger the file download
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = downloadUrl;
+      form.style.display = "none";
+
+      const urlField = document.createElement("input");
+      urlField.type = "hidden";
+      urlField.name = "url";
+      urlField.value = url.trim();
+      form.appendChild(urlField);
+
+      const qualityField = document.createElement("input");
+      qualityField.type = "hidden";
+      qualityField.name = "quality";
+      qualityField.value = quality;
+      form.appendChild(qualityField);
+
+      document.body.appendChild(form);
+      form.submit();
+      document.body.removeChild(form);
+
+      setDownloadReady({
+        url: downloadUrl,
+        filename: `${videoInfo.title || "video"}.mp4`,
+        filesize: undefined,
       });
 
-      const data = await res.json();
-      if (!data.success) { setError(data.error || "Download failed."); return; }
-
-      // Build the full download URL
-      const fullDownloadUrl = data.downloadUrl.startsWith("http")
-        ? data.downloadUrl
-        : `${API_URL}${data.downloadUrl}`;
-
-      setDownloadReady({ url: fullDownloadUrl, filename: data.filename, filesize: data.filesize });
-
-      // Trigger proper file download via hidden anchor
-      const a = document.createElement("a");
-      a.href = fullDownloadUrl;
-      a.download = data.filename || "video.mp4";
-      // For direct Cobalt URLs (cross-origin), open in new tab
-      if (data.isDirect) {
-        a.target = "_blank";
-        a.rel = "noopener noreferrer";
-      }
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      setTimeout(() => setDownloading(false), 3000);
     } catch (err: any) {
-      if (err?.name === "AbortError") {
-        setError("Download timed out. The video may be too large or the server is busy. Please try again.");
-      } else if (err?.message?.includes("fetch") || err?.message?.includes("Failed to fetch")) {
-        setError("Could not connect to the server. Backend may be waking up (~30-60s). Please try again.");
-      } else {
-        setError(`Download failed: ${err?.message || "Unknown error"}. Please check your connection and try again.`);
-      }
-    } finally {
+      setError(`Download failed: ${err?.message || "Unknown error"}. Please try again.`);
       setDownloading(false);
     }
   };
