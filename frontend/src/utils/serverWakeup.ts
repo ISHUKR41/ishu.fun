@@ -20,19 +20,15 @@ export interface ServerStatus {
 
 let wakeupPromise: Promise<ServerStatus> | null = null;
 let lastCheckTime = 0;
-const CHECK_INTERVAL = 60000; // Check every minute
+const CHECK_INTERVAL = 60000;
 
 /**
- * Ping the server to wake it up if it's sleeping (Render free tier)
- * Returns immediately if server is already awake
+ * Ping the server to wake it up if sleeping (Render free tier)
+ * IMPORTANT: No custom headers — they cause CORS preflight failures
  */
 export async function wakeupServer(): Promise<ServerStatus> {
-  // Return cached promise if wake-up is in progress
-  if (wakeupPromise) {
-    return wakeupPromise;
-  }
+  if (wakeupPromise) return wakeupPromise;
 
-  // Skip if we checked recently and server was awake
   const now = Date.now();
   if (now - lastCheckTime < CHECK_INTERVAL) {
     return { isAwake: true, isWaking: false, responseTime: null, error: null };
@@ -46,14 +42,13 @@ export async function wakeupServer(): Promise<ServerStatus> {
     while (attempts < maxAttempts) {
       try {
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
+        const timeout = setTimeout(() => controller.abort(), 15000);
 
+        // No custom headers - avoid CORS preflight issues
         const response = await fetch(WAKE_ENDPOINT, {
           method: 'GET',
           signal: controller.signal,
-          headers: {
-            'Cache-Control': 'no-cache',
-          },
+          mode: 'cors',
         });
 
         clearTimeout(timeout);
@@ -62,75 +57,48 @@ export async function wakeupServer(): Promise<ServerStatus> {
           const responseTime = Date.now() - startTime;
           lastCheckTime = Date.now();
           wakeupPromise = null;
-
-          console.log(`[Server Wake-up] ✅ Server awake (${responseTime}ms)`);
-
-          return {
-            isAwake: true,
-            isWaking: false,
-            responseTime,
-            error: null,
-          };
+          return { isAwake: true, isWaking: false, responseTime, error: null };
         }
       } catch (error) {
         attempts++;
-        console.log(`[Server Wake-up] Attempt ${attempts}/${maxAttempts} failed`);
-
         if (attempts < maxAttempts) {
-          // Wait before retry (exponential backoff)
           await new Promise(resolve => setTimeout(resolve, 2000 * attempts));
         }
       }
     }
 
-    // All attempts failed
     wakeupPromise = null;
     return {
       isAwake: false,
       isWaking: false,
       responseTime: null,
-      error: 'Server is not responding. Please try again in a moment.',
+      error: 'Server is starting up. Please try again in a moment.',
     };
   })();
 
   return wakeupPromise;
 }
 
-/**
- * Check server status without waking it up
- */
 export async function checkServerStatus(): Promise<ServerStatus> {
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
-
+    const timeout = setTimeout(() => controller.abort(), 8000);
     const startTime = Date.now();
+
+    // No custom headers to avoid CORS preflight
     const response = await fetch(STATUS_ENDPOINT, {
       method: 'GET',
       signal: controller.signal,
-      headers: {
-        'Cache-Control': 'no-cache',
-      },
+      mode: 'cors',
     });
 
     clearTimeout(timeout);
 
     if (response.ok) {
-      const responseTime = Date.now() - startTime;
-      return {
-        isAwake: true,
-        isWaking: false,
-        responseTime,
-        error: null,
-      };
+      return { isAwake: true, isWaking: false, responseTime: Date.now() - startTime, error: null };
     }
 
-    return {
-      isAwake: false,
-      isWaking: false,
-      responseTime: null,
-      error: 'Server check failed',
-    };
+    return { isAwake: false, isWaking: false, responseTime: null, error: 'Server check failed' };
   } catch (error) {
     return {
       isAwake: false,
@@ -141,9 +109,6 @@ export async function checkServerStatus(): Promise<ServerStatus> {
   }
 }
 
-/**
- * Hook for React components to use server wake-up
- */
 export function useServerWakeup() {
   const [status, setStatus] = useState<ServerStatus>({
     isAwake: false,
@@ -154,25 +119,17 @@ export function useServerWakeup() {
 
   useEffect(() => {
     let mounted = true;
-
     async function wake() {
       const result = await wakeupServer();
-      if (mounted) {
-        setStatus(result);
-      }
+      if (mounted) setStatus(result);
     }
-
     wake();
-
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, []);
 
   return status;
 }
 
-// Auto-wake on module load (non-blocking)
 if (typeof window !== 'undefined') {
-  wakeupServer().catch(console.error);
+  wakeupServer().catch(() => {});
 }

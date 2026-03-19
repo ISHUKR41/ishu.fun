@@ -157,7 +157,7 @@ const queryClient = new QueryClient({
 
 /**
  * MissingEnvFallback - Shown when Clerk key is not configured.
- * This prevents the blank page issue on Vercel when env vars are missing.
+ * This prevents the blank page issue when env vars are missing.
  */
 const MissingEnvFallback = () => (
   <div style={{
@@ -182,19 +182,19 @@ const MissingEnvFallback = () => (
       </h1>
       <p style={{ color: "rgba(255,255,255,0.5)", lineHeight: 1.7, marginBottom: 24, fontSize: 15 }}>
         The <code style={{ background: "rgba(255,255,255,0.08)", padding: "2px 8px", borderRadius: 6, fontSize: 13 }}>VITE_CLERK_PUBLISHABLE_KEY</code> environment 
-        variable is not set. Please add it to your Vercel project settings or <code style={{ background: "rgba(255,255,255,0.08)", padding: "2px 8px", borderRadius: 6, fontSize: 13 }}>.env</code> file 
-        and redeploy.
+        variable is not set. Add it to your project Secrets (or <code style={{ background: "rgba(255,255,255,0.08)", padding: "2px 8px", borderRadius: 6, fontSize: 13 }}>.env</code> file) 
+        and restart the workflow.
       </p>
       <div style={{
         background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
         borderRadius: 12, padding: "16px 20px", textAlign: "left", fontSize: 13,
         color: "rgba(255,255,255,0.6)", lineHeight: 1.8,
       }}>
-        <strong style={{ color: "rgba(255,255,255,0.9)" }}>Steps to fix:</strong><br/>
-        1. Go to Vercel Dashboard → Settings → Environment Variables<br/>
-        2. Add <code style={{ color: "#60a5fa" }}>VITE_CLERK_PUBLISHABLE_KEY</code> = your Clerk key<br/>
-        3. Add <code style={{ color: "#60a5fa" }}>VITE_API_URL</code> = your backend URL<br/>
-        4. Redeploy the project
+        <strong style={{ color: "rgba(255,255,255,0.9)" }}>Steps to fix (Replit):</strong><br/>
+        1. Open the <strong style={{ color: "rgba(255,255,255,0.8)" }}>Secrets</strong> tab in your Replit project<br/>
+        2. Add <code style={{ color: "#60a5fa" }}>VITE_CLERK_PUBLISHABLE_KEY</code> = your Clerk publishable key<br/>
+        3. Add <code style={{ color: "#60a5fa" }}>VITE_API_URL</code> = <code style={{ color: "#34d399" }}>https://ishu-site.onrender.com</code><br/>
+        4. Restart the workflow — the app will load immediately
       </div>
     </div>
   </div>

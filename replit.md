@@ -1,11 +1,11 @@
-# ISHU.FUN — PDF Tools App
+# ISHU.FUN — Indian StudentHub University
 
 ## Project Overview
-A monorepo web application with a React + Vite frontend and a Node.js + Express backend offering 100+ PDF processing, conversion, and AI tools.
+A monorepo web application: React + Vite frontend with Node.js + Express backend offering 100+ PDF tools, 700+ Live Indian TV channels, video downloaders (YouTube, Terabox, Universal), government exam results, news, CV/Resume builder.
 
 ## Architecture
-- **Frontend** (`/frontend`): React 18 + Vite + TypeScript + Tailwind CSS + shadcn/ui
-- **Backend** (`/backend`): Node.js + Express with 100+ PDF API endpoints
+- **Frontend** (`/frontend`): React 18 + Vite + TypeScript + Tailwind CSS + shadcn/ui + Framer Motion + GSAP
+- **Backend** (`/backend`): Node.js + Express on Render free tier (`https://ishu-site.onrender.com`)
 
 ## Running the App
 
@@ -15,13 +15,13 @@ A monorepo web application with a React + Vite frontend and a Node.js + Express 
 - Port: **5000** (Replit web preview)
 
 ### Backend (API Server)
-- Workflow: **Start Backend**
-- Command: `pnpm run dev:backend` (from root, runs `node server.js` in `/backend`)
-- Port: **3001** (default, can be configured via `PORT` env var)
+- Workflow: **Start Backend** (local dev only)
+- Production backend: `https://ishu-site.onrender.com` (Render free tier — auto-sleep after 15 min)
+- Port: **3001** local
 
 ## Package Manager
-- Root & Backend: **pnpm** (pnpm-lock.yaml at root)
-- Frontend: **pnpm** (pnpm-lock.yaml in frontend/)
+- Root & Backend: **pnpm**
+- Frontend: **pnpm** (`pnpm install --ignore-scripts` to avoid interactive prompts)
 
 ## Required Environment Variables
 
@@ -41,20 +41,47 @@ A monorepo web application with a React + Vite frontend and a Node.js + Express 
 | `GEMINI_API_KEY` | Google Gemini API key (for AI features) |
 | `PORT` | Backend port (optional, defaults to 5000) |
 | `FRONTEND_URL` | Frontend URL for CORS (optional) |
-| `LIBREOFFICE_PATH` | Path to LibreOffice binary (optional) |
-| `GHOSTSCRIPT_PATH` | Path to Ghostscript binary (optional) |
-| `TEMP_DIR` | Temp directory for file processing (optional) |
-| `MAX_FILE_SIZE_MB` | Max upload file size in MB (optional) |
-| `TEMP_FILE_EXPIRY_MINUTES` | Temp file cleanup interval (optional) |
+| `RENDER_EXTERNAL_URL` | Set by Render — used for self-ping keep-alive |
 
 ## Key Files
-- `frontend/vite.config.ts` — Vite config, port 5000, allowedHosts: true
-- `backend/server.js` — Express entry point
-- `package.json` — Root scripts for running frontend/backend
-- `.replit` — Replit environment config (nodejs-20, web)
+- `frontend/vite.config.ts` — Vite config, port 5000, `allowedHosts: true`
+- `backend/server.js` — Express entry point with all 122+ API routes
+- `frontend/src/pages/TVPage.tsx` — Live TV player (1900+ lines)
+- `frontend/src/utils/serverHealth.ts` — Backend keep-alive health monitor (pings every 2 min)
+- `frontend/src/utils/serverWakeup.ts` — Backend wake-up utility for Render cold starts
+- `frontend/src/components/tools/BackendStatusBar.tsx` — UI widget for backend wake status
+- `frontend/src/config/performance.ts` — Global performance settings (60-90fps target)
+
+## Important Technical Notes
+
+### CORS Rule (Critical)
+**Never send custom headers** (like `Cache-Control: no-cache`) in fetch calls to the backend.
+Custom headers trigger CORS preflight (OPTIONS) requests which fail when Render backend is sleeping.
+Always use simple GET with no custom headers for wake/health pings.
+
+### TV Page Stream Architecture
+Attempt order per stream URL (to maximize channels working even when backend is asleep):
+1. **Direct** — no proxy (works for CDN streams with CORS headers)
+2. **allorigins** (`api.allorigins.win`) — fast public CORS proxy
+3. **corsproxy.io** — backup public CORS proxy
+4. **Backend proxy** (`/api/stream-proxy`) — last resort (may be sleeping)
+
+HLS timeouts: 8s direct, 14s proxied (fail fast, try next source quickly).
+FragLoadPolicy: 8s TTFB, 20s max load.
+
+### Backend Keep-Alive
+- `serverHealth.ts` pings `/api/wake` every **2 minutes** to prevent Render sleep
+- Backend also self-pings via `RENDER_EXTERNAL_URL` every 14 minutes
+- No Cache-Control or custom headers on pings (CORS safe)
+
+### Tool Pages (YouTube/Terabox/Universal)
+- All show `BackendStatusBar` which auto-wakes backend on mount
+- `fetchWithRetry` with 240s first-attempt timeout (Render cold start can take 60s)
+- Graceful error messages on timeout/network failure
 
 ## Replit Migration Notes
 - Frontend port changed from 3000 → 5000 (Replit webview requirement)
 - `allowedHosts: true` added to Vite config for proxied preview
 - Root `package.json` scripts updated to use pnpm
 - Two workflows configured: "Start application" (frontend) and "Start Backend"
+- Error screen updated to reference Replit Secrets (not Vercel)

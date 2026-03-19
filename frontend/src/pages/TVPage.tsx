@@ -212,12 +212,15 @@ function parseM3U(text: string, defaultLang: string): { name: string; logo: stri
 const API_URL = import.meta.env.VITE_API_URL || "https://ishu-site.onrender.com";
 const BACKEND_PROXY = `${API_URL}/api/stream-proxy`;
 
-// Multiple proxy fallbacks for maximum channel reliability
+// Proxy fallbacks in PRIORITY order (index 0 = highest priority)
+// Public proxies are faster than backend when Render is sleeping
 const CORS_PROXIES = [
-  (url: string) => `${BACKEND_PROXY}?url=${encodeURIComponent(url)}`,
-  // Public CORS proxies as fallbacks
+  // 0: allorigins - fast & reliable public CORS proxy
   (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  // 1: corsproxy.io - another reliable public proxy
   (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+  // 2: backend proxy (last resort — may be sleeping on Render free tier)
+  (url: string) => `${BACKEND_PROXY}?url=${encodeURIComponent(url)}`,
 ];
 
 /* ═══════════════════ STREAM RELIABILITY SCORING ═══════════════════ */
@@ -537,7 +540,7 @@ function useRobustPlayer(
   const [hlsLevels, setHlsLevels] = useState<QualityLevel[]>([]);
   const [currentLevel, setCurrentLevel] = useState(-1);
   const [isAutoQuality, setIsAutoQuality] = useState(true);
-  const [proxyActive, setProxyActive] = useState(false);
+  const [proxyActive, setProxyActive] = useState<false | string>(false);
 
   const cleanup = useCallback(() => {
     if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; }
@@ -587,26 +590,32 @@ function useRobustPlayer(
     }
   }, []);
 
-  // Build expanded attempt list: PROXY-FIRST for most streams (faster connection)
-  // Most Indian TV streams need CORS bypass, so going proxy-first saves 5-10s
+  // Build expanded attempt list: DIRECT first → public CORS proxies → backend proxy last
+  // This way channels work even when the Render backend is sleeping
   const buildAttemptList = useCallback((streamList: StreamUrl[]) => {
     const list: { url: string; proxyIdx: number; original: StreamUrl }[] = [];
-    const directCDNs = ["akamaized.net", "cloudfront.net", "youtube.com", "googlevideo.com", "dai.google.com", "amagi.tv", "amagimedia.com", "cdn.jwplayer.com", "fastly.net", "fastly.com", "edgecastcdn.net", "limelight.com", "llnwd.net"];
+    // These CDNs serve CORS headers natively — always try direct
+    const directCDNs = [
+      "akamaized.net", "cloudfront.net", "youtube.com", "googlevideo.com",
+      "dai.google.com", "amagi.tv", "amagimedia.com", "cdn.jwplayer.com",
+      "fastly.net", "fastly.com", "edgecastcdn.net", "limelight.com",
+      "llnwd.net", "jprdigital.in", "wiseplayout.com", "pishow.tv",
+      "tangotv.in", "smartplaytv.in", "5centscdn.com", "ottlive.co.in",
+    ];
     for (const s of streamList) {
       const urlLower = s.url.toLowerCase();
       const isDirectCDN = directCDNs.some(cdn => urlLower.includes(cdn));
       if (isDirectCDN) {
-        // Known CORS-friendly CDNs: try direct first, then proxy as fallback
+        // CDN streams: direct first, then public proxy fallback
         list.push({ url: s.url, proxyIdx: -1, original: s });
-        list.push({ url: s.url, proxyIdx: 0, original: s }); // Backend proxy fallback
+        list.push({ url: s.url, proxyIdx: 0, original: s }); // allorigins
+        list.push({ url: s.url, proxyIdx: 1, original: s }); // corsproxy
       } else {
-        // ALL other streams: proxy first (most Indian streams need CORS bypass)
-        list.push({ url: s.url, proxyIdx: 0, original: s }); // Backend proxy first
-        list.push({ url: s.url, proxyIdx: -1, original: s }); // Direct as fallback
-        // Additional public proxies as last resort
-        for (let i = 1; i < CORS_PROXIES.length; i++) {
-          list.push({ url: s.url, proxyIdx: i, original: s });
-        }
+        // Other streams: direct first, then public proxies, backend proxy last
+        list.push({ url: s.url, proxyIdx: -1, original: s }); // direct
+        list.push({ url: s.url, proxyIdx: 0, original: s }); // allorigins
+        list.push({ url: s.url, proxyIdx: 1, original: s }); // corsproxy.io
+        list.push({ url: s.url, proxyIdx: 2, original: s }); // backend (last)
       }
     }
     return list;
@@ -637,7 +646,9 @@ function useRobustPlayer(
     // Calculate which original URL # we're on (for UI display)
     const originalUrlIdx = Math.floor(idx / (1 + CORS_PROXIES.length));
     setUrlAttempt(originalUrlIdx + 1);
-    setProxyActive(attempt.proxyIdx >= 0);
+    // Show proxy label: 0=allorigins, 1=corsproxy.io, 2=backend
+    const proxyNames = ["allorigins", "corsproxy", "backend"];
+    setProxyActive(attempt.proxyIdx >= 0 ? (proxyNames[attempt.proxyIdx] || "proxy") : false);
 
     setState(idx === 0 ? "loading" : "switching");
     setQuality(attempt.original.quality || "");
@@ -645,12 +656,13 @@ function useRobustPlayer(
     // Determine the actual URL to load and whether to use proxy xhrSetup
     const isProxied = attempt.proxyIdx >= 0;
     const loadUrl = isProxied ? CORS_PROXIES[attempt.proxyIdx](attempt.url) : attempt.url;
-    const timeout = isProxied ? 60000 : 35000; // Very generous timeouts - Render cold starts can take 30s+
+    // Reduced timeouts: fail fast so we try next stream/proxy quickly
+    const timeout = isProxied ? 14000 : 8000;
 
-    // Stall detection — 15s timeout (Indian streams can buffer slowly on mobile networks)
+    // Stall detection — 12s timeout (if video freezes, try next source)
     const onTimeUpdate = () => {
       if (stallRef.current) clearTimeout(stallRef.current);
-      stallRef.current = setTimeout(() => tryAttempt(idx + 1), 15000);
+      stallRef.current = setTimeout(() => tryAttempt(idx + 1), 12000);
     };
     timeUpdateRef.current = onTimeUpdate;
     video.addEventListener("timeupdate", onTimeUpdate);
@@ -697,10 +709,10 @@ function useRobustPlayer(
       // Optimized for faster channel switching and failover
       fragLoadPolicy: { 
         default: { 
-          maxTimeToFirstByteMs: 10000,
-          maxLoadTimeMs: 60000,
-          timeoutRetry: { maxNumRetry: 3, retryDelayMs: 500, maxRetryDelayMs: 5000 },
-          errorRetry: { maxNumRetry: 4, retryDelayMs: 500, maxRetryDelayMs: 5000 }
+          maxTimeToFirstByteMs: 8000,
+          maxLoadTimeMs: 20000,
+          timeoutRetry: { maxNumRetry: 2, retryDelayMs: 500, maxRetryDelayMs: 3000 },
+          errorRetry: { maxNumRetry: 3, retryDelayMs: 500, maxRetryDelayMs: 3000 }
         } 
       },
       // Additional optimizations for faster startup
@@ -709,13 +721,11 @@ function useRobustPlayer(
     };
 
     // For proxied streams, route ALL XHR requests through the proxy
-    // Since our backend now rewrites M3U8 URLs to absolute, segment URLs
-    // in manifests are already absolute — xhrSetup wraps them in proxy
     if (isProxied) {
       const proxyFn = CORS_PROXIES[attempt.proxyIdx];
       hlsConfig.xhrSetup = (xhr: XMLHttpRequest, url: string) => {
-        // If URL is already going through our proxy, don't double-wrap
-        if (url.includes('/api/stream-proxy')) return;
+        // Don't double-wrap if already proxied
+        if (url.includes('/api/stream-proxy') || url.includes('allorigins.win') || url.includes('corsproxy.io')) return;
         const proxiedUrl = proxyFn(url);
         xhr.open("GET", proxiedUrl, true);
       };
@@ -1446,7 +1456,7 @@ const TVPage = () => {
                       <div className="flex items-center gap-1 sm:gap-1.5">
                         {pState === "playing" && (
                           <span className="hidden sm:flex items-center gap-1 rounded-full bg-green-500/90 px-2 py-1 text-[9px] sm:text-[10px] font-bold uppercase text-white">
-                            <Check className="h-3 w-3" /> Live {proxyActive && "(Proxy)"}
+                            <Check className="h-3 w-3" /> Live {proxyActive && <span className="opacity-80 lowercase font-normal">via {proxyActive}</span>}
                           </span>
                         )}
                         {(pState === "loading" || pState === "switching") && (
