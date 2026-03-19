@@ -1,0 +1,8 @@
+packages:
+  - "@clerk/shared"
+  - "@swc/core"
+  - "@tsparticles/engine"
+  - canvas
+  - core-js
+  - esbuild
+  - "tesseract.js"

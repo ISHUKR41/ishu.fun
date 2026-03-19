@@ -4,9 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "cd frontend && npm install && npm run dev",
-    "build": "cd frontend && npm install && npm run build",
-    "preview": "cd frontend && npm run preview",
-    "lint": "cd frontend && npm run lint"
+    "dev": "cd frontend && pnpm install && pnpm run dev",
+    "dev:backend": "cd backend && npm install && node server.js",
+    "build": "cd frontend && pnpm install && pnpm run build",
+    "preview": "cd frontend && pnpm run preview",
+    "lint": "cd frontend && pnpm run lint"
   }
 }
