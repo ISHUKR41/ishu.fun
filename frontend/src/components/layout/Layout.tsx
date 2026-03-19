@@ -26,6 +26,7 @@ import ScrollToTop from "../animations/ScrollToTop";
 import FloatingElements from "../animations/FloatingElements";
 import ScrollFixer from "./ScrollFixer";
 import SmoothScroll from "./SmoothScroll";
+import PerformanceOptimizer from "./PerformanceOptimizer";
 
 // Lazy load CursorSpotlight since it's only needed on desktop
 const CursorSpotlight = lazy(() => import("../animations/CursorSpotlight"));
@@ -46,6 +47,8 @@ const Layout = ({ children }: LayoutProps) => {
       <ScrollFixer />
       {/* Lenis smooth scroll — 120fps butter-smooth scrolling on all devices */}
       <SmoothScroll />
+      {/* Performance enhancements — CSS containment, lazy images, GPU hints */}
+      <PerformanceOptimizer />
       {/* Fixed background layers - creates depth effect */}
       <div className="pointer-events-none fixed inset-0 bg-gradient-to-b from-background via-background to-background z-0" />
       <div className="pointer-events-none fixed inset-0 mesh-gradient-advanced opacity-50 z-0" />

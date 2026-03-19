@@ -206,6 +206,57 @@ html.lenis-stopped {
     content-visibility: auto;
   }
 
+  /* ═══ ULTRA-SMOOTH TRANSITIONS (all interactive elements) ═══ */
+  /* Apply buttery-smooth transition to ALL buttons, links, cards */
+  a, button, [role="button"],
+  .glass, .glass-strong,
+  .spotlight-card {
+    transition-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transition-duration: 0.2s;
+  }
+
+  /* GPU-accelerate all framer-motion animated elements */
+  [style*="transform"] {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    perspective: 1000px;
+  }
+
+  /* Smooth color transitions on hover for all interactive elements */
+  a:hover, button:hover, [role="button"]:hover {
+    transition-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+
+  /* ═══ SECTION SMOOTHNESS ═══ */
+  /* Each section gets paint containment for scroll performance */
+  section {
+    contain: layout style;
+    will-change: auto;
+  }
+
+  /* When sections come into view, hint the GPU */
+  section:hover {
+    will-change: contents;
+  }
+
+  /* ═══ REDUCED MOTION ACCESSIBILITY ═══ */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* ═══ HIGH REFRESH RATE OPTIMIZATION ═══ */
+  @media (min-resolution: 2dppx) {
+    /* On high-DPI displays, optimize rendering */
+    img, video {
+      image-rendering: auto;
+    }
+  }
+
   /* ═══ RESPONSIVE TYPOGRAPHY ═══ */
   /* Fluid typography for all devices */
   h1 {
