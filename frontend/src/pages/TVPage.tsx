@@ -245,8 +245,11 @@ function parseM3U(text: string, defaultLang: string): { name: string; logo: stri
 // Backend proxy for CORS bypass (runs on your Express backend via Vite proxy)
 const BACKEND_PROXY = `${CENTRAL_API_URL}/api/stream-proxy`;
 
+// Backend proxy is always the LAST entry — update BACKEND_PROXY_IDX if adding more proxies
+const BACKEND_PROXY_IDX = 22;
+
 // Proxy fallbacks in PRIORITY order (index 0 = highest priority)
-// Optimized: fastest & most reliable proxies first
+// 22 public CORS proxies + our backend = 23 total fallback layers
 const CORS_PROXIES = [
   // 0: allorigins - fast & reliable, most widely used
   (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
@@ -264,15 +267,35 @@ const CORS_PROXIES = [
   (url: string) => `https://crossorigin.me/${url}`,
   // 7: jsonp.afeld.me - another public proxy
   (url: string) => `https://jsonp.afeld.me/?url=${encodeURIComponent(url)}`,
-  // 8: api.codetabs.com - fast & reliable CORS proxy  
+  // 8: api.codetabs.com - fast & reliable CORS proxy
   (url: string) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
   // 9: cors-anywhere heroku
   (url: string) => `https://cors-anywhere.herokuapp.com/${url}`,
   // 10: yacdn.org CORS proxy
   (url: string) => `https://yacdn.org/proxy/${url}`,
-  // 11: proxy.opensuse.org alternative
+  // 11: cors.bridged.cc
   (url: string) => `https://cors.bridged.cc/${url}`,
-  // 12: backend proxy (most reliable - has caching + proper headers)
+  // 12: bypass.cors.sh - additional bypass option
+  (url: string) => `https://bypass.cors.sh/?url=${encodeURIComponent(url)}`,
+  // 13: cors.proxy.tools
+  (url: string) => `https://cors.proxy.tools/?url=${encodeURIComponent(url)}`,
+  // 14: corsproxy.github.io
+  (url: string) => `https://corsproxy.github.io/?${encodeURIComponent(url)}`,
+  // 15: gobetween CORS worker
+  (url: string) => `https://worker.bridged.cc/${url}`,
+  // 16: cors.eu.org free proxy
+  (url: string) => `https://cors.eu.org/${url}`,
+  // 17: htmldriven cors proxy
+  (url: string) => `https://cors-proxy.htmldriven.com/?url=${encodeURIComponent(url)}`,
+  // 18: any-cors worker
+  (url: string) => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}&callback=cb`,
+  // 19: supersimple cors everywhere
+  (url: string) => `https://supersimple.io/cors-proxy/?url=${encodeURIComponent(url)}`,
+  // 20: cors-bypass using xhook
+  (url: string) => `https://nhcorsanywhere.vercel.app/${url}`,
+  // 21: proxy.techfree.workers.dev
+  (url: string) => `https://proxy.techfree.workers.dev/?url=${encodeURIComponent(url)}`,
+  // 22: backend proxy — most reliable (caching + Indian OTT referrers + smart UA)
   (url: string) => `${BACKEND_PROXY}?url=${encodeURIComponent(url)}`,
 ];
 
@@ -523,6 +546,57 @@ async function fetchAllChannels(
     // Sports focused
     { url: "https://iptv-org.github.io/iptv/categories/auto.m3u", lang: "English" },
     { url: "https://iptv-org.github.io/iptv/categories/swim.m3u", lang: "English" },
+    // South Asian region aggregator (includes India + Pakistan + Bangladesh + Sri Lanka)
+    { url: "https://iptv-org.github.io/iptv/regions/sas.m3u", lang: "Hindi" },
+    // General Hindi news channels
+    { url: "https://iptv-org.github.io/iptv/categories/general.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/categories/kids.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/categories/cooking.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/categories/travel.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/categories/culture.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/categories/family.m3u", lang: "Hindi" },
+    // Additional language-specific official iptv-org streams
+    { url: "https://iptv-org.github.io/iptv/languages/sin.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/languages/nep.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/languages/mni.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/languages/doi.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/languages/kok.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/languages/sat.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/languages/mai.m3u", lang: "Hindi" },
+    // More popular Indian M3U aggregator repos
+    { url: "https://raw.githubusercontent.com/Cha0smagick/IPTV_playlist_magic/master/india_channels.m3u", lang: "Hindi" },
+    { url: "https://raw.githubusercontent.com/Lunaticsatoshi/Indian-IPTV/main/channels.m3u", lang: "Hindi" },
+    { url: "https://raw.githubusercontent.com/AkashMundari/IPTV/master/India.m3u8", lang: "Hindi" },
+    { url: "https://raw.githubusercontent.com/amitjoki/IndianIPTV/main/IndianChannels.m3u", lang: "Hindi" },
+    { url: "https://raw.githubusercontent.com/abhilash-dev/Indian-TV-Channels-M3U-Playlist/main/IndianTV.m3u", lang: "Hindi" },
+    // Pakistani channels (Urdu language — many overlap with Hindi)
+    { url: "https://iptv-org.github.io/iptv/countries/pk.m3u", lang: "Urdu" },
+    // Bangladesh channels (Bengali language)
+    { url: "https://iptv-org.github.io/iptv/countries/bd.m3u", lang: "Bengali" },
+    // Sri Lanka channels
+    { url: "https://iptv-org.github.io/iptv/countries/lk.m3u", lang: "Tamil" },
+    // Nepal channels
+    { url: "https://iptv-org.github.io/iptv/countries/np.m3u", lang: "Hindi" },
+    // More entertainment category
+    { url: "https://iptv-org.github.io/iptv/categories/animation.m3u", lang: "English" },
+    { url: "https://iptv-org.github.io/iptv/categories/classic.m3u", lang: "Hindi" },
+    // Additional subdivisions
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-mh.m3u", lang: "Marathi" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-wb.m3u", lang: "Bengali" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-ka.m3u", lang: "Kannada" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-gu.m3u", lang: "Gujarati" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-pb.m3u", lang: "Punjabi" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-up.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-or.m3u", lang: "Odia" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-br.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-rj.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-mp.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-as.m3u", lang: "Assamese" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-ts.m3u", lang: "Telugu" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-ap.m3u", lang: "Telugu" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-hp.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-uk.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-ga.m3u", lang: "Hindi" },
   ];
 
   // Fetch each M3U source with individual 12s timeout to avoid slow sources blocking everything
@@ -854,7 +928,7 @@ function useRobustPlayer(
     //   direct  → 900ms (fail fast, native CDN)
     //   backend → 1500ms (most reliable proxy, slight buffer)
     //   public CORS proxies → 1000ms (fast public proxies)
-    const timeout = !isProxied ? 900 : (attempt.proxyIdx === 12 ? 1500 : 1000);
+    const timeout = !isProxied ? 900 : (attempt.proxyIdx === BACKEND_PROXY_IDX ? 1500 : 1000);
 
     // Stall detection — if video freezes for 1.5s, try next source (faster switching)
     const onTimeUpdate = () => {
@@ -1031,7 +1105,7 @@ function useRobustPlayer(
     const probeControllers: AbortController[] = [];
     setState("loading");
 
-    const toProbe = expandedList.slice(0, Math.min(4, expandedList.length));
+    const toProbe = expandedList.slice(0, Math.min(6, expandedList.length));
     Promise.any(
       toProbe.map((attempt, i) => new Promise<number>((resolve, reject) => {
         const ctrl = new AbortController();

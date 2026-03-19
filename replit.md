@@ -90,6 +90,33 @@ FragLoadPolicy: 8s TTFB, 20s max load.
 - YouTube: `@distube/ytdl-core` with enhanced browser-like request headers to bypass bot protection
 - Universal: cobalt.tools API v10 with 4 fallback community instances tried in order
 
+## Performance Architecture (120fps Layer)
+All pages optimized for 120fps via global CSS rules at the end of `frontend/src/index.css`:
+- Buttons/links/cards: `will-change: transform, opacity` + `backfaceVisibility: hidden` on hover/active
+- Fixed/sticky elements: forced GPU layer via `translateZ(0)`
+- Smooth scrolling with momentum + `overscroll-behavior-y: contain`
+- Sections: `contain: layout style` for paint isolation
+- Tablet (768–1024px): adjusted grid columns and container padding
+- TV/4K (≥1920px): wider container + scaled font-size
+- Touch targets: min 44px on mobile for all interactive elements
+- Reduced-motion: all custom animations disabled respectfully
+- Utility classes: `.animate-page-in`, `.animate-pop-in`, `.skeleton`, `.grid-auto-{xs/sm/md/lg/xl}`
+
+## TV Streaming Architecture
+- 23 CORS proxies (`BACKEND_PROXY_IDX = 22`) tried in order after 6 parallel direct probes
+- 80+ M3U sources: Indian states, regions, languages, curated repos, South Asian neighbours
+- TV cache key: `ishu_tv_channels_v10` (45 min TTL, localStorage)
+- Stream success cache: 4h TTL per channel URL (avoids re-probing known-good sources)
+- HLS timeouts: 900ms direct, 1500ms backend, 1000ms proxy, 1500ms stall detection
+
+## SEO Implementation
+- `frontend/index.html`: WebSite + Organization + WebApplication + BreadcrumbList + SiteNavigationElement structured data
+- 11 hreflang tags: `en-in`, `hi-in`, `ta-in`, `te-in`, `bn-in`, `mr-in`, `gu-in`, `kn-in`, `ml-in`, `pa-in`, `ur-in` + `x-default`
+- `frontend/public/sitemap.xml`: 60+ URLs covering all pages, tools, and state result pages
+- `frontend/public/robots.txt`: Bot-specific rules for Google, Bing, Yandex, social crawlers
+- `frontend/public/manifest.json`: PWA manifest with 6 shortcuts, `display_override`, `prefer_related_applications: false`
+- SEOHead component on every page for per-route canonical/OG/Twitter meta
+
 ## Replit Migration Notes
 - Frontend port changed from 3000 → 5000 (Replit webview requirement)
 - `allowedHosts: true` added to Vite config for proxied preview

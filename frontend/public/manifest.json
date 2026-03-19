@@ -6,10 +6,13 @@
   "display": "standalone",
   "background_color": "#020817",
   "theme_color": "#0070f3",
-  "orientation": "portrait-primary",
+  "orientation": "any",
   "scope": "/",
   "lang": "en-IN",
+  "dir": "ltr",
   "categories": ["education", "utilities", "news"],
+  "iarc_rating_id": "e84b072d-71b3-4d3e-86ae-31a8ce4e53b7",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/favicon.ico",
@@ -47,6 +50,13 @@
       "short_name": "News",
       "url": "/news",
       "description": "1000+ daily news articles"
+    },
+    {
+      "name": "CV & Resume Maker",
+      "short_name": "CV",
+      "url": "/cv",
+      "description": "Free professional CV and resume builder"
     }
-  ]
+  ],
+  "display_override": ["standalone", "minimal-ui", "browser"]
 }
