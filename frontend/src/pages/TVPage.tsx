@@ -168,7 +168,7 @@ const ALL_CAT = "all";
 const FAV_CAT = "favorites";
 
 /* ═══════════════════ SESSION STORAGE CACHE ═══════════════════ */
-const TV_CACHE_KEY = "ishu_tv_channels_v6";
+const TV_CACHE_KEY = "ishu_tv_channels_v7";
 const TV_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
 const Q_ORDER: Record<string, number> = { "2160p": 6, "1080p": 5, "720p": 4, "576p": 3, "480p": 2, "360p": 1, "240p": 0 };
 
