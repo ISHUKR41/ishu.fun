@@ -54,6 +54,7 @@ const userRoutes = require('./src/routes/userRoutes');
 const youtubeRoutes = require('./src/routes/youtubeRoutes');
 const teraboxRoutes = require('./src/routes/teraboxRoutes');
 const universalDownloadRoutes = require('./src/routes/universalDownloadRoutes');
+const seoRoutes = require('./src/routes/seoRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -116,8 +117,33 @@ app.use(cors({
     credentials: true,
 }));
 
-// Security headers (Helmet)
-app.use(helmet());
+// ═══════════════════════════════════════════════════════════════
+// ENHANCED SECURITY & SEO CONFIGURATION
+// ═══════════════════════════════════════════════════════════════
+
+// Import enhanced SEO configuration
+const {
+    getHelmetConfig,
+    seoHeadersMiddleware,
+    securityHeadersMiddleware,
+    cacheControlMiddleware,
+    compressionHintsMiddleware,
+} = require('./src/config/seoSecurityConfig');
+
+// Enhanced Security headers (Helmet with maximum optimization)
+app.use(helmet(getHelmetConfig()));
+
+// SEO-specific headers
+app.use(seoHeadersMiddleware);
+
+// Security headers middleware
+app.use(securityHeadersMiddleware);
+
+// Cache control for different resource types
+app.use(cacheControlMiddleware);
+
+// Compression hints
+app.use(compressionHintsMiddleware);
 
 // Gzip compression for all responses
 app.use(compression());
@@ -418,6 +444,13 @@ app.get('/api/status', (_req, res) => {
         ts: Date.now(),
     });
 });
+
+// ═══════════════════════════════════════════════════════════════
+// SEO ROUTES — MAXIMUM GLOBAL RANKING OPTIMIZATION
+// ═══════════════════════════════════════════════════════════════
+// Sitemaps, robots.txt, structured data, and SEO endpoints
+app.use('/', seoRoutes);
+app.use('/api/seo', seoRoutes);
 
 // Mount all tool route groups under /api/tools
 app.use('/api/tools', organizeRoutes);

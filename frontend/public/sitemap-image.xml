@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Image Sitemap for ISHU.fun - All images for image search optimization -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  
+  <!-- Homepage with images -->
+  <url>
+    <loc>https://ishu.fun/</loc>
+    <image:image>
+      <image:loc>https://ishu.fun/og-image.png</image:loc>
+      <image:title>ISHU - India's #1 Government Jobs & Free Tools Platform</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://ishu.fun/about-banner.jpg</image:loc>
+      <image:title>ISHU - Indian StudentHub University Platform</image:title>
+    </image:image>
+  </url>
+  
+  <!-- Government Jobs Results Page -->
+  <url>
+    <loc>https://ishu.fun/results</loc>
+    <image:image>
+      <image:loc>https://ishu.fun/images/government-jobs-banner.jpg</image:loc>
+      <image:title>Government Exam Results - UPSC, SSC, Banking, Railway</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://ishu.fun/images/exam-calendar.png</image:loc>
+      <image:title>Government Exam Calendar 2026</image:title>
+    </image:image>
+  </url>
+  
+  <!-- PDF Tools Hub -->
+  <url>
+    <loc>https://ishu.fun/tools/pdf</loc>
+    <image:image>
+      <image:loc>https://ishu.fun/images/pdf-tools.png</image:loc>
+      <image:title>100+ Free PDF Tools - Merge, Compress, Convert, Edit</image:title>
+    </image:image>
+  </url>
+  
+  <!-- Video Downloader Tools -->
+  <url>
+    <loc>https://ishu.fun/tools/videos</loc>
+    <image:image>
+      <image:loc>https://ishu.fun/images/video-downloader.jpg</image:loc>
+      <image:title>Download Videos from YouTube, Instagram, TikTok, Terabox</image:title>
+    </image:image>
+  </url>
+  
+  <!-- Live TV Streaming -->
+  <url>
+    <loc>https://ishu.fun/tv</loc>
+    <image:image>
+      <image:loc>https://ishu.fun/images/live-tv.jpg</image:loc>
+      <image:title>700+ Live Indian TV Channels Streaming Free</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://ishu.fun/images/tv-channels.png</image:loc>
+      <image:title>Hindi, English, Regional TV Channels</image:title>
+    </image:image>
+  </url>
+  
+  <!-- CV/Resume Builder -->
+  <url>
+    <loc>https://ishu.fun/cv</loc>
+    <image:image>
+      <image:loc>https://ishu.fun/images/resume-builder.jpg</image:loc>
+      <image:title>Free Resume & CV Builder - Download Template</image:title>
+    </image:image>
+  </url>
+  
+  <!-- News Page -->
+  <url>
+    <loc>https://ishu.fun/news</loc>
+    <image:image>
+      <image:loc>https://ishu.fun/images/news-banner.jpg</image:loc>
+      <image:title>Latest Government Job News, Exam Updates, Current Affairs</image:title>
+    </image:image>
+  </url>
+  
+  <!-- Blog -->
+  <url>
+    <loc>https://ishu.fun/blog</loc>
+    <image:image>
+      <image:loc>https://ishu.fun/images/blog-banner.jpg</image:loc>
+      <image:title>Government Job Tips, Exam Prep, Career Guidance Blog</image:title>
+    </image:image>
+  </url>
+  
+  <!-- Merge PDF Tool -->
+  <url>
+    <loc>https://ishu.fun/tools/pdf/merge</loc>
+    <image:image>
+      <image:loc>https://ishu.fun/images/tools/merge-pdf.png</image:loc>
+      <image:title>Merge PDF Files Online - Free PDF Merger Tool</image:title>
+    </image:image>
+  </url>
+  
+  <!-- Compress PDF Tool -->
+  <url>
+    <loc>https://ishu.fun/tools/pdf/compress</loc>
+    <image:image>
+      <image:loc>https://ishu.fun/images/tools/compress-pdf.png</image:loc>
+      <image:title>Compress PDF Online - Reduce PDF File Size Free</image:title>
+    </image:image>
+  </url>
+  
+  <!-- PDF to Word Converter -->
+  <url>
+    <loc>https://ishu.fun/tools/pdf/to-word</loc>
+    <image:image>
+      <image:loc>https://ishu.fun/images/tools/pdf-to-word.png</image:loc>
+      <image:title>Convert PDF to Word Document - Free PDF to Word Tool</image:title>
+    </image:image>
+  </url>
+  
+  <!-- Word to PDF Converter -->
+  <url>
+    <loc>https://ishu.fun/tools/word-to-pdf</loc>
+    <image:image>
+      <image:loc>https://ishu.fun/images/tools/word-to-pdf.png</image:loc>
+      <image:title>Convert Word to PDF - Free Online Converter</image:title>
+    </image:image>
+  </url>
+  
+  <!-- Resume Creator -->
+  <url>
+    <loc>https://ishu.fun/tools/resume-creator</loc>
+    <image:image>
+      <image:loc>https://ishu.fun/images/tools/resume-creator.jpg</image:loc>
+      <image:title>Create Professional Resume Online - Free Resume Template</image:title>
+    </image:image>
+  </url>
+  
+</urlset>

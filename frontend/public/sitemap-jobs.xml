@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Jobs & Recruitment Sitemap for ISHU.fun - Government Jobs Coverage -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  
+  <!-- Government Jobs Hub -->
+  <url>
+    <loc>https://ishu.fun/jobs</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  
+  <!-- Exam Results Hub -->
+  <url>
+    <loc>https://ishu.fun/results</loc>
+    <lastmod>2026-03-19T06:00:00+05:30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.98</priority>
+  </url>
+  
+  <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+  <!-- ALL MAJOR EXAM CATEGORIES -->
+  <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+  
+  <!-- UPSC Recruitment -->
+  <url>
+    <loc>https://ishu.fun/jobs/upsc</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.95</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/results/upsc</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <!-- SSC Recruitment (CGL, CHSL, MTS) -->
+  <url>
+    <loc>https://ishu.fun/jobs/ssc</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.95</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/jobs/ssc-cgl</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.93</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/jobs/ssc-chsl</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.93</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/jobs/ssc-mts</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/results/ssc</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <!-- IBPS & SBI Banking Recruitment -->
+  <url>
+    <loc>https://ishu.fun/jobs/banking</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.95</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/jobs/ibps</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/jobs/sbi</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/results/banking</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.88</priority>
+  </url>
+  
+  <!-- Railway Recruitment Board -->
+  <url>
+    <loc>https://ishu.fun/jobs/railway</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.94</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/jobs/rrb-ntpc</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/results/railway</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.88</priority>
+  </url>
+  
+  <!-- NTA (JEE, NEET, NET) Recruitment -->
+  <url>
+    <loc>https://ishu.fun/jobs/nta</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.94</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/jobs/jee-main</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.91</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/jobs/neet</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.91</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/jobs/ugc-net</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/results/nta</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.88</priority>
+  </url>
+  
+  <!-- State Government Jobs (All 36 States) -->
+  <url>
+    <loc>https://ishu.fun/jobs/state</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/jobs/delhi</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.88</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/jobs/maharashtra</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.88</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/jobs/karnataka</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.88</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/jobs/uttar-pradesh</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.88</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/jobs/west-bengal</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.88</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/jobs/tamil-nadu</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.88</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/jobs/telangana</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.88</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/jobs/rajasthan</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.88</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/jobs/bihar</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.88</priority>
+  </url>
+  
+  <!-- Police & Security Recruitment -->
+  <url>
+    <loc>https://ishu.fun/jobs/police</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.88</priority>
+  </url>
+  
+  <!-- Defence Recruitment (Army, Navy, Air Force) -->
+  <url>
+    <loc>https://ishu.fun/jobs/defence</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.88</priority>
+  </url>
+  
+  <!-- Teaching & Education Recruitment -->
+  <url>
+    <loc>https://ishu.fun/jobs/teaching</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.88</priority>
+  </url>
+  
+  <!-- Medical & Health Services Recruitment -->
+  <url>
+    <loc>https://ishu.fun/jobs/health</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+  
+  <!-- Admit Cards Hub -->
+  <url>
+    <loc>https://ishu.fun/admit-cards</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+  </url>
+  
+  <!-- Answer Keys Hub -->
+  <url>
+    <loc>https://ishu.fun/answer-keys</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <!-- Notifications Hub -->
+  <url>
+    <loc>https://ishu.fun/notifications</loc>
+    <lastmod>2026-03-19T00:00:00+05:30</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.95</priority>
+  </url>
+  
+</urlset>

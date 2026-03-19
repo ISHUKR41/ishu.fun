@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Sitemap Index for ishu.fun - Routes all search engines to multiple sitemaps -->
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Main sitemap with core pages -->
+  <sitemap>
+    <loc>https://ishu.fun/sitemap-main.xml</loc>
+    <lastmod>2026-03-19</lastmod>
+  </sitemap>
+  
+  <!-- News content sitemap (updated hourly) -->
+  <sitemap>
+    <loc>https://ishu.fun/sitemap-news.xml</loc>
+    <lastmod>2026-03-19T12:00:00+05:30</lastmod>
+  </sitemap>
+  
+  <!-- Video sitemap for YouTube, Terabox downloads etc -->
+  <sitemap>
+    <loc>https://ishu.fun/sitemap-video.xml</loc>
+    <lastmod>2026-03-19</lastmod>
+  </sitemap>
+  
+  <!-- Image sitemap for all tools with images -->
+  <sitemap>
+    <loc>https://ishu.fun/sitemap-image.xml</loc>
+    <lastmod>2026-03-19</lastmod>
+  </sitemap>
+  
+  <!-- Mobile-specific sitemap -->
+  <sitemap>
+    <loc>https://ishu.fun/sitemap-mobile.xml</loc>
+    <lastmod>2026-03-19</lastmod>
+  </sitemap>
+  
+  <!-- Government jobs/recruitment sitemap -->
+  <sitemap>
+    <loc>https://ishu.fun/sitemap-jobs.xml</loc>
+    <lastmod>2026-03-19T06:00:00+05:30</lastmod>
+  </sitemap>
+  
+  <!-- PDF tools sitemap -->
+  <sitemap>
+    <loc>https://ishu.fun/sitemap-tools.xml</loc>
+    <lastmod>2026-03-19</lastmod>
+  </sitemap>
+  
+  <!-- Educational content sitemap -->
+  <sitemap>
+    <loc>https://ishu.fun/sitemap-education.xml</loc>
+    <lastmod>2026-03-19</lastmod>
+  </sitemap>
+  
+  <!-- Exam results sitemap (daily updates) -->
+  <sitemap>
+    <loc>https://ishu.fun/sitemap-results.xml</loc>
+    <lastmod>2026-03-19T00:00:00+05:30</lastmod>
+  </sitemap>
+  
+  <!-- Blog/Article sitemap -->
+  <sitemap>
+    <loc>https://ishu.fun/sitemap-blog.xml</loc>
+    <lastmod>2026-03-19</lastmod>
+  </sitemap>
+</sitemapindex>

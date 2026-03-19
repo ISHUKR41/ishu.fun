@@ -1,26 +1,619 @@
-# robots.txt for ishu.fun — Indian StudentHub University
-# Last updated: 2026-03-17
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# ADVANCED ROBOTS.TXT v4.0 - MAXIMUM SEO OPTIMIZATION FOR ALL SEARCH ENGINES
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# Strategy: MAXIMUM CRAWLER PERMISSIVENESS + INTELLIGENT CRAWL RATE OPTIMIZATION
+# Updated: 2026-03-19
+# Supported: Google, Bing, Yahoo, Yandex, Baidu, DuckDuckGo, Sogou, Qihoo, Blekko
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
 
-# Google
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# GOOGLE SPECIFIC - PRIORITY CRAWLING
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
 User-agent: Googlebot
+Allow: /
+Crawl-delay: 0.5
+Request-rate: 50/1s
+
+User-agent: Googlebot-Mobile
+Allow: /
+Crawl-delay: 0.5
+Request-rate: 50/1s
+
+User-agent: Googlebot-Image
+Allow: /
+Crawl-delay: 0.5
+
+User-agent: Googlebot-News
+Allow: /
+Crawl-delay: 0.5
+
+User-agent: Googlebot-Video
+Allow: /
+Crawl-delay: 0.5
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# BING/MSFT CRAWLERS
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+Request-rate: 20/1s
+
+User-agent: BingPreview
+Allow: /
+
+User-agent: MSNBot
 Allow: /
 Crawl-delay: 1
 
-# Bing
-User-agent: Bingbot
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# YANDEX (BEST FOR INDIA + CIS)
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+User-agent: YandexBot
 Allow: /
-Crawl-delay: 2
+Crawl-delay: 0.5
+Request-rate: 15/1s
 
-# Yandex
+User-agent: YandexMobileBot
+Allow: /
+Crawl-delay: 0.5
+
+User-agent: YandexImageResizer
+Allow: /
+Crawl-delay: 1
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# BAIDU (CHINESE SEARCH ENGINE - INTERNATIONAL REACH)
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+User-agent: Baiduspider
+Allow: /
+Crawl-delay: 0.5
+Request-rate: 10/1s
+
+User-agent: Baiduspider-mobile
+Allow: /
+Crawl-delay: 0.5
+
+User-agent: Baiduspider-image
+Allow: /
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# DUCKDUCKGO & PRIVACY-FOCUSED ENGINES
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+User-agent: DuckDuckBot
+Allow: /
+Crawl-delay: 0.5
+
+User-agent: DuckDuckBot-Https
+Allow: /
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# OTHER SEARCH ENGINES
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+User-agent: yahoo-mmcrawler
+Allow: /
+
+User-agent: Sogou web spider
+Allow: /
+Crawl-delay: 0.5
+
+User-agent: Qihoobot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Blekkobot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# BROWSER AUTOMATED CRAWLERS (INDEX WELL)
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+User-agent: Chrome
+Allow: /
+
+User-agent: Firefox
+Allow: /
+
+User-agent: Safari
+Allow: /
+
+User-agent: Edge
+Allow: /
+
+User-agent: Opera
+Allow: /
+
+User-agent: Brave
+Allow: /
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# SOCIAL MEDIA CRAWLERS - MAXIMIZE SHARING
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
+
+User-agent: WhatsApp
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+User-agent: Pinterestbot
+Allow: /
+
+User-agent: Discordbot
+Allow: /
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# MONITORING & ANALYTICS BOTS
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+User-agent: AhrefsBot
+Allow: /
+
+User-agent: SemrushBot
+Allow: /
+
+User-agent: DotBot
+Allow: /
+
+User-agent: MJ12bot
+Allow: /
+
+User-agent: Exabot
+Allow: /
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# GLOBAL DEFAULT RULES - ALL OTHER BOTS
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+User-agent: *
+Allow: /
+Allow: /jobs/
+Allow: /results/
+Allow: /exam/
+Allow: /tools/
+Allow: /tv/
+Allow: /downloader/
+Allow: /news/
+Allow: /pdf-tools/
+Allow: /video-downloader/
+Allow: /image-tools/
+Allow: /resume-builder/
+Allow: /document/
+Allow: /converters/
+Allow: /utilities/
+Allow: /search
+Allow: /category/
+Allow: /tag/
+Allow: /archive/
+Allow: /about/
+Allow: /contact/
+Allow: /help/
+Allow: /faq/
+Allow: /blog/
+Allow: /articles/
+Allow: /guides/
+Allow: /tutorials/
+Allow: /resources/
+Allow: /education/
+Allow: /learning/
+Allow: /sitemap.xml
+Allow: /sitemap1.xml
+Allow: /sitemap2.xml
+Allow: /sitemap3.xml
+Allow: /sitemap-main.xml
+Allow: /sitemap-news.xml
+Allow: /sitemap-video.xml
+Allow: /sitemap-image.xml
+Allow: /sitemap-mobile.xml
+Allow: /opensearch.xml
+Allow: /feed.xml
+Allow: /feed.rss
+
+Crawl-delay: 0
+Request-rate: 30/1s
+
+# Block only truly private/admin areas
+Disallow: /admin/
+Disallow: /private/
+Disallow: /dashboard/
+Disallow: /user-account/
+Disallow: /profile/settings/
+Disallow: /auth/login
+Disallow: /auth/register
+Disallow: /api/
+Disallow: /.well-known/
+Disallow: *.json$
+Disallow: *.xml$
+Disallow: *.pdf$
+Disallow: *.doc$
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# SITEMAP REFERENCES FOR ALL SEARCH ENGINES
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+Sitemap: https://ishu.fun/sitemap.xml
+Sitemap: https://ishu.fun/sitemap1.xml
+Sitemap: https://ishu.fun/sitemap2.xml
+Sitemap: https://ishu.fun/sitemap3.xml
+Sitemap: https://ishu.fun/sitemap-main.xml
+Sitemap: https://ishu.fun/sitemap-news.xml
+Sitemap: https://ishu.fun/sitemap-video.xml
+Sitemap: https://ishu.fun/sitemap-image.xml
+Sitemap: https://ishu.fun/sitemap-mobile.xml
+Sitemap: https://ishu.fun/feed.xml
+Disallow: /api/admin/
+Disallow: /backend/
+Disallow: /temp/
+Disallow: /cache/
+Disallow: /logs/
+Disallow: /*.json$
+Disallow: /?sort=
+Disallow: /?filter=
+Disallow: /?redirect=
+
+Sitemap: https://ishu.fun/sitemap.xml
+Sitemap: https://ishu.fun/sitemap-main.xml
+Sitemap: https://ishu.fun/sitemap-news.xml
+Sitemap: https://ishu.fun/sitemap-video.xml
+Sitemap: https://ishu.fun/sitemap-image.xml
+Sitemap: https://ishu.fun/sitemap-mobile.xml
+
+Crawl-delay: 0
+Request-rate: 100/1s
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# GOOGLE BOT - PRIMARY OPTIMIZATION
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+User-agent: Googlebot
+User-agent: Googlebot-Image
+User-agent: Googlebot-Video
+User-agent: Googlebot-Mobile
+Allow: /
+Allow: /jobs/
+Allow: /results/
+Allow: /tools/
+Allow: /tv/
+Allow: /news/
+Allow: /download
+Allow: /convert
+Allow: /merge
+Allow: /compress
+Allow: /edit
+Sitemap: https://ishu.fun/sitemap.xml
+Crawl-delay: 0
+Request-rate: 500/1s
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# BING BOT - SECONDARY OPTIMIZATION
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+User-agent: Bingbot
+User-agent: MSNBot
+User-agent: MsnBot-Media
+Allow: /
+Allow: /jobs/
+Allow: /results/
+Allow: /tools/
+Sitemap: https://ishu.fun/sitemap.xml
+Crawl-delay: 0.5
+Request-rate: 200/1s
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# YANDEX BOT - RUSSIAN/GLOBAL MARKET
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+User-agent: YandexBot
+User-agent: Yandexbot-Mobile
+Allow: /
+Sitemap: https://ishu.fun/sitemap.xml
+Crawl-delay: 0.5
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# BAIDU BOT - CHINESE MARKET REACH
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+User-agent: Baiduspider
+User-agent: Baiduspider-mobile
+Allow: /
+Crawl-delay: 1
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# YAHOO SLURP - YAHOO SEARCH ENGINE
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+User-agent: Slurp
+Allow: /
+Crawl-delay: 1
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# DUCKDUCKGO BOT - PRIVACY-FOCUSED SEARCH
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+User-agent: DuckDuckBot
+Allow: /
+Crawl-delay: 1
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# SOCIAL MEDIA CRAWLERS - CRITICAL FOR SHARING
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+User-agent: facebookexternalhit
+User-agent: facebookplatformbot
+User-agent: OG
+Allow: /
+Crawl-delay: 0
+
+User-agent: Twitterbot
+Allow: /
+Crawl-delay: 0
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# INSTAGRAM & WHATSAPP CRAWLERS
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+User-agent: ig_bot
+User-agent: WhatsApp
+Allow: /
+Crawl-delay: 0
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# LINKEDIN BOT
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+User-agent: LinkedInBot
+Allow: /
+Crawl-delay: 0.5
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# PINTEREST & VISUAL SEARCH CRAWLERS
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+User-agent: Pinterestbot
+User-agent: Pinterestbot-Mobile
+Allow: /
+Crawl-delay: 0
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# TELEGRAM BOT
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+User-agent: TelegramBot
+Allow: /
+Crawl-delay: 0
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# SKYPE BOT
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+User-agent: skypeUriPreview
+Allow: /
+Crawl-delay: 0
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# VIBER BOT
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+User-agent: Viber
+Allow: /
+Crawl-delay: 0
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# SLACK BOT
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+User-agent: Slackbot
+Allow: /
+Crawl-delay: 0
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# YOUTUBE BOT - VIDEO RECOMMENDATION
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+User-agent: Youtubbot
+Allow: /
+Crawl-delay: 0
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# OTHER MAJOR SEARCH ENGINE BOTS
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+User-agent: Genieo
+User-agent: Speedy
+User-agent: Qwantify
+User-agent: Qwant
+Allow: /
+Crawl-delay: 1
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# ARCHIVAL & MONITORING CRAWLERS (HELPFUL)
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+User-agent: archive.org_bot
+User-agent: Applebot
+Allow: /
+Crawl-delay: 0
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# BROWSER EXTENSIONS & ACCESSIBILITY
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+User-agent: CheckMarkBot
+User-agent: Chrome-Lighthouse
+User-agent: Mobile-Friendly
+Allow: /
+Crawl-delay: 0
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# BLOCK MALICIOUS/UNWANTED BOTS
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+User-agent: AhrefsBot
+User-agent: AhrefsSiteAudit
+User-agent: SemrushBot
+User-agent: MJ12bot
+User-agent: AspiegelBot
+User-agent: DotBot
+Disallow: /
+
+User-agent: BadBot
+User-agent: MaliciousBot
+User-agent: ScamBot
+Disallow: /
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# SITEMAP DECLARATION FOR ALL SEARCH ENGINES
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# Main sitemaps
+Sitemap: https://ishu.fun/sitemap.xml
+Sitemap: https://ishu.fun/sitemap-main.xml
+Sitemap: https://ishu.fun/sitemap-index.xml
+Sitemap: https://ishu.fun/sitemap-news.xml
+Sitemap: https://ishu.fun/sitemap-video.xml
+Sitemap: https://ishu.fun/sitemap-image.xml
+Sitemap: https://ishu.fun/sitemap-mobile.xml
+Sitemap: https://ishu.fun/sitemap-jobs.xml
+Sitemap: https://ishu.fun/sitemap-tools.xml
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# GLOBAL CRAWL SETTINGS
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# Default crawl limits (most generous)
+User-agent: *
+Crawl-delay: 0
+Request-rate: 100/1s
+
+User-agent: LinkedInBot
+Allow: /
+Crawl-delay: 0.5
+
+User-agent: PinterestBot
+Allow: /
+Crawl-delay: 0.5
+
+User-agent: WhatsApp
+Allow: /
+Crawl-delay: 0
+
+User-agent: Telegram
+User-agent: TelegramBot
+Allow: /
+Crawl-delay: 0
+
+User-agent: Discordbot
+Allow: /
+Crawl-delay: 0
+
+User-agent: Slackbot
+Allow: /
+Crawl-delay: 0
+
+User-agent: Instagram
+Allow: /
+Crawl-delay: 0
+
+User-agent: Viber
+Allow: /
+Crawl-delay: 0
+
+User-agent: Snapchat
+Allow: /
+Crawl-delay: 0
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# BROWSER USER AGENTS - ALLOW ALL (Important for browser compatibility)
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+User-agent: Mozilla
+User-agent: Chrome
+User-agent: Firefox
+User-agent: Safari
+User-agent: Edge
+User-agent: Opera
+User-agent: Brave
+User-agent: Vivaldi
+User-agent: Mobile
+User-agent: Android
+User-agent: iPhone
+Allow: /
+Request-rate: 0/1s
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# AI & ML CRAWLERS - ALLOW FOR MODERN INDEXING
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+User-agent: GPTBot
+User-agent: ChatGPT
+User-agent: Claude
+User-agent: Bard
+User-agent: LLaMA
+User-agent: Copilot
+Allow: /
+Crawl-delay: 1
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+# BAD BOTS & ATTACK PREVENTION - BLOCK
+# ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+User-agent: AhrefsBot
+User-agent: AhrefsBot-Site-Audit
+User-agent: SemrushBot
+User-agent: SemrushBot-SA
+User-agent: SemrushBot-CT
+User-agent: MJ12bot
+User-agent: DotBot
+User-agent: BUbiNG
+User-agent: Exabot
+User-agent: scrapy
+User-agent: curl
+User-agent: wget
+User-agent: python-requests
+User-agent: sqlmap
+User-agent: nikto
+Disallow: /
 User-agent: Yandex
 Allow: /
-Crawl-delay: 3
+Crawl-delay: 0.5
+Request-rate: 15/1s
 
-# Social Media Crawlers
+# ═══════════════════════════════════════════════════════════════════════════
+# OTHER SEARCH ENGINES
+# ═══════════════════════════════════════════════════════════════════════════
+User-agent: Slurp
+Allow: /
+Crawl-delay: 1
+
+User-agent: DuckDuckBot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Baidu
+User-agent: baiduspider
+Allow: /
+Crawl-delay: 1
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SEO ANALYSIS & MONITORING CRAWLERS (ALLOWED)
+# ═══════════════════════════════════════════════════════════════════════════
+User-agent: AhrefsBot
+User-agent: ahrefs
+Allow: /
+Crawl-delay: 1
+
+User-agent: SemrushBot
+User-agent: SemrushBot-SA
+Allow: /
+Crawl-delay: 1
+
+User-agent: MJ12bot
+Allow: /
+Crawl-delay: 1
+
+User-agent: DotBot
+Allow: /
+Crawl-delay: 1
+
+User-agent: BLEXBot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Majestic
+Allow: /
+Crawl-delay: 1
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SOCIAL MEDIA CRAWLERS (FOR RICH PREVIEWS)
+# ═══════════════════════════════════════════════════════════════════════════
 User-agent: Twitterbot
 Allow: /
 
 User-agent: facebookexternalhit
+User-agent: Facebot
 Allow: /
 
 User-agent: LinkedInBot
@@ -35,19 +628,130 @@ Allow: /
 User-agent: Slackbot
 Allow: /
 
-# All other bots
-User-agent: *
+User-agent: vkShare
 Allow: /
-Disallow: /admin
-Disallow: /auth/
-Disallow: /dashboard
-Disallow: /profile
-Disallow: /settings
-Disallow: /notifications
-Disallow: /activity
-Disallow: /saved
-Disallow: /tracker
-Disallow: /tools/history
+
+User-agent: PinterestBot
+Allow: /
+
+User-agent: Discordbot
+Allow: /
+
+# ═══════════════════════════════════════════════════════════════════════════
+# NEWS AGGREGATORS & MEDIA CRAWLERS
+# ═══════════════════════════════════════════════════════════════════════════
+User-agent: Googlebot-News
+Allow: /
+
+User-agent: BingPreview
+Allow: /
+
+User-agent: Feedfetcher-Google
+Allow: /
+
+User-agent: NewsGator
+Allow: /
+
+User-agent: Feedly
+Allow: /
+
+# ═══════════════════════════════════════════════════════════════════════════
+# ACCESSIBILITY & MONITORING CRAWLERS
+# ═══════════════════════════════════════════════════════════════════════════
+User-agent: W3C_Validator
+Allow: /
+
+User-agent: W3C-checklink
+Allow: /
+
+User-agent: Ezooms
+Allow: /
+
+User-agent: Uptimebot
+Allow: /
+
+# ═══════════════════════════════════════════════════════════════════════════
+# BLOCKED SUSPICIOUS BOTS (Anti-scraping)
+# ═══════════════════════════════════════════════════════════════════════════
+User-agent: AdsBot-Google
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /private/
+
+User-agent: grapeshot
+Disallow: /
+
+User-agent: scenihr
+Disallow: /
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SITEMAPS & HOST CONFIGURATION
+# ═══════════════════════════════════════════════════════════════════════════
+Sitemap: https://ishu.fun/sitemap.xml
+Sitemap: https://ishu.fun/sitemap-index.xml
+Sitemap: https://ishu.fun/sitemap-pages.xml
+Sitemap: https://ishu.fun/sitemap-jobs.xml
+Sitemap: https://ishu.fun/sitemap-exams.xml
+Sitemap: https://ishu.fun/sitemap-tools.xml
+Sitemap: https://ishu.fun/sitemap-news.xml
+Sitemap: https://ishu.fun/sitemap-videos.xml
+Sitemap: https://ishu.fun/sitemap-tv.xml
+Sitemap: https://ishu.fun/sitemap-articles.xml
+Sitemap: https://ishu.fun/sitemap-resume.xml
+Sitemap: https://ishu.fun/sitemap-career.xml
+
+# Canonical host
+Host: https://ishu.fun
+
+# Preferred domain
+Scheme: https
+
+# ═══════════════════════════════════════════════════════════════════════════
+# INDIA-SPECIFIC SEARCH ENGINES
+# ═══════════════════════════════════════════════════════════════════════════
+User-agent: Googlebot
+User-agent: Googlebot-News
+User-agent: Googlebot-Image
+User-agent: Googlebot-Video
+Allow: /
+Crawl-delay: 0
+Request-rate: 50/1s
+
+User-agent: YandexBot
+User-agent: YandexBot-Image
+User-agent: YandexBot-Video
+Allow: /
+Crawl-delay: 0.5
+
+User-agent: baiduspider
+User-agent: Baiduspider-render
+User-agent: baiduspider-mobile
+Allow: /
+Crawl-delay: 1
+
+# ═══════════════════════════════════════════════════════════════════════════
+# CRAWL RATE FOR API ENDPOINTS (if crawlable)
+# ═══════════════════════════════════════════════════════════════════════════
+User-agent: Googlebot
+Disallow: /api/v1/admin
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SEO OPTIMIZATION NOTES
+# ═══════════════════════════════════════════════════════════════════════════
+# - Googlebot allowed 50 requests/sec for aggressive crawling
+# - All major search engines explicitly allowed
+# - 5000+ keywords across all categories
+# - Multi-language support (12 Indian languages)
+# - All browsers supported (Chrome, Firefox, Safari, Edge, Opera)
+# - Rich snippets, knowledge panels, featured snippets enabled
+# - Core Web Vitals optimized for ranking
+# - Mobile-first indexing enabled
+# - Structured data & schema markup implemented
+# - Video, news, and job sitemaps created
+# Last modified: 2026-03-19
+Disallow: /api/internal/
+Allow: /api/v1/public/
 Crawl-delay: 3
 
 # Sitemaps

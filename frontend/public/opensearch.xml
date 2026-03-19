@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
+  <ShortName>ISHU Search</ShortName>
+  <Description>Search ISHU — Indian StudentHub University for government exams, PDF tools, video downloaders, and more</Description>
+  <Url type="text/html" method="GET" template="https://ishu.fun/search?q={searchTerms}"/>
+  <Url type="application/x-suggestions+json" method="GET" template="https://ishu.fun/api/search/suggestions?q={searchTerms}"/>
+  <Contact>ishukryk@gmail.com</Contact>
+  <Tags>search government exams pdf tools video download ishu</Tags>
+  <Image height="16" width="16" type="image/x-icon">https://ishu.fun/favicon.ico</Image>
+  <Image height="64" width="64" type="image/png">https://ishu.fun/og-image.png</Image>
+  <Query role="example" searchTerms="UPSC exam result"/>
+  <Query role="example" searchTerms="PDF merge tool"/>
+  <Query role="example" searchTerms="YouTube downloader"/>
+  <Query role="example" searchTerms="live TV India"/>
+  <Query role="example" searchTerms="free resume maker"/>
+  <Attribution>ISHU © 2024-2026</Attribution>
+  <SyndicationRight>open</SyndicationRight>
+  <AdultContent>false</AdultContent>
+  <Language>en</Language>
+  <Language>hi</Language>
+  <Language>ta</Language>
+  <Language>te</Language>
+  <Language>bn</Language>
+  <Language>mr</Language>
+  <Language>gu</Language>
+  <Language>kn</Language>
+  <Language>ml</Language>
+  <Language>pa</Language>
+  <Language>ur</Language>
+</OpenSearchDescription>
