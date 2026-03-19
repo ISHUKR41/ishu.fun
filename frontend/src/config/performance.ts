@@ -1,7 +1,7 @@
 /**
  * performance.ts - Global Performance Configuration
  * 
- * Centralized performance settings for 90fps+ smooth scrolling
+ * Centralized performance settings for 120fps smooth scrolling
  * and optimal rendering across all devices.
  */
 
@@ -188,8 +188,8 @@ export const PERF_CONFIG = {
   // Enable performance monitoring in dev
   enableMonitoring: process.env.NODE_ENV === 'development',
   
-  // Log slow renders (> 16ms = < 60fps)
-  slowRenderThreshold: 16,
+  // Log slow renders (> 8.33ms = < 120fps target)
+  slowRenderThreshold: 8,
   
   // Log large bundles
   largeBundleThreshold: 500 * 1024, // 500KB

@@ -126,8 +126,12 @@ router.get('/stream-proxy', async (req, res) => {
     // Smart referrer based on URL
     const referrer = getReferer(decodedUrl);
 
+    // Aggressive timeouts: fail fast so client can try next source quickly
+    // Manifests: 5s (was 30s), Segments: 10s (was 20s), Other: 5s
+    const reqTimeout = isSegment ? 10000 : isManifest ? 5000 : 5000;
+
     const response = await axios.get(decodedUrl, {
-      timeout: isSegment ? 20000 : 30000,
+      timeout: reqTimeout,
       responseType: isManifest ? 'text' : 'arraybuffer',
       httpAgent: decodedUrl.startsWith('http:') ? httpAgent : undefined,
       httpsAgent: decodedUrl.startsWith('https:') ? httpsAgent : undefined,

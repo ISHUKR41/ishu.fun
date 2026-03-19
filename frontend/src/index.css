@@ -68,7 +68,7 @@
     touch-action: manipulation;
   }
 
-  /* ═══ ULTRA-SMOOTH 90fps+ PERFORMANCE OPTIMIZATIONS ═══ */
+  /* ═══ ULTRA-SMOOTH 120fps PERFORMANCE OPTIMIZATIONS ═══ */
   html {
     scroll-behavior: smooth;
     overflow-x: hidden;
@@ -78,12 +78,17 @@
     /* Enable hardware acceleration */
     transform: translateZ(0);
     -webkit-transform: translateZ(0);
+    /* Prevent layout shift from scrollbar appearing/disappearing */
+    scrollbar-gutter: stable;
+    /* Hint to browser we want high refresh rate rendering */
+    image-rendering: auto;
   }
 
   /* Mobile: disable smooth scroll to prevent jank during fast scrolling */
   @media (max-width: 768px) {
     html {
       scroll-behavior: auto;
+      scrollbar-gutter: auto;
     }
   }
 
@@ -101,6 +106,10 @@
     /* Enable hardware acceleration */
     transform: translateZ(0);
     -webkit-transform: translateZ(0);
+    /* Prevent overscroll bounce which causes jank */
+    overscroll-behavior-y: none;
+    /* Improve font rendering */
+    font-display: optional;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -262,6 +271,7 @@
   transform: translate3d(0, 0, 0);
   will-change: transform;
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 /* Content visibility for offscreen optimization */
@@ -283,6 +293,91 @@
   contain: layout style;
   content-visibility: auto;
   contain-intrinsic-size: auto 600px;
+}
+
+/* ═══ 120FPS SMOOTH TRANSITION OPTIMIZATION ═══ */
+/* Only use GPU-friendly properties for transitions */
+.smooth-transition {
+  transition-property: transform, opacity, background-color, border-color, color, fill, stroke, box-shadow;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Page section isolation for better compositing */
+.page-section {
+  isolation: isolate;
+  contain: layout style;
+}
+
+/* Offscreen content — skip paint until visible */
+.offscreen-optimize {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 400px;
+}
+
+/* Card performance optimization */
+.card-perf {
+  contain: layout style paint;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* ═══ HIGH REFRESH RATE ANIMATIONS ═══ */
+/* Explicitly use GPU-only properties for 120fps animations */
+@keyframes smooth-fade-in {
+  from { opacity: 0; transform: translate3d(0, 8px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes smooth-scale-in {
+  from { opacity: 0; transform: scale3d(0.96, 0.96, 1); }
+  to   { opacity: 1; transform: scale3d(1, 1, 1); }
+}
+@keyframes smooth-slide-up {
+  from { opacity: 0; transform: translate3d(0, 20px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+.animate-smooth-in {
+  animation: smooth-fade-in 0.25s cubic-bezier(0.4, 0, 0.2, 1) both;
+  will-change: transform, opacity;
+}
+.animate-scale-in {
+  animation: smooth-scale-in 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  will-change: transform, opacity;
+}
+.animate-slide-up {
+  animation: smooth-slide-up 0.3s cubic-bezier(0.4, 0, 0.2, 1) both;
+  will-change: transform, opacity;
+}
+
+/* ═══ INTERSECTION-BASED LAZY RENDERING ═══ */
+/* Used with IntersectionObserver to trigger GPU layers only when needed */
+.lazy-gpu {
+  transform: translateZ(0);
+}
+.lazy-gpu:not(.visible) {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 300px;
+}
+
+/* ═══ SCROLL PERFORMANCE ═══ */
+/* Momentum scrolling + layer promotion for scroll containers */
+.smooth-scroll-container {
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+  will-change: scroll-position;
+}
+@media (max-width: 768px) {
+  .smooth-scroll-container {
+    scroll-behavior: auto;
+  }
 }
 
 /* ═══ MOBILE PERFORMANCE: Reduce heavy effects ═══ */

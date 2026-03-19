@@ -502,6 +502,27 @@ async function fetchAllChannels(
     { url: "https://iptv-org.github.io/iptv/languages/snd.m3u", lang: "Hindi" },
     { url: "https://iptv-org.github.io/iptv/languages/gom.m3u", lang: "Hindi" },
     { url: "https://iptv-org.github.io/iptv/languages/lus.m3u", lang: "Hindi" },
+    // Extra verified active repos (newer additions)
+    { url: "https://raw.githubusercontent.com/vkumbhare/indian-iptv/main/channels.m3u", lang: "Hindi" },
+    { url: "https://raw.githubusercontent.com/nikhilbadyal/docker-py-revanced/dev/iptv/in.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/languages/tcy.m3u", lang: "Kannada" },
+    { url: "https://iptv-org.github.io/iptv/languages/raj.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/languages/wbq.m3u", lang: "Bengali" },
+    // Indian channel aggregators with direct HLS streams
+    { url: "https://raw.githubusercontent.com/luongz/iptv-jp/main/in.m3u", lang: "Hindi" },
+    { url: "https://raw.githubusercontent.com/fruitstudios/iptv/main/india.m3u", lang: "Hindi" },
+    { url: "https://raw.githubusercontent.com/Coldtapwater/IPTV/main/india.m3u", lang: "Hindi" },
+    { url: "https://raw.githubusercontent.com/redqx/iptv_list/main/india.m3u", lang: "Hindi" },
+    { url: "https://raw.githubusercontent.com/sairajchouhan/indian-live-tv/main/channels.m3u", lang: "Hindi" },
+    // DD Free Dish & Doordarshan
+    { url: "https://raw.githubusercontent.com/vishal-shete/dd-freedish/main/dd-freedish.m3u", lang: "Hindi" },
+    // Additional regional Indian language sources
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-jk.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-ch.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/subdivisions/in-an.m3u", lang: "Hindi" },
+    // Sports focused
+    { url: "https://iptv-org.github.io/iptv/categories/auto.m3u", lang: "English" },
+    { url: "https://iptv-org.github.io/iptv/categories/swim.m3u", lang: "English" },
   ];
 
   // Fetch each M3U source with individual 12s timeout to avoid slow sources blocking everything
@@ -829,16 +850,16 @@ function useRobustPlayer(
     // Determine the actual URL to load and whether to use proxy xhrSetup
     const isProxied = attempt.proxyIdx >= 0;
     const loadUrl = isProxied ? CORS_PROXIES[attempt.proxyIdx](attempt.url) : attempt.url;
-    // Timeout strategy (aggressive fail-fast for instant switching):
-    //   direct  → 1.2s (fail fast, native CDN)
-    //   backend → 2.5s (most reliable proxy, slight buffer)
-    //   public CORS proxies → 1.8s (fast public proxies)
-    const timeout = !isProxied ? 1200 : (attempt.proxyIdx === 12 ? 2500 : 1800);
+    // Timeout strategy (ultra-aggressive fail-fast for instant switching):
+    //   direct  → 900ms (fail fast, native CDN)
+    //   backend → 1500ms (most reliable proxy, slight buffer)
+    //   public CORS proxies → 1000ms (fast public proxies)
+    const timeout = !isProxied ? 900 : (attempt.proxyIdx === 12 ? 1500 : 1000);
 
-    // Stall detection — if video freezes for 2.5s, try next source (faster switching)
+    // Stall detection — if video freezes for 1.5s, try next source (faster switching)
     const onTimeUpdate = () => {
       if (stallRef.current) clearTimeout(stallRef.current);
-      stallRef.current = setTimeout(() => tryAttempt(idx + 1), 2500);
+      stallRef.current = setTimeout(() => tryAttempt(idx + 1), 1500);
     };
     timeUpdateRef.current = onTimeUpdate;
     video.addEventListener("timeupdate", onTimeUpdate);
@@ -886,10 +907,10 @@ function useRobustPlayer(
       // Ultra fast-fail policy — instant move to next source
       fragLoadPolicy: { 
         default: { 
-          maxTimeToFirstByteMs: isProxied ? 1500 : 800,
-          maxLoadTimeMs: isProxied ? 1800 : 1200,
-          timeoutRetry: { maxNumRetry: 0, retryDelayMs: 100, maxRetryDelayMs: 200 },
-          errorRetry: { maxNumRetry: 0, retryDelayMs: 100, maxRetryDelayMs: 200 }
+          maxTimeToFirstByteMs: isProxied ? 900 : 600,
+          maxLoadTimeMs: isProxied ? 1000 : 800,
+          timeoutRetry: { maxNumRetry: 0, retryDelayMs: 50, maxRetryDelayMs: 100 },
+          errorRetry: { maxNumRetry: 0, retryDelayMs: 50, maxRetryDelayMs: 100 }
         } 
       },
       startFragPrefetch: true,
@@ -992,14 +1013,57 @@ function useRobustPlayer(
 
   useEffect(() => {
     if (!streams || streams.length === 0) { cleanup(); setState("idle"); return; }
-    // Check success cache — if this channel worked before, prepend that attempt first
     const cached = channelId ? readStreamSuccessCache()[channelId] ?? null : null;
     const expandedList = buildAttemptList(streams, cached);
     attemptListRef.current = expandedList;
     attemptIdxRef.current = 0;
     setTotalUrls(streams.length);
-    tryAttempt(0);
-    return cleanup;
+
+    // If cached successful attempt exists, use it directly (instant!)
+    if (cached) {
+      tryAttempt(0);
+      return cleanup;
+    }
+
+    // Parallel probe: test top 4 attempts simultaneously with 700ms timeout
+    // Jump to first server that responds — eliminates sequential wait time
+    let cancelled = false;
+    const probeControllers: AbortController[] = [];
+    setState("loading");
+
+    const toProbe = expandedList.slice(0, Math.min(4, expandedList.length));
+    Promise.any(
+      toProbe.map((attempt, i) => new Promise<number>((resolve, reject) => {
+        const ctrl = new AbortController();
+        probeControllers.push(ctrl);
+        const timer = setTimeout(() => { ctrl.abort(); reject(new Error("probe timeout")); }, 700);
+        const loadUrl = attempt.proxyIdx >= 0
+          ? CORS_PROXIES[attempt.proxyIdx](attempt.url)
+          : attempt.url;
+        fetch(loadUrl, {
+          signal: ctrl.signal,
+          mode: attempt.proxyIdx >= 0 ? 'cors' : 'no-cors',
+          cache: 'no-store',
+        }).then(r => {
+          clearTimeout(timer);
+          if (r.ok || r.type === 'opaque') resolve(i);
+          else reject(new Error(`HTTP ${r.status}`));
+        }).catch(e => { clearTimeout(timer); reject(e); });
+      }))
+    ).then(winnerIdx => {
+      if (!cancelled) {
+        attemptIdxRef.current = winnerIdx;
+        tryAttempt(winnerIdx);
+      }
+    }).catch(() => {
+      if (!cancelled) tryAttempt(0);
+    });
+
+    return () => {
+      cancelled = true;
+      probeControllers.forEach(c => { try { c.abort(); } catch {} });
+      cleanup();
+    };
   }, [streams, channelId]);
 
   return { state, quality, urlAttempt, totalUrls, skipIn, retry, cancelSkip, hlsLevels, currentLevel, isAutoQuality, setQualityLevel, proxyActive };

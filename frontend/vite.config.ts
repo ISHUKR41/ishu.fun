@@ -46,6 +46,7 @@ export default defineConfig(({ mode }) => ({
       'react-router-dom',
       'framer-motion',
       'gsap',
+      'hls.js',
       '@radix-ui/react-dialog',
       '@radix-ui/react-dropdown-menu',
       '@radix-ui/react-tooltip',
