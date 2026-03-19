@@ -94,6 +94,7 @@ const allowedOrigins = [
     'http://localhost:3001',
     'http://localhost:3002',
     'http://localhost:5173',
+    'http://localhost:5000',
     'http://localhost:8080',
     'https://ishu.fun',
     'https://www.ishu.fun',
@@ -102,6 +103,10 @@ app.use(cors({
     origin: function (origin, callback) {
         // Allow requests with no origin (mobile apps, curl, server-to-server)
         if (!origin) return callback(null, true);
+        // Allow Replit dev domains (.replit.dev, .repl.co, .picard.replit.dev, .sisko.replit.dev)
+        if (origin && (origin.includes('.replit.dev') || origin.includes('.repl.co') || origin.includes('.replit.app'))) {
+            return callback(null, true);
+        }
         if (allowedOrigins.includes(origin)) return callback(null, true);
         return callback(null, true); // Allow all in dev — tighten for production
     },

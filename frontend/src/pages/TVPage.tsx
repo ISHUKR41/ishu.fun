@@ -169,7 +169,7 @@ const ALL_CAT = "all";
 const FAV_CAT = "favorites";
 
 /* ═══════════════════ SESSION STORAGE CACHE ═══════════════════ */
-const TV_CACHE_KEY = "ishu_tv_channels_v3";
+const TV_CACHE_KEY = "ishu_tv_channels_v4";
 const TV_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
 const Q_ORDER: Record<string, number> = { "2160p": 6, "1080p": 5, "720p": 4, "576p": 3, "480p": 2, "360p": 1, "240p": 0 };
 
@@ -371,6 +371,17 @@ async function fetchAllChannels(
     { url: "https://iptv-org.github.io/iptv/categories/news.m3u", lang: "Hindi" },
     { url: "https://iptv-org.github.io/iptv/categories/education.m3u", lang: "Hindi" },
     { url: "https://iptv-org.github.io/iptv/categories/comedy.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/categories/religious.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/categories/documentary.m3u", lang: "English" },
+    // Additional high-quality Indian sources
+    { url: "https://raw.githubusercontent.com/dtankdempse/free-iptv-channels/main/channels/in.m3u", lang: "Hindi" },
+    { url: "https://raw.githubusercontent.com/PetitPrince/playlists/refs/heads/master/India.m3u8", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/languages/mai.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/languages/bgc.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/languages/hne.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/languages/kok.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/languages/nep.m3u", lang: "Hindi" },
+    { url: "https://iptv-org.github.io/iptv/languages/sat.m3u", lang: "Hindi" },
   ];
 
   const m3uResults = await Promise.allSettled(
@@ -559,7 +570,7 @@ function useRobustPlayer(
 
   const startSkipCountdown = useCallback(() => {
     if (skipRef.current) return;
-    let c = 8;
+    let c = 5;
     setSkipIn(c);
     skipRef.current = setInterval(() => {
       c--;
@@ -657,12 +668,12 @@ function useRobustPlayer(
     const isProxied = attempt.proxyIdx >= 0;
     const loadUrl = isProxied ? CORS_PROXIES[attempt.proxyIdx](attempt.url) : attempt.url;
     // Reduced timeouts: fail fast so we try next stream/proxy quickly
-    const timeout = isProxied ? 14000 : 8000;
+    const timeout = isProxied ? 8000 : 5000;
 
     // Stall detection — 12s timeout (if video freezes, try next source)
     const onTimeUpdate = () => {
       if (stallRef.current) clearTimeout(stallRef.current);
-      stallRef.current = setTimeout(() => tryAttempt(idx + 1), 12000);
+      stallRef.current = setTimeout(() => tryAttempt(idx + 1), 8000);
     };
     timeUpdateRef.current = onTimeUpdate;
     video.addEventListener("timeupdate", onTimeUpdate);
@@ -709,10 +720,10 @@ function useRobustPlayer(
       // Optimized for faster channel switching and failover
       fragLoadPolicy: { 
         default: { 
-          maxTimeToFirstByteMs: 8000,
-          maxLoadTimeMs: 20000,
-          timeoutRetry: { maxNumRetry: 2, retryDelayMs: 500, maxRetryDelayMs: 3000 },
-          errorRetry: { maxNumRetry: 3, retryDelayMs: 500, maxRetryDelayMs: 3000 }
+          maxTimeToFirstByteMs: 5000,
+          maxLoadTimeMs: 12000,
+          timeoutRetry: { maxNumRetry: 2, retryDelayMs: 300, maxRetryDelayMs: 2000 },
+          errorRetry: { maxNumRetry: 2, retryDelayMs: 300, maxRetryDelayMs: 2000 }
         } 
       },
       // Additional optimizations for faster startup
