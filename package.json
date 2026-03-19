@@ -4,13 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "cd frontend && pnpm install && pnpm run dev",
+    "dev": "cd frontend && npm install && npm run dev",
     "dev:backend": "cd backend && npm install && node server.js",
-    "build": "cd frontend && pnpm install && pnpm run build",
-    "preview": "cd frontend && pnpm run preview",
-    "lint": "cd frontend && pnpm run lint"
-  },
-  "devDependencies": {
-    "lenis": "^1.3.19"
+    "build": "cd frontend && npm install && npm run build",
+    "preview": "cd frontend && npm run preview",
+    "lint": "cd frontend && npm run lint"
   }
 }
