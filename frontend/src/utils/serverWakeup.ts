@@ -7,7 +7,7 @@
 
 import { useState, useEffect } from 'react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://ishu-site.onrender.com';
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? '' : 'https://ishu-site.onrender.com');
 const WAKE_ENDPOINT = `${API_URL}/api/wake`;
 const STATUS_ENDPOINT = `${API_URL}/api/status`;
 

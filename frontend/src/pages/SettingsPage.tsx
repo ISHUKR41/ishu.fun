@@ -27,7 +27,7 @@ import { useAuth as useClerkAuth } from "@clerk/clerk-react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-const API_BASE = import.meta.env.VITE_API_URL || "https://ishu-site.onrender.com";
+const API_BASE = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "" : "https://ishu-site.onrender.com");
 
 // ──── Tab definition ────
 const tabs = [

@@ -29,7 +29,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const API_URL = import.meta.env.VITE_API_URL || "https://ishu-site.onrender.com";
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "" : "https://ishu-site.onrender.com");
 
 const QUALITY_OPTIONS = [
   { value: "2160", label: "4K (2160p)", badge: "4K" },

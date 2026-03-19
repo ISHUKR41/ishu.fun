@@ -21,7 +21,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth as useClerkAuth } from "@clerk/clerk-react";
 import axios from "axios";
 
-const API_BASE = import.meta.env.VITE_API_URL || "https://ishu-site.onrender.com";
+const API_BASE = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "" : "https://ishu-site.onrender.com");
 
 const typeIcons: Record<string, { icon: any; color: string; bg: string }> = {
   tool_used: { icon: Wrench, color: "text-blue-400", bg: "bg-blue-500/10" },

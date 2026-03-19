@@ -9,7 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth as useClerkAuth } from "@clerk/clerk-react";
 import axios from "axios";
 
-const API_BASE = import.meta.env.VITE_API_URL || "https://ishu-site.onrender.com";
+const API_BASE = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "" : "https://ishu-site.onrender.com");
 
 export const useToolHistory = (page: number = 1, limit: number = 20) => {
   const { getToken, isSignedIn } = useClerkAuth();

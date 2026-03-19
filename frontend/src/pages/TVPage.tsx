@@ -47,6 +47,7 @@ import {
   STREAM_CONFIG,
   ANIMATION_CONFIG,
 } from "@/config/performance";
+import { API_URL as CENTRAL_API_URL } from "@/config/api";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -170,8 +171,9 @@ const ALL_CAT = "all";
 const FAV_CAT = "favorites";
 
 /* ═══════════════════ SESSION STORAGE CACHE ═══════════════════ */
-const TV_CACHE_KEY = "ishu_tv_channels_v9";
-const TV_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+const TV_CACHE_KEY = "ishu_tv_channels_v10";
+const TV_CACHE_TTL = 45 * 60 * 1000; // 45 minutes
+const TV_LANG_PREF_KEY = "ishu_tv_lang_pref";
 
 /* ═══════════════════ STREAM SUCCESS CACHE ═══════════════════
    Stores working stream URL + proxy index per channel in localStorage.
@@ -240,9 +242,8 @@ function parseM3U(text: string, defaultLang: string): { name: string; logo: stri
 }
 
 /* ═══════════════════ PROXY CONFIG ═══════════════════ */
-// Backend proxy for CORS bypass (runs on your Express backend)
-const API_URL = import.meta.env.VITE_API_URL || "https://ishu-site.onrender.com";
-const BACKEND_PROXY = `${API_URL}/api/stream-proxy`;
+// Backend proxy for CORS bypass (runs on your Express backend via Vite proxy)
+const BACKEND_PROXY = `${CENTRAL_API_URL}/api/stream-proxy`;
 
 // Proxy fallbacks in PRIORITY order (index 0 = highest priority)
 // Optimized: fastest & most reliable proxies first
@@ -253,23 +254,25 @@ const CORS_PROXIES = [
   (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
   // 2: corsproxy.org - very reliable
   (url: string) => `https://www.corsproxy.org/?${encodeURIComponent(url)}`,
-  // 3: cors.sh - fast alternative
+  // 3: cors.lol - reliable & fast
+  (url: string) => `https://api.cors.lol/?url=${encodeURIComponent(url)}`,
+  // 4: cors.sh - fast alternative
   (url: string) => `https://proxy.cors.sh/${url}`,
-  // 4: thingproxy - alternative
+  // 5: thingproxy - alternative
   (url: string) => `https://thingproxy.freeboard.io/fetch/${url}`,
-  // 5: crossorigin.me
+  // 6: crossorigin.me
   (url: string) => `https://crossorigin.me/${url}`,
-  // 6: jsonp.afeld.me - another public proxy
+  // 7: jsonp.afeld.me - another public proxy
   (url: string) => `https://jsonp.afeld.me/?url=${encodeURIComponent(url)}`,
-  // 7: api.codetabs.com - fast & reliable CORS proxy  
+  // 8: api.codetabs.com - fast & reliable CORS proxy  
   (url: string) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
-  // 8: cors-anywhere heroku
+  // 9: cors-anywhere heroku
   (url: string) => `https://cors-anywhere.herokuapp.com/${url}`,
-  // 9: yacdn.org CORS proxy
+  // 10: yacdn.org CORS proxy
   (url: string) => `https://yacdn.org/proxy/${url}`,
-  // 10: proxy.opensuse.org alternative
+  // 11: proxy.opensuse.org alternative
   (url: string) => `https://cors.bridged.cc/${url}`,
-  // 11: backend proxy (last resort — may be sleeping on Render free tier)
+  // 12: backend proxy (most reliable - has caching + proper headers)
   (url: string) => `${BACKEND_PROXY}?url=${encodeURIComponent(url)}`,
 ];
 
@@ -427,6 +430,11 @@ async function fetchAllChannels(
     // Additional high-quality Indian sources
     { url: "https://raw.githubusercontent.com/dtankdempse/free-iptv-channels/main/channels/in.m3u", lang: "Hindi" },
     { url: "https://raw.githubusercontent.com/PetitPrince/playlists/refs/heads/master/India.m3u8", lang: "Hindi" },
+    // More verified working Indian IPTV repos
+    { url: "https://raw.githubusercontent.com/jaiswalvik/IPTV/main/Indian-TV-Channels.m3u", lang: "Hindi" },
+    { url: "https://raw.githubusercontent.com/Avi-D-coder/indian-iptv/master/indian.m3u", lang: "Hindi" },
+    { url: "https://raw.githubusercontent.com/kefranabg/bento-starter/master/public/india.m3u", lang: "Hindi" },
+    { url: "https://raw.githubusercontent.com/Free-TV/IPTV/master/playlists/playlist_india.m3u8", lang: "Hindi" },
     { url: "https://iptv-org.github.io/iptv/languages/mai.m3u", lang: "Hindi" },
     { url: "https://iptv-org.github.io/iptv/languages/bgc.m3u", lang: "Hindi" },
     { url: "https://iptv-org.github.io/iptv/languages/hne.m3u", lang: "Hindi" },
@@ -694,7 +702,7 @@ function useRobustPlayer(
 
   const startSkipCountdown = useCallback(() => {
     if (skipRef.current) return;
-    let c = 5;
+    let c = 3;
     setSkipIn(c);
     skipRef.current = setInterval(() => {
       c--;
@@ -728,7 +736,7 @@ function useRobustPlayer(
   // Build optimized attempt list: DIRECT → BACKEND → public proxies per URL
   // Strategy: backend proxy is 2nd (best CORS handling + caching, no rate limits)
   // Max ~5 attempts per URL (direct + backend + 3 public proxies)
-  // BACKEND PROXY = index 11 in CORS_PROXIES
+  // BACKEND PROXY = index 12 in CORS_PROXIES
   const buildAttemptList = useCallback((streamList: StreamUrl[], cachedAttempt?: { url: string; proxyIdx: number } | null) => {
     const list: { url: string; proxyIdx: number; original: StreamUrl }[] = [];
 
@@ -757,13 +765,13 @@ function useRobustPlayer(
       if (isDirectCDN) {
         // CDN streams: direct, then backend proxy (has caching), then allorigins
         list.push({ url: s.url, proxyIdx: -1,  original: s }); // direct
-        list.push({ url: s.url, proxyIdx: 11,  original: s }); // backend (CORS + referrer + cache)
+        list.push({ url: s.url, proxyIdx: 12,  original: s }); // backend (CORS + referrer + cache)
         list.push({ url: s.url, proxyIdx: 0,   original: s }); // allorigins
         list.push({ url: s.url, proxyIdx: 1,   original: s }); // corsproxy.io
       } else {
         // Other streams: direct → backend → 3 public CORS proxies
         list.push({ url: s.url, proxyIdx: -1,  original: s }); // direct
-        list.push({ url: s.url, proxyIdx: 11,  original: s }); // backend (most reliable proxy)
+        list.push({ url: s.url, proxyIdx: 12,  original: s }); // backend (most reliable proxy)
         list.push({ url: s.url, proxyIdx: 0,   original: s }); // allorigins
         list.push({ url: s.url, proxyIdx: 1,   original: s }); // corsproxy.io
         list.push({ url: s.url, proxyIdx: 2,   original: s }); // corsproxy.org
@@ -772,7 +780,7 @@ function useRobustPlayer(
     // Remaining streams (beyond top 5): direct + backend only
     for (const s of streamList.slice(5)) {
       list.push({ url: s.url, proxyIdx: -1,  original: s }); // direct
-      list.push({ url: s.url, proxyIdx: 11,  original: s }); // backend
+      list.push({ url: s.url, proxyIdx: 12,  original: s }); // backend
     }
 
     // Remove duplicate entries (same url+proxyIdx) while preserving order
@@ -812,7 +820,7 @@ function useRobustPlayer(
     const originalUrlIdx = Math.floor(idx / attemptsPerUrl);
     setUrlAttempt(originalUrlIdx + 1);
     // Show proxy label
-    const proxyNames = ["allorigins", "corsproxy.io", "corsproxy.org", "cors.sh", "thingproxy", "crossorigin.me", "jsonp", "codetabs", "cors-anywhere", "yacdn.org", "bridged", "backend"];
+    const proxyNames = ["allorigins", "corsproxy.io", "corsproxy.org", "cors.lol", "cors.sh", "thingproxy", "crossorigin.me", "jsonp", "codetabs", "cors-anywhere", "yacdn.org", "bridged", "backend"];
     setProxyActive(attempt.proxyIdx >= 0 ? (proxyNames[attempt.proxyIdx] || "proxy") : false);
 
     setState(idx === 0 ? "loading" : "switching");
@@ -821,16 +829,16 @@ function useRobustPlayer(
     // Determine the actual URL to load and whether to use proxy xhrSetup
     const isProxied = attempt.proxyIdx >= 0;
     const loadUrl = isProxied ? CORS_PROXIES[attempt.proxyIdx](attempt.url) : attempt.url;
-    // Timeout strategy:
-    //   direct  → 2.5s (fail fast)
-    //   backend → 6.0s (most reliable, may need Render cold-start buffer)
-    //   public CORS proxies → 4.0s
-    const timeout = !isProxied ? 2500 : (attempt.proxyIdx === 11 ? 6000 : 4000);
+    // Timeout strategy (aggressive fail-fast for instant switching):
+    //   direct  → 1.2s (fail fast, native CDN)
+    //   backend → 2.5s (most reliable proxy, slight buffer)
+    //   public CORS proxies → 1.8s (fast public proxies)
+    const timeout = !isProxied ? 1200 : (attempt.proxyIdx === 12 ? 2500 : 1800);
 
-    // Stall detection — if video freezes for 5s, try next source
+    // Stall detection — if video freezes for 2.5s, try next source (faster switching)
     const onTimeUpdate = () => {
       if (stallRef.current) clearTimeout(stallRef.current);
-      stallRef.current = setTimeout(() => tryAttempt(idx + 1), 5000);
+      stallRef.current = setTimeout(() => tryAttempt(idx + 1), 2500);
     };
     timeUpdateRef.current = onTimeUpdate;
     video.addEventListener("timeupdate", onTimeUpdate);
@@ -856,15 +864,15 @@ function useRobustPlayer(
       maxBufferLength: STREAM_CONFIG.maxBufferLength,
       maxMaxBufferLength: STREAM_CONFIG.maxMaxBufferLength,
       startLevel: -1,
-      // Reduced retries — fail fast, try next source
-      fragLoadingMaxRetry: 2,
-      fragLoadingRetryDelay: 200,
+      // Ultra-fast fail — move to next source almost immediately
+      fragLoadingMaxRetry: 1,
+      fragLoadingRetryDelay: 100,
       fragLoadingMaxRetryTimeout: timeout,
-      manifestLoadingMaxRetry: 2,
-      manifestLoadingRetryDelay: 200,
+      manifestLoadingMaxRetry: 1,
+      manifestLoadingRetryDelay: 100,
       manifestLoadingMaxRetryTimeout: timeout,
-      levelLoadingMaxRetry: 2,
-      levelLoadingRetryDelay: 200,
+      levelLoadingMaxRetry: 1,
+      levelLoadingRetryDelay: 100,
       levelLoadingMaxRetryTimeout: timeout,
       backBufferLength: IS_MOBILE ? 10 : 15,
       capLevelToPlayerSize: true,
@@ -875,13 +883,13 @@ function useRobustPlayer(
       abrBandWidthUpFactor: 0.5,
       appendErrorMaxRetry: 2,
       enableSoftwareAES: true,
-      // Fast-fail policy — don't wait long per fragment
+      // Ultra fast-fail policy — instant move to next source
       fragLoadPolicy: { 
         default: { 
-          maxTimeToFirstByteMs: isProxied ? 3000 : 2000,
-          maxLoadTimeMs: isProxied ? 4000 : 2500,
-          timeoutRetry: { maxNumRetry: 1, retryDelayMs: 200, maxRetryDelayMs: 500 },
-          errorRetry: { maxNumRetry: 1, retryDelayMs: 200, maxRetryDelayMs: 500 }
+          maxTimeToFirstByteMs: isProxied ? 1500 : 800,
+          maxLoadTimeMs: isProxied ? 1800 : 1200,
+          timeoutRetry: { maxNumRetry: 0, retryDelayMs: 100, maxRetryDelayMs: 200 },
+          errorRetry: { maxNumRetry: 0, retryDelayMs: 100, maxRetryDelayMs: 200 }
         } 
       },
       startFragPrefetch: true,
@@ -891,7 +899,7 @@ function useRobustPlayer(
     // For proxied streams, route ALL XHR requests through the proxy
     if (isProxied) {
       const proxyFn = CORS_PROXIES[attempt.proxyIdx];
-      const proxyDomains = ['allorigins.win', 'corsproxy.io', 'corsproxy.org', 'proxy.cors.sh', 'thingproxy.freeboard.io', 'crossorigin.me', 'jsonp.afeld.me', 'codetabs.com', 'cors-anywhere.herokuapp.com', 'yacdn.org', 'cors.bridged.cc', '/api/stream-proxy'];
+      const proxyDomains = ['allorigins.win', 'corsproxy.io', 'corsproxy.org', 'cors.lol', 'proxy.cors.sh', 'thingproxy.freeboard.io', 'crossorigin.me', 'jsonp.afeld.me', 'codetabs.com', 'cors-anywhere.herokuapp.com', 'yacdn.org', 'cors.bridged.cc', '/api/stream-proxy'];
       hlsConfig.xhrSetup = (xhr: XMLHttpRequest, url: string) => {
         // Don't double-wrap if already proxied
         if (proxyDomains.some(d => url.includes(d))) return;
@@ -956,13 +964,12 @@ function useRobustPlayer(
     hls.on(Hls.Events.ERROR, (_e: any, data: any) => {
       if (!data.fatal) return;
       // Fast-fail: limited retries so we move to next source quickly
-      if (data.type === Hls.ErrorTypes.MEDIA_ERROR && retryRef.current < 3) {
+      if (data.type === Hls.ErrorTypes.MEDIA_ERROR && retryRef.current < 1) {
         retryRef.current++;
-        if (retryRef.current === 1) hls.recoverMediaError();
-        else { hls.swapAudioCodec(); hls.recoverMediaError(); }
+        hls.recoverMediaError();
         return;
       }
-      if (data.type === Hls.ErrorTypes.NETWORK_ERROR && retryRef.current < 2) {
+      if (data.type === Hls.ErrorTypes.NETWORK_ERROR && retryRef.current < 1) {
         retryRef.current++;
         hls.startLoad();
         return;
@@ -1082,8 +1089,10 @@ const TVPage = () => {
   const [fetchMsg, setFetchMsg] = useState("Initializing...");
   const [fetchError, setFetchError] = useState("");
 
-  // Language-first selection
-  const [selectedLang, setSelectedLang] = useState<string | null>(null);
+  // Language-first selection (persisted in localStorage)
+  const [selectedLang, setSelectedLang] = useState<string | null>(() => {
+    try { return localStorage.getItem(TV_LANG_PREF_KEY) || null; } catch { return null; }
+  });
 
   // Filters
   const [activeCat, setActiveCat] = useState(ALL_CAT);
@@ -1308,6 +1317,14 @@ const TVPage = () => {
     });
     return () => ctx.revert();
   }, [fetchLoading]);
+
+  /* ── Language preference persistence ── */
+  useEffect(() => {
+    try {
+      if (selectedLang) localStorage.setItem(TV_LANG_PREF_KEY, selectedLang);
+      else localStorage.removeItem(TV_LANG_PREF_KEY);
+    } catch {}
+  }, [selectedLang]);
 
   /* ── Favorites ── */
   useEffect(() => { localStorage.setItem("ishu_tv_favs", JSON.stringify([...favorites])); }, [favorites]);

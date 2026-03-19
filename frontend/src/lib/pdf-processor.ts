@@ -27,7 +27,7 @@ import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
 import { supabase } from '@/integrations/supabase/client';
 
-const API_URL = import.meta.env.VITE_API_URL || "https://ishu-site.onrender.com";
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "" : "https://ishu-site.onrender.com");
 
 export interface ProcessResult {
   blob: Blob;

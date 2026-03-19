@@ -12,7 +12,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, CheckCircle, WifiOff, RefreshCw, Zap, Clock } from "lucide-react";
 
-const API_URL = import.meta.env.VITE_API_URL || "https://ishu-site.onrender.com";
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "" : "https://ishu-site.onrender.com");
 
 // Shared wake state — so multiple components can await the same wake
 let _wakePromise: Promise<boolean> | null = null;

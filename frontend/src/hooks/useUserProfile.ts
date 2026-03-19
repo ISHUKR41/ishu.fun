@@ -16,7 +16,7 @@ import { useAuth as useClerkAuth } from "@clerk/clerk-react";
 import axios from "axios";
 
 // Backend API base URL
-const API_BASE = import.meta.env.VITE_API_URL || "https://ishu-site.onrender.com";
+const API_BASE = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "" : "https://ishu-site.onrender.com");
 
 /**
  * useUserProfile — Hook for fetching and updating the current user's profile
