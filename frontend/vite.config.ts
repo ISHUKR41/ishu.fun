@@ -46,6 +46,7 @@ export default defineConfig(({ mode }) => ({
       'react-router-dom',
       'framer-motion',
       'gsap',
+      'lenis',
       'hls.js',
       '@radix-ui/react-dialog',
       '@radix-ui/react-dropdown-menu',
@@ -81,6 +82,7 @@ export default defineConfig(({ mode }) => ({
           }
           if (id.includes("node_modules/@tsparticles/")) return "vendor-particles";
           if (id.includes("node_modules/@radix-ui/")) return "vendor-radix";
+          if (id.includes("node_modules/lenis/") || id.includes("node_modules/@studio-freight/")) return "vendor-lenis";
           if (
             id.includes("node_modules/jspdf/") ||
             id.includes("node_modules/pdf-lib/") ||

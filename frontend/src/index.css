@@ -4165,3 +4165,148 @@ section {
   padding-left: max(1rem, env(safe-area-inset-left));
   padding-right: max(1rem, env(safe-area-inset-right));
 }
+
+/* ═══════════════════════════════════════════════════════════════════ */
+/* ═══ ULTRA-SMOOTHNESS LAYER — Applied globally for lag-free UX ═══ */
+/* ═══════════════════════════════════════════════════════════════════ */
+
+/* Smooth reveal animations for intersection-based entry */
+.smooth-reveal {
+  opacity: 0;
+  transform: translate3d(0, 20px, 0);
+  transition: opacity 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: transform, opacity;
+}
+
+.smooth-reveal.visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  will-change: auto;
+}
+
+/* Smooth scale reveal */
+.smooth-reveal-scale {
+  opacity: 0;
+  transform: scale3d(0.95, 0.95, 1);
+  transition: opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.smooth-reveal-scale.visible {
+  opacity: 1;
+  transform: scale3d(1, 1, 1);
+}
+
+/* Ultra-smooth transition system for interactive elements */
+.ultra-smooth {
+  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.ultra-smooth:hover {
+  transition: all 0.15s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* Smooth enter animation variants */
+.smooth-enter-up {
+  animation: smooth-enter-up 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+.smooth-enter-down {
+  animation: smooth-enter-down 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+.smooth-enter-left {
+  animation: smooth-enter-left 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+.smooth-enter-right {
+  animation: smooth-enter-right 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@keyframes smooth-enter-up {
+  from { opacity: 0; transform: translate3d(0, 16px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes smooth-enter-down {
+  from { opacity: 0; transform: translate3d(0, -16px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes smooth-enter-left {
+  from { opacity: 0; transform: translate3d(16px, 0, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes smooth-enter-right {
+  from { opacity: 0; transform: translate3d(-16px, 0, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+/* Compositing optimization for scrollable areas */
+.scroll-optimize {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  will-change: scroll-position;
+}
+
+/* Smooth paint isolation for sections (prevents cross-section repaint) */
+.paint-isolate {
+  isolation: isolate;
+  contain: layout style paint;
+}
+
+/* High frame-rate rendering hints */
+@media (prefers-reduced-motion: no-preference) {
+  /* Enable smooth compositing for motion-friendly users */
+  .motion-safe-gpu {
+    transform: translateZ(0);
+    will-change: transform;
+  }
+  
+  /* Smooth CSS transitions for all Radix UI elements */
+  [data-state] {
+    transition: all 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  
+  /* Smooth dialog/modal overlays */
+  [data-state="open"] {
+    animation: smooth-fade-in 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+}
+
+/* Ensure font rendering is always smooth */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Smooth scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(0 0% 30%);
+  border-radius: 3px;
+  transition: background 0.2s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(0 0% 45%);
+}
+
+/* Firefox smooth scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(0 0% 30%) transparent;
+}
