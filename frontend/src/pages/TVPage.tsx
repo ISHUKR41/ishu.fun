@@ -963,15 +963,15 @@ function useRobustPlayer(
     const isProxied = attempt.proxyIdx >= 0;
     const loadUrl = isProxied ? CORS_PROXIES[attempt.proxyIdx](attempt.url) : attempt.url;
     // Timeout strategy (ultra-aggressive fail-fast for instant switching):
-    //   direct  → 900ms (fail fast, native CDN)
-    //   backend → 1200ms (most reliable proxy, slight buffer)
-    //   public CORS proxies → 800ms (fast public proxies)
-    const timeout = !isProxied ? 600 : (attempt.proxyIdx === BACKEND_PROXY_IDX ? 1200 : 800);
+    //   direct  → 400ms (fail fast, native CDN)
+    //   backend → 700ms (most reliable proxy, slight buffer)
+    //   public CORS proxies → 500ms (fast public proxies)
+    const timeout = !isProxied ? 400 : (attempt.proxyIdx === BACKEND_PROXY_IDX ? 700 : 500);
 
-    // Stall detection — if video freezes for 1s, try next source (faster switching)
+    // Stall detection — if video freezes for 700ms, try next source (faster switching)
     const onTimeUpdate = () => {
       if (stallRef.current) clearTimeout(stallRef.current);
-      stallRef.current = setTimeout(() => tryAttempt(idx + 1), 1000);
+      stallRef.current = setTimeout(() => tryAttempt(idx + 1), 700);
     };
     timeUpdateRef.current = onTimeUpdate;
     video.addEventListener("timeupdate", onTimeUpdate);
@@ -1019,10 +1019,10 @@ function useRobustPlayer(
       // Ultra fast-fail policy — instant move to next source
       fragLoadPolicy: { 
         default: { 
-          maxTimeToFirstByteMs: isProxied ? 700 : 400,
-          maxLoadTimeMs: isProxied ? 800 : 600,
-          timeoutRetry: { maxNumRetry: 0, retryDelayMs: 50, maxRetryDelayMs: 100 },
-          errorRetry: { maxNumRetry: 0, retryDelayMs: 50, maxRetryDelayMs: 100 }
+          maxTimeToFirstByteMs: isProxied ? 450 : 250,
+          maxLoadTimeMs: isProxied ? 500 : 400,
+          timeoutRetry: { maxNumRetry: 0, retryDelayMs: 30, maxRetryDelayMs: 60 },
+          errorRetry: { maxNumRetry: 0, retryDelayMs: 30, maxRetryDelayMs: 60 }
         } 
       },
       startFragPrefetch: true,

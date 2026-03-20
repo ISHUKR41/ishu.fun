@@ -4321,3 +4321,187 @@ section {
   scrollbar-width: thin;
   scrollbar-color: hsl(0 0% 30%) transparent;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   ULTRA PERFORMANCE PACK — 120fps Smooth Scroll & Rendering
+   Added: Scroll bounce fix, GPU compositing, paint isolation
+════════════════════════════════════════════════════════════ */
+
+/* 1. Lenis scroll wrapper — force GPU compositing layer */
+html.lenis,
+html.lenis-smooth {
+  /* Lenis needs NO overflow constraints on html */
+  overflow: unset !important;
+  height: auto !important;
+}
+
+/* 2. Stop scroll bounce from overscroll on all devices */
+html, body {
+  overscroll-behavior-y: none;
+  overscroll-behavior-x: none;
+}
+
+/* 3. Main layout container — GPU compositing for smooth scroll */
+#root > div {
+  /* transform: translateZ(0) here would prevent Lenis from working */
+  /* So we isolate without creating a new stacking context */
+  contain: layout;
+}
+
+/* 4. Force consistent compositing for all animated elements */
+[data-framer-motion],
+[style*="opacity"],
+[style*="transform: translate"] {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* 5. Prevent layout thrashing during scroll */
+.sticky, [class*="sticky"] {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* 6. Optimize fixed position elements (header, scroll progress) */
+[class*="fixed"] {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* 7. Cards and interactive grid items — GPU layer isolation */
+.card, [class*="rounded-"], [class*="border"] {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* 8. Optimize gradient backgrounds (very expensive) */
+[class*="bg-gradient"] {
+  will-change: auto;
+  transform: translateZ(0);
+}
+
+/* 9. Images — prevent jank during scroll */
+img {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* 10. Prevent text reflow jank */
+p, span, h1, h2, h3, h4, h5, h6, li {
+  text-rendering: optimizeSpeed;
+}
+
+/* 11. Framer Motion elements — ensure GPU compositing */
+[class*="framer"], [class*="motion"] {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* 12. Touch scrolling containers (mobile horizontal carousels etc) */
+[class*="overflow-x-auto"],
+[class*="overflow-y-auto"],
+[class*="overflow-auto"] {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+/* 13. Prevent paint storms from box-shadow during scroll */
+[class*="shadow"] {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* 14. Lazy-load images below the fold */
+img:not([loading]) {
+  loading: lazy;
+}
+
+/* 15. Ensure all transitions use composited-only properties */
+.transition-smooth {
+  transition-property: transform, opacity, filter;
+  transition-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition-duration: 200ms;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* 16. Page route transitions — prevent layout shift on navigation */
+main {
+  isolation: isolate;
+  contain: layout style;
+}
+
+/* 17. Ensure video elements are GPU-accelerated */
+video, canvas {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* 18. High DPI / Retina displays — use device pixel ratio aware rendering */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  img {
+    image-rendering: -webkit-optimize-contrast;
+  }
+}
+
+/* 19. 120hz+ display optimization — hint browser to use high frame rate */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    /* Allow browser to use highest available refresh rate */
+    scroll-behavior: auto;
+  }
+}
+
+/* 20. Mobile-specific optimizations */
+@media (max-width: 768px) {
+  /* Reduce visual complexity on mobile for better FPS */
+  [class*="blur-"] {
+    filter: none !important;
+  }
+  
+  /* Prevent costly animations on low-end mobile */
+  @media (max-device-memory: 2gb) {
+    [class*="animate-"] {
+      animation-duration: 0.1ms !important;
+    }
+  }
+}
+
+/* 21. TV / Large screen optimizations */
+@media (min-width: 1920px) {
+  body {
+    font-size: 18px;
+  }
+}
+
+/* 22. Force repaint-free scroll by promoting scroll-linked elements */
+.scroll-linked {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* 23. Tab / Accordion / Collapsible — smooth height transitions */
+[data-radix-collection-item],
+[data-state="open"],
+[data-state="closed"] {
+  will-change: auto;
+}
+
+/* 24. Popover / Dropdown — GPU composite for smooth appear/disappear */
+[data-radix-popper-content-wrapper] {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* 25. Prevent scroll-triggered reflow from glassmorphism */
+.glass, .glass-strong, [class*="backdrop-blur"] {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
