@@ -94,8 +94,15 @@ const ToolsPage = () => {
   const { scrollY } = useScroll();
   const bgY = useTransform(scrollY, [0, 2000], [0, -150]);
   const [activeCat, setActiveCat] = useState("All");
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
+  // Debounce search to prevent Fuse.js running on every keystroke
+  useEffect(() => {
+    const timer = setTimeout(() => setSearch(searchInput), 200);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
   const gridRef = useRef<HTMLDivElement>(null);
   const howRef = useRef<HTMLElement>(null);
   const trustRef = useRef<HTMLElement>(null);
@@ -238,10 +245,10 @@ const ToolsPage = () => {
             <div className="mx-auto mt-10 max-w-xl">
               <div className="flex items-center gap-3 rounded-2xl border border-border glass-ultra px-5 py-4 transition-all focus-within:border-primary/40 focus-within:shadow-glow">
                 <Search size={20} className="text-muted-foreground" />
-                <input type="text" placeholder="Search tools... (e.g., merge, compress, convert)" value={search} onChange={(e) => setSearch(e.target.value)}
+                <input type="text" placeholder="Search tools... (e.g., merge, compress, convert)" value={searchInput} onChange={(e) => setSearchInput(e.target.value)}
                   className="w-full bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none" />
-                {search && (
-                  <button onClick={() => setSearch("")} className="text-muted-foreground hover:text-foreground transition-colors">
+                {searchInput && (
+                  <button onClick={() => { setSearchInput(""); setSearch(""); }} className="text-muted-foreground hover:text-foreground transition-colors">
                     <X size={18} />
                   </button>
                 )}

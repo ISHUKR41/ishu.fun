@@ -1,0 +1,376 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- TV Sitemap for ISHU.fun - Live Indian TV Channels -->
+<!-- Updated: 2026-03-20 -->
+<!-- Domain: https://ishu.fun -->
+<!-- 700+ Live Indian TV Channels in 14+ Languages -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:video="http://www.google.com/schemas/sitemap-video/1.1"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+
+  <!-- ═══ MAIN TV PAGE ═══ -->
+  <url>
+    <loc>https://ishu.fun/tv</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.95</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ishu.fun/tv" />
+    <xhtml:link rel="alternate" hreflang="hi" href="https://ishu.fun/tv" />
+    <xhtml:link rel="alternate" hreflang="ta" href="https://ishu.fun/tv" />
+    <xhtml:link rel="alternate" hreflang="te" href="https://ishu.fun/tv" />
+    <xhtml:link rel="alternate" hreflang="bn" href="https://ishu.fun/tv" />
+    <xhtml:link rel="alternate" hreflang="mr" href="https://ishu.fun/tv" />
+    <xhtml:link rel="alternate" hreflang="gu" href="https://ishu.fun/tv" />
+    <xhtml:link rel="alternate" hreflang="kn" href="https://ishu.fun/tv" />
+    <xhtml:link rel="alternate" hreflang="ml" href="https://ishu.fun/tv" />
+    <xhtml:link rel="alternate" hreflang="pa" href="https://ishu.fun/tv" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ishu.fun/tv" />
+    <video:video>
+      <video:thumbnail_loc>https://ishu.fun/og-image.png</video:thumbnail_loc>
+      <video:title>Live Indian TV Channels Free Online - ISHU</video:title>
+      <video:description>Watch 700+ live Indian TV channels free online. Hindi, English, Tamil, Telugu, Bengali, Marathi channels. News, entertainment, sports, movies, devotional, kids channels live streaming. No app required.</video:description>
+      <video:content_loc>https://ishu.fun/tv</video:content_loc>
+      <video:player_loc>https://ishu.fun/tv</video:player_loc>
+      <video:duration>3600</video:duration>
+      <video:publication_date>2024-01-01T00:00:00+05:30</video:publication_date>
+      <video:family_friendly>yes</video:family_friendly>
+      <video:live>yes</video:live>
+      <video:tag>live TV India</video:tag>
+      <video:tag>Indian channels free</video:tag>
+      <video:tag>Hindi TV live</video:tag>
+      <video:tag>Tamil TV live</video:tag>
+      <video:tag>Telugu TV live</video:tag>
+      <video:tag>free streaming India</video:tag>
+      <video:tag>news channels India</video:tag>
+      <video:tag>entertainment channels</video:tag>
+      <video:tag>sports channels India</video:tag>
+      <video:tag>devotional channels</video:tag>
+    </video:video>
+  </url>
+
+  <!-- ═══ HINDI TV CHANNELS ═══ -->
+  <url>
+    <loc>https://ishu.fun/tv?lang=Hindi&amp;cat=news</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.90</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tv?lang=Hindi&amp;cat=entertainment</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.88</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tv?lang=Hindi&amp;cat=movies</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.87</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tv?lang=Hindi&amp;cat=sports</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.87</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tv?lang=Hindi&amp;cat=kids</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.82</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tv?lang=Hindi&amp;cat=religious</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.82</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tv?lang=Hindi&amp;cat=music</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.80</priority>
+  </url>
+
+  <!-- ═══ ENGLISH TV CHANNELS ═══ -->
+  <url>
+    <loc>https://ishu.fun/tv?lang=English&amp;cat=news</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.88</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tv?lang=English&amp;cat=entertainment</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tv?lang=English&amp;cat=sports</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <!-- ═══ TAMIL TV CHANNELS ═══ -->
+  <url>
+    <loc>https://ishu.fun/tv?lang=Tamil&amp;cat=news</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.87</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tv?lang=Tamil&amp;cat=entertainment</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tv?lang=Tamil&amp;cat=movies</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.84</priority>
+  </url>
+
+  <!-- ═══ TELUGU TV CHANNELS ═══ -->
+  <url>
+    <loc>https://ishu.fun/tv?lang=Telugu&amp;cat=news</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.87</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tv?lang=Telugu&amp;cat=entertainment</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tv?lang=Telugu&amp;cat=movies</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.84</priority>
+  </url>
+
+  <!-- ═══ BENGALI TV CHANNELS ═══ -->
+  <url>
+    <loc>https://ishu.fun/tv?lang=Bengali&amp;cat=news</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.86</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tv?lang=Bengali&amp;cat=entertainment</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.84</priority>
+  </url>
+
+  <!-- ═══ MARATHI TV CHANNELS ═══ -->
+  <url>
+    <loc>https://ishu.fun/tv?lang=Marathi&amp;cat=news</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tv?lang=Marathi&amp;cat=entertainment</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.83</priority>
+  </url>
+
+  <!-- ═══ KANNADA TV CHANNELS ═══ -->
+  <url>
+    <loc>https://ishu.fun/tv?lang=Kannada&amp;cat=news</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tv?lang=Kannada&amp;cat=entertainment</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.83</priority>
+  </url>
+
+  <!-- ═══ MALAYALAM TV CHANNELS ═══ -->
+  <url>
+    <loc>https://ishu.fun/tv?lang=Malayalam&amp;cat=news</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tv?lang=Malayalam&amp;cat=entertainment</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.83</priority>
+  </url>
+
+  <!-- ═══ GUJARATI TV CHANNELS ═══ -->
+  <url>
+    <loc>https://ishu.fun/tv?lang=Gujarati&amp;cat=news</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.84</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tv?lang=Gujarati&amp;cat=entertainment</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.82</priority>
+  </url>
+
+  <!-- ═══ PUNJABI TV CHANNELS ═══ -->
+  <url>
+    <loc>https://ishu.fun/tv?lang=Punjabi&amp;cat=news</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.84</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tv?lang=Punjabi&amp;cat=entertainment</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.82</priority>
+  </url>
+
+  <!-- ═══ URDU TV CHANNELS ═══ -->
+  <url>
+    <loc>https://ishu.fun/tv?lang=Urdu&amp;cat=news</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.83</priority>
+  </url>
+
+  <!-- ═══ ODIA TV CHANNELS ═══ -->
+  <url>
+    <loc>https://ishu.fun/tv?lang=Odia&amp;cat=news</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.82</priority>
+  </url>
+
+  <!-- ═══ POPULAR CHANNEL PAGES ═══ -->
+  <url>
+    <loc>https://ishu.fun/tv?search=Aaj+Tak</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.88</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tv?search=NDTV</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.87</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tv?search=Republic+TV</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.86</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tv?search=Star+Plus</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.86</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tv?search=Zee+TV</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tv?search=Sony+TV</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tv?search=Colors+TV</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tv?search=DD+National</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.84</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tv?search=India+Today</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.84</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tv?search=ABP+News</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.84</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tv?search=News18</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.83</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tv?search=Zee+News</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.83</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tv?search=Sun+TV</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.83</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tv?search=Star+Sports</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.86</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tv?search=Sony+Six</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tv?search=Cartoon+Network</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.82</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tv?search=Pogo</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.80</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tv?search=National+Geographic</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.82</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tv?search=Discovery</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.82</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tv?search=Astha+TV</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.80</priority>
+  </url>
+
+</urlset>

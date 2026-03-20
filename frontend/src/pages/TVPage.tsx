@@ -962,16 +962,16 @@ function useRobustPlayer(
     // Determine the actual URL to load and whether to use proxy xhrSetup
     const isProxied = attempt.proxyIdx >= 0;
     const loadUrl = isProxied ? CORS_PROXIES[attempt.proxyIdx](attempt.url) : attempt.url;
-    // Timeout strategy (ultra-aggressive fail-fast for instant switching):
-    //   direct  → 400ms (fail fast, native CDN)
-    //   backend → 700ms (most reliable proxy, slight buffer)
-    //   public CORS proxies → 500ms (fast public proxies)
-    const timeout = !isProxied ? 400 : (attempt.proxyIdx === BACKEND_PROXY_IDX ? 700 : 500);
+    // Timeout strategy (balanced — enough time for HLS manifest to load):
+    //   direct  → 6000ms (HLS manifests need time, especially on slow connections)
+    //   backend → 10000ms (most reliable proxy, needs more time for proxying)
+    //   public CORS proxies → 7000ms (public proxies can be slow)
+    const timeout = !isProxied ? 6000 : (attempt.proxyIdx === BACKEND_PROXY_IDX ? 10000 : 7000);
 
-    // Stall detection — if video freezes for 700ms, try next source (faster switching)
+    // Stall detection — if video freezes for 8s, try next source
     const onTimeUpdate = () => {
       if (stallRef.current) clearTimeout(stallRef.current);
-      stallRef.current = setTimeout(() => tryAttempt(idx + 1), 700);
+      stallRef.current = setTimeout(() => tryAttempt(idx + 1), 8000);
     };
     timeUpdateRef.current = onTimeUpdate;
     video.addEventListener("timeupdate", onTimeUpdate);
@@ -997,15 +997,15 @@ function useRobustPlayer(
       maxBufferLength: STREAM_CONFIG.maxBufferLength,
       maxMaxBufferLength: STREAM_CONFIG.maxMaxBufferLength,
       startLevel: -1,
-      // Ultra-fast fail — move to next source almost immediately
-      fragLoadingMaxRetry: 1,
-      fragLoadingRetryDelay: 100,
+      // Balanced retry — enough retries per source before moving on
+      fragLoadingMaxRetry: 3,
+      fragLoadingRetryDelay: 500,
       fragLoadingMaxRetryTimeout: timeout,
-      manifestLoadingMaxRetry: 1,
-      manifestLoadingRetryDelay: 100,
+      manifestLoadingMaxRetry: 3,
+      manifestLoadingRetryDelay: 500,
       manifestLoadingMaxRetryTimeout: timeout,
-      levelLoadingMaxRetry: 1,
-      levelLoadingRetryDelay: 100,
+      levelLoadingMaxRetry: 3,
+      levelLoadingRetryDelay: 500,
       levelLoadingMaxRetryTimeout: timeout,
       backBufferLength: IS_MOBILE ? 10 : 15,
       capLevelToPlayerSize: true,
@@ -1016,13 +1016,13 @@ function useRobustPlayer(
       abrBandWidthUpFactor: 0.5,
       appendErrorMaxRetry: 2,
       enableSoftwareAES: true,
-      // Ultra fast-fail policy — instant move to next source
+      // Balanced load policy — enough time for HLS segments to load
       fragLoadPolicy: { 
         default: { 
-          maxTimeToFirstByteMs: isProxied ? 450 : 250,
-          maxLoadTimeMs: isProxied ? 500 : 400,
-          timeoutRetry: { maxNumRetry: 0, retryDelayMs: 30, maxRetryDelayMs: 60 },
-          errorRetry: { maxNumRetry: 0, retryDelayMs: 30, maxRetryDelayMs: 60 }
+          maxTimeToFirstByteMs: isProxied ? 8000 : 5000,
+          maxLoadTimeMs: isProxied ? 12000 : 8000,
+          timeoutRetry: { maxNumRetry: 2, retryDelayMs: 500, maxRetryDelayMs: 2000 },
+          errorRetry: { maxNumRetry: 2, retryDelayMs: 500, maxRetryDelayMs: 2000 }
         } 
       },
       startFragPrefetch: true,
@@ -1148,7 +1148,7 @@ function useRobustPlayer(
       toProbe.map((attempt, i) => new Promise<number>((resolve, reject) => {
         const ctrl = new AbortController();
         probeControllers.push(ctrl);
-        const timer = setTimeout(() => { ctrl.abort(); reject(new Error("probe timeout")); }, 350);
+        const timer = setTimeout(() => { ctrl.abort(); reject(new Error("probe timeout")); }, 2000);
         const loadUrl = attempt.proxyIdx >= 0
           ? CORS_PROXIES[attempt.proxyIdx](attempt.url)
           : attempt.url;

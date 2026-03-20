@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Main Sitemap for ISHU.fun - Core Navigation Pages -->
+<!-- Updated: 2026-03-20 -->
+<!-- Domain: https://ishu.fun -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+
+  <!-- Homepage -->
+  <url>
+    <loc>https://ishu.fun/</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ishu.fun/" />
+    <xhtml:link rel="alternate" hreflang="en-in" href="https://ishu.fun/" />
+    <xhtml:link rel="alternate" hreflang="hi" href="https://ishu.fun/" />
+  </url>
+
+  <!-- Government Exam Results -->
+  <url>
+    <loc>https://ishu.fun/results</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.97</priority>
+  </url>
+
+  <!-- Free PDF & Online Tools -->
+  <url>
+    <loc>https://ishu.fun/tools</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.95</priority>
+  </url>
+
+  <!-- Live Indian TV Channels -->
+  <url>
+    <loc>https://ishu.fun/tv</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.95</priority>
+  </url>
+
+  <!-- YouTube Video Downloader -->
+  <url>
+    <loc>https://ishu.fun/tools/youtube-downloader</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+  </url>
+
+  <!-- Terabox Downloader -->
+  <url>
+    <loc>https://ishu.fun/tools/terabox-downloader</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.93</priority>
+  </url>
+
+  <!-- Universal Video Downloader -->
+  <url>
+    <loc>https://ishu.fun/tools/universal-video-downloader</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.92</priority>
+  </url>
+
+  <!-- News -->
+  <url>
+    <loc>https://ishu.fun/news</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.90</priority>
+  </url>
+
+  <!-- Blog -->
+  <url>
+    <loc>https://ishu.fun/blog</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <!-- CV / Resume Builder -->
+  <url>
+    <loc>https://ishu.fun/cv</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <!-- Resume Builder -->
+  <url>
+    <loc>https://ishu.fun/cv/resume</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.83</priority>
+  </url>
+
+  <!-- Bio Data Builder -->
+  <url>
+    <loc>https://ishu.fun/cv/bio-data</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.82</priority>
+  </url>
+
+  <!-- About Page -->
+  <url>
+    <loc>https://ishu.fun/about</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.70</priority>
+  </url>
+
+  <!-- Contact Page -->
+  <url>
+    <loc>https://ishu.fun/contact</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.65</priority>
+  </url>
+
+  <!-- Privacy Policy -->
+  <url>
+    <loc>https://ishu.fun/privacy</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.50</priority>
+  </url>
+
+  <!-- Terms of Service -->
+  <url>
+    <loc>https://ishu.fun/terms</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.50</priority>
+  </url>
+
+  <!-- Sitemap Page -->
+  <url>
+    <loc>https://ishu.fun/sitemap</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.45</priority>
+  </url>
+
+</urlset>

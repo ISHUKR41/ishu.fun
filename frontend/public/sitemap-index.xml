@@ -58,6 +58,30 @@
   <!-- Blog/Article sitemap -->
   <sitemap>
     <loc>https://ishu.fun/sitemap-blog.xml</loc>
-    <lastmod>2026-03-19</lastmod>
+    <lastmod>2026-03-20</lastmod>
+  </sitemap>
+
+  <!-- Live TV channels sitemap -->
+  <sitemap>
+    <loc>https://ishu.fun/sitemap-tv.xml</loc>
+    <lastmod>2026-03-20T00:00:00+05:30</lastmod>
+  </sitemap>
+
+  <!-- Expanded keywords sitemap -->
+  <sitemap>
+    <loc>https://ishu.fun/sitemap-expanded.xml</loc>
+    <lastmod>2026-03-20</lastmod>
+  </sitemap>
+
+  <!-- Main sitemap (all core pages) -->
+  <sitemap>
+    <loc>https://ishu.fun/sitemap.xml</loc>
+    <lastmod>2026-03-20</lastmod>
+  </sitemap>
+
+  <!-- Tools sitemap -->
+  <sitemap>
+    <loc>https://ishu.fun/sitemap-tools.xml</loc>
+    <lastmod>2026-03-20</lastmod>
   </sitemap>
 </sitemapindex>
