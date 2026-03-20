@@ -63,29 +63,37 @@
   }
 }
 
-/* ═══ SCROLL SAFETY NET ═══ */
-/* Lenis manages all smooth scrolling. These are safety fallbacks. */
+/* ═══ SCROLL SAFETY NET (Lenis-compatible) ═══ */
+/*
+ * CRITICAL: Do NOT set overflow-x: hidden on <html> when using Lenis.
+ * It makes html the scroll container, breaking window-based Lenis scroll interception.
+ * Use overflow: clip instead — it clips visually but does NOT create a scroll container.
+ */
 html {
-  overflow-x: hidden;
+  /* overflow: clip does NOT create a BFC / new scroll container (safe for Lenis) */
+  overflow-x: clip;
   pointer-events: auto;
-  /* Prevent browser from competing with Lenis on scroll boundaries */
   overscroll-behavior: none;
+  /* Lenis needs html height to be auto */
+  height: auto;
+  /* Required by Lenis — content element must have non-static position */
+  position: relative;
 }
 
 body {
+  /* body can safely use overflow-x: hidden */
   overflow-x: hidden;
   overscroll-behavior: none;
 }
 
-/* Lenis adds .lenis class — let it manage scroll */
+/* Lenis adds these classes when active — ensure no overflow interference */
 html.lenis,
 html.lenis-smooth {
   height: auto;
-  /* Lenis requires overflow to be unset on html when active */
-  overflow: unset;
+  overflow: unset !important;
 }
 
-/* When Lenis stops (e.g. modal open), allow native scroll fallback */
+/* When Lenis stops (modal open, etc.) allow native scroll */
 html.lenis-stopped {
   overflow: auto;
 }
@@ -95,9 +103,9 @@ html.lenis-stopped {
   min-height: 100dvh;
 }
 
-/* Prevent horizontal overflow from Layout wrapper */
+/* Prevent horizontal overflow from Layout wrapper without creating scroll container */
 #root > div {
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 @layer base {

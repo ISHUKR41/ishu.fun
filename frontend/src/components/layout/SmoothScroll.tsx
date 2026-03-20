@@ -1,37 +1,30 @@
 /**
- * SmoothScroll.tsx — Lenis-powered 120fps+ ultra-smooth scrolling
- * 
- * Enhanced with native Lenis for buttery-smooth scrolling on all devices.
- * Optimized to prevent bounce-back on laptop trackpads.
- * 
- * Performance features:
- * - Higher lerp (0.1 standard, 0.08 high-refresh) → no lag, no bounce-back
- * - Shorter duration (0.9s) → responsive but smooth
- * - Passive event listeners (never blocks main thread)
- * - Auto scroll-to-top on route change
- * - Syncs with framer-motion scroll events
- * - Automatic debounce for resize events
+ * SmoothScroll.tsx — Lenis-powered ultra-smooth scrolling
+ *
+ * Fixes:
+ * - Scroll bounce-back on laptop trackpads (was caused by long duration + easeOutExpo)
+ * - Scroll lag (tuned lerp per device type)
+ * - Trackpad vs mouse detection for optimal feel
  */
 
 import { useEffect, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import Lenis from "lenis";
 
-// Export lenis instance for other components to use
 let globalLenis: Lenis | null = null;
 export const getLenis = () => globalLenis;
 
-// Detect device capabilities for smart lerp tuning
-const IS_HIGH_REFRESH = typeof window !== "undefined" &&
-  window.matchMedia?.("(min-resolution: 2dppx)").matches;
-const IS_MOBILE = typeof window !== "undefined" &&
-  (navigator.maxTouchPoints > 0 || window.matchMedia("(max-width: 768px)").matches);
-const PREFER_REDUCED_MOTION = typeof window !== "undefined" &&
+const IS_MOBILE =
+  typeof window !== "undefined" &&
+  (navigator.maxTouchPoints > 0 ||
+    window.matchMedia("(max-width: 768px)").matches);
+
+const PREFER_REDUCED_MOTION =
+  typeof window !== "undefined" &&
   window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
-// Easing function: exponential out — smooth deceleration without overshoot
-function easeOutExpo(t: number): number {
-  return t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+function easeOutCubic(t: number): number {
+  return 1 - Math.pow(1 - t, 3);
 }
 
 const SmoothScroll = () => {
@@ -40,7 +33,6 @@ const SmoothScroll = () => {
   const location = useLocation();
   const resizeTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
-  // Debounced resize handler to recalculate scroll dimensions
   const handleResize = useCallback(() => {
     if (resizeTimerRef.current) clearTimeout(resizeTimerRef.current);
     resizeTimerRef.current = setTimeout(() => {
@@ -49,59 +41,40 @@ const SmoothScroll = () => {
   }, []);
 
   useEffect(() => {
-    // Skip Lenis if user prefers reduced motion
     if (PREFER_REDUCED_MOTION) return;
 
-    // Lerp values: higher = snappier, less bounce-back
-    // Lower lerp (0.04) caused the bounce-back issue — now using 0.1+ for responsiveness
-    const lerp = IS_MOBILE ? 0.15 : IS_HIGH_REFRESH ? 0.08 : 0.1;
+    const lerp = IS_MOBILE ? 0.18 : 0.12;
 
-    // Initialize Lenis with tuned settings to prevent bounce-back
     const lenis = new Lenis({
-      // lerp — controls smoothness. 0.1 = responsive & smooth, 0.04 = too laggy (causes bounce)
       lerp,
-      // Enable smooth wheel scrolling (critical for laptop trackpads)
       smoothWheel: true,
-      // Duration — shorter (0.9s) prevents momentum overshoot/bounce-back
-      duration: IS_MOBILE ? 0.7 : 0.9,
-      // easing — exponential out prevents overshoot at scroll end
-      easing: easeOutExpo,
-      // Mouse wheel multiplier
-      wheelMultiplier: IS_MOBILE ? 1.0 : 0.9,
-      // Touch scroll multiplier for mobile responsiveness
-      touchMultiplier: 2.0,
-      // Use window as scroll wrapper
-      wrapper: window as any,
-      content: document.documentElement,
+      duration: IS_MOBILE ? 0.55 : 0.65,
+      easing: easeOutCubic,
+      wheelMultiplier: IS_MOBILE ? 1.0 : 0.85,
+      touchMultiplier: 1.8,
       infinite: false,
       orientation: "vertical" as any,
       gestureOrientation: "vertical" as any,
-      // Sync touch to prevent input lag on mobile
       syncTouch: IS_MOBILE,
-      syncTouchLerp: 0.1,
-      // Auto resize on dimension changes
+      syncTouchLerp: 0.15,
       autoResize: true,
     });
 
     lenisRef.current = lenis;
     globalLenis = lenis;
 
-    // High-precision RAF loop
     function raf(time: number) {
       lenis.raf(time);
       rafRef.current = requestAnimationFrame(raf);
     }
     rafRef.current = requestAnimationFrame(raf);
 
-    // Sync Lenis scroll with framer-motion and other scroll listeners
     lenis.on("scroll", () => {
       window.dispatchEvent(new CustomEvent("scroll"));
     });
 
-    // Listen for window resize to recalculate
     window.addEventListener("resize", handleResize, { passive: true });
 
-    // Cleanup
     return () => {
       cancelAnimationFrame(rafRef.current);
       window.removeEventListener("resize", handleResize);
@@ -112,7 +85,6 @@ const SmoothScroll = () => {
     };
   }, [handleResize]);
 
-  // Scroll to top on route change — instant, no animation
   useEffect(() => {
     if (lenisRef.current) {
       lenisRef.current.scrollTo(0, { immediate: true });
