@@ -178,14 +178,9 @@ html.lenis-stopped {
   /* ═══ GPU-ACCELERATED ANIMATIONS (60fps+) ═══ */
   /* Only animate transform and opacity for best performance */
   .animate-smooth {
-    will-change: transform, opacity;
     transform: translateZ(0);
     -webkit-transform: translateZ(0);
-  }
-
-  /* Remove will-change after animation completes to free GPU memory */
-  .animate-smooth:not(:hover):not(:focus):not(:active) {
-    will-change: auto;
+    backface-visibility: hidden;
   }
 
   /* ═══ SCROLL PERFORMANCE ═══ */
@@ -226,12 +221,8 @@ html.lenis-stopped {
     transition-duration: 0.2s;
   }
 
-  /* GPU-accelerate all framer-motion animated elements */
-  [style*="transform"] {
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-    perspective: 1000px;
-  }
+  /* GPU-accelerate framer-motion animated elements — do NOT apply perspective globally */
+  /* perspective on every element creates thousands of compositing layers = flickering */
 
   /* Smooth color transitions on hover for all interactive elements */
   a:hover, button:hover, [role="button"]:hover {
@@ -239,15 +230,10 @@ html.lenis-stopped {
   }
 
   /* ═══ SECTION SMOOTHNESS ═══ */
-  /* Each section gets paint containment for scroll performance */
+  /* Layout containment only — NOT paint or style (paint can hide overflow children) */
   section {
-    contain: layout style;
+    contain: layout;
     will-change: auto;
-  }
-
-  /* When sections come into view, hint the GPU */
-  section:hover {
-    will-change: contents;
   }
 
   /* ═══ REDUCED MOTION ACCESSIBILITY ═══ */
@@ -970,23 +956,18 @@ section[class*="py-"] {
   }
 }
 
-/* Breathing glow */
+/* Breathing glow — uses opacity on a pseudo-element (GPU compositable, no repaint) */
 @keyframes breathe {
-
-  0%,
-  100% {
-    box-shadow: 0 0 20px hsl(210 100% 56% / 0.1);
+  0%, 100% {
+    opacity: 0.7;
   }
-
   50% {
-    box-shadow: 0 0 40px hsl(210 100% 56% / 0.2), 0 0 80px hsl(210 100% 56% / 0.05);
+    opacity: 1;
   }
 }
 
 .animate-breathe {
   animation: breathe 4s ease-in-out infinite;
-  will-change: transform;
-  transform: translateZ(0);
 }
 
 /* Stagger children animation */

@@ -461,7 +461,7 @@ const CVPage = () => {
             backgroundImage: "url('https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=2070&q=80')",
             backgroundSize: "cover",
             backgroundPosition: "center",
-            backgroundAttachment: "fixed",
+            backgroundAttachment: "scroll",
           }}
         />
         <div className="absolute inset-0 -z-10 border-y border-border/30" />
@@ -585,7 +585,7 @@ const CVPage = () => {
             backgroundImage: "url('https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&w=2070&q=80')",
             backgroundSize: "cover",
             backgroundPosition: "center",
-            backgroundAttachment: "fixed",
+            backgroundAttachment: "scroll",
           }}
         />
         <div className="container">
@@ -749,7 +749,7 @@ const CVPage = () => {
             backgroundImage: "url('https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=2070&q=80')",
             backgroundSize: "cover",
             backgroundPosition: "center",
-            backgroundAttachment: "fixed",
+            backgroundAttachment: "scroll",
           }}
         />
         <div className="container">
@@ -794,7 +794,7 @@ const CVPage = () => {
             backgroundImage: "url('https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&w=2072&q=80')",
             backgroundSize: "cover",
             backgroundPosition: "center",
-            backgroundAttachment: "fixed",
+            backgroundAttachment: "scroll",
           }}
         />
         <div className="absolute inset-0 -z-10 border-t border-border/30" />

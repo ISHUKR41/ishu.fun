@@ -1563,7 +1563,7 @@ const TVPage = () => {
         backgroundImage: "url('https://images.unsplash.com/photo-1593784991095-a205069470b6?auto=format&fit=crop&q=80')",
         backgroundSize: "cover",
         backgroundPosition: "center",
-        backgroundAttachment: "fixed",
+        backgroundAttachment: "scroll",
       }} />
       <SEOHead {...SEO_DATA.tv} />
       <BreadcrumbSchema items={[{ name: "Home", url: "/" }, { name: "Live TV", url: "/tv" }]} />

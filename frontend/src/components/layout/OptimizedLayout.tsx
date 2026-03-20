@@ -40,21 +40,6 @@ export const OptimizedLayout = ({
   useEffect(() => {
     if (!containerRef.current) return;
 
-    const container = containerRef.current;
-
-    // Force GPU compositing
-    container.style.transform = 'translateZ(0)';
-    container.style.webkitTransform = 'translateZ(0)';
-
-    // Enable hardware acceleration for children
-    const children = container.querySelectorAll('[data-animate]');
-    children.forEach((child) => {
-      if (child instanceof HTMLElement) {
-        child.style.transform = 'translateZ(0)';
-        child.style.webkitTransform = 'translateZ(0)';
-      }
-    });
-
     // Parallax effect (desktop only)
     if (enableParallax && !IS_MOBILE && !PREFERS_REDUCED_MOTION && shouldEnableAnimation('parallax')) {
       let rafId: number | null = null;
@@ -123,7 +108,7 @@ export const OptimizedLayout = ({
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundRepeat: 'no-repeat',
-      backgroundAttachment: IS_MOBILE ? 'scroll' : 'fixed', // Fixed on desktop for parallax
+      backgroundAttachment: 'scroll', // Always scroll — fixed causes full repaint on every scroll frame
     }),
     ...(backgroundGradient && {
       background: backgroundGradient,
@@ -173,10 +158,8 @@ export const OptimizedSection = ({
       data-parallax-speed={parallax ? parallaxSpeed : undefined}
       data-animate={animate ? 'true' : undefined}
       style={{
-        /* contain: layout style for perf, but NO paint containment (causes content to disappear) */
-        contain: 'layout style',
-        /* contentVisibility DISABLED — it causes below-fold sections to render late */
-        /* contentVisibility: lazy ? 'auto' : 'visible', */
+        /* contain: layout only — style containment can break cascading CSS */
+        contain: 'layout',
         contentVisibility: 'visible',
       }}
     >

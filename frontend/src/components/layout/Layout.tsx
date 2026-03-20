@@ -66,12 +66,12 @@ const Layout = ({ children }: LayoutProps) => {
       <ScrollToTop />         {/* "Back to top" button appears on scroll */}
       <Header />              {/* Navigation bar */}
       
-      {/* Main content area with GPU-accelerated entry animation */}
+      {/* Main content area with fade-in only — no y movement (prevents layout reflow) */}
       <LazyMotion features={domAnimation}>
       <m.main
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
         className="relative flex-1 pt-16 z-10"
       >
         <div className="border-b border-border/60 bg-card/40">
