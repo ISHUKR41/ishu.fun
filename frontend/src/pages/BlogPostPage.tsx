@@ -253,7 +253,7 @@ const BlogPostPage = () => {
       />
 
       {/* Breadcrumb + Meta */}
-      <section className="bg-gradient-hero py-12">
+      <section className="bg-gradient-hero pt-6 pb-10">
         <div className="container">
           <FadeInView>
             <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-border glass px-4 py-2 text-sm text-muted-foreground">

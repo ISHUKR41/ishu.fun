@@ -209,7 +209,7 @@ const ToolPage = () => {
       }} />
 
       {/* Header */}
-      <section className="bg-gradient-hero py-16">
+      <section className="bg-gradient-hero pt-6 pb-12">
         <div className="container">
           <FadeInView>
             <Link to="/tools" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4">

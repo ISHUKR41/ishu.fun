@@ -1572,7 +1572,7 @@ const TVPage = () => {
 
         {/* ═══ HERO ═══ */}
         {!selectedLang && !playing ? (
-        <section className="relative overflow-hidden py-20 sm:py-28 lg:py-32">
+        <section className="relative overflow-hidden pt-8 pb-16">
           <div className="pointer-events-none absolute inset-0">
             <GradientMesh variant="aurora" />
             {!IS_MOBILE && <MorphingBlob color="hsl(217,91%,55%)" size={300} duration={40} />}

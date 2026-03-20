@@ -26,6 +26,7 @@ import FloatingElements from "../animations/FloatingElements";
 import ScrollFixer from "./ScrollFixer";
 import SmoothScroll from "./SmoothScroll";
 import PerformanceOptimizer from "./PerformanceOptimizer";
+import IshuBrandSEO from "../seo/IshuBrandSEO";
 
 // Lazy load CursorSpotlight since it's only needed on desktop
 const CursorSpotlight = lazy(() => import("../animations/CursorSpotlight"));
@@ -42,6 +43,8 @@ interface LayoutProps {
 const Layout = ({ children }: LayoutProps) => {
   return (
     <div className="relative flex min-h-screen flex-col">
+      {/* Global Ishu Brand SEO — Person schema injected on every page */}
+      <IshuBrandSEO />
       {/* Nuclear JS-based scroll fix — forces scrolling to work regardless of CSS */}
       <ScrollFixer />
       {/* Lenis smooth scroll — 120fps butter-smooth scrolling on all devices */}
