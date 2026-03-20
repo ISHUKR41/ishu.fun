@@ -892,6 +892,7 @@ section[class*="py-"] {
 
 .animate-marquee {
   animation: marquee 30s linear infinite;
+  will-change: transform;
 }
 
 /* Animated gradient border */

@@ -44,6 +44,9 @@ const liveStats = [
 { icon: Newspaper, value: "1K+", label: "Daily News" }];
 
 
+const IS_MOBILE_DEVICE = typeof window !== "undefined" &&
+  (navigator.maxTouchPoints > 0 || window.matchMedia("(max-width: 768px)").matches);
+
 const HeroSection = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const headlineRef = useRef<HTMLHeadingElement>(null);
@@ -64,10 +67,11 @@ const HeroSection = () => {
   const scale = useTransform(scrollYProgress, [0, 1], [1, 0.9]);
 
   useEffect(() => {
+    if (IS_MOBILE_DEVICE || prefersReducedMotion) return;
     initParticlesEngine(async (engine) => {
       await loadSlim(engine);
     }).then(() => setParticlesReady(true));
-  }, []);
+  }, [prefersReducedMotion]);
 
   useEffect(() => {
     if (!headlineRef.current) return;

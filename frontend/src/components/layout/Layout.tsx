@@ -48,8 +48,9 @@ const Layout = ({ children }: LayoutProps) => {
       <SmoothScroll />
       {/* Performance enhancements — CSS containment, lazy images, GPU hints */}
       <PerformanceOptimizer />
-      {/* Fixed background layer - base gradient (single layer, no GPU layer explosion) */}
-      <div className="pointer-events-none fixed inset-0 bg-gradient-to-b from-background via-background to-background z-0" />
+      {/* Fixed background layer - base gradient with GPU compositing to prevent scroll repaint */}
+      <div className="pointer-events-none fixed inset-0 bg-gradient-to-b from-background via-background to-background z-0"
+        style={{ transform: "translateZ(0)", willChange: "transform" }} />
       
       {/* Floating ambient orbs - decorative animated circles in background (hidden on mobile via CSS) */}
       <FloatingElements variant="default" />

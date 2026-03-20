@@ -36,10 +36,10 @@ const TextReveal = ({ text, className = "", delay = 0, staggerDelay = 0.03 }: Te
         <span key={i} className="inline-block overflow-hidden">
           <motion.span
             className="inline-block"
-            initial={{ y: "60%", opacity: 0.3 }}
+            initial={{ y: "15%", opacity: 0.85 }}
             animate={isInView ? { y: "0%", opacity: 1 } : {}}
             transition={{
-              duration: 0.45,
+              duration: 0.3,
               delay: delay + i * staggerDelay,
               ease: [0.25, 0.46, 0.45, 0.94],
             }}

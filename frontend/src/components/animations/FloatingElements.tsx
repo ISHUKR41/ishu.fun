@@ -53,6 +53,8 @@ const FloatingElements = ({ variant = "default" }: { variant?: "default" | "warm
       style={{
         contain: "layout style",
         animationPlayState: isVisible ? "running" : "paused",
+        transform: "translateZ(0)",
+        willChange: "transform",
       }}
     >
       {PALETTES[variant].map((orb, i) => (
