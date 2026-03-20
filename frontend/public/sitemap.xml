@@ -3,15 +3,17 @@
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
         xmlns:video="http://www.google.com/schemas/sitemap-video/1.1"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
-  
-  <!-- CORE PAGES (Homepage, Main Sections) -->
-  
+
+  <!-- ═══ CORE PAGES ═══ -->
+
   <url>
     <loc>https://ishu.fun/</loc>
-    <lastmod>2026-03-19</lastmod>
+    <lastmod>2026-03-20</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ishu.fun/" />
     <xhtml:link rel="alternate" hreflang="en" href="https://ishu.fun/?lang=en" />
+    <xhtml:link rel="alternate" hreflang="en-in" href="https://ishu.fun/?lang=en" />
     <xhtml:link rel="alternate" hreflang="hi" href="https://ishu.fun/?lang=hi" />
     <xhtml:link rel="alternate" hreflang="ta" href="https://ishu.fun/?lang=ta" />
     <xhtml:link rel="alternate" hreflang="te" href="https://ishu.fun/?lang=te" />
@@ -20,387 +22,344 @@
     <xhtml:link rel="alternate" hreflang="gu" href="https://ishu.fun/?lang=gu" />
     <xhtml:link rel="alternate" hreflang="kn" href="https://ishu.fun/?lang=kn" />
     <xhtml:link rel="alternate" hreflang="ml" href="https://ishu.fun/?lang=ml" />
+    <xhtml:link rel="alternate" hreflang="pa" href="https://ishu.fun/?lang=pa" />
+    <xhtml:link rel="alternate" hreflang="or" href="https://ishu.fun/?lang=or" />
   </url>
 
-  <!-- Government Exam Results — core feature -->
+  <!-- ═══ GOVERNMENT EXAM RESULTS ═══ -->
+
   <url>
     <loc>https://ishu.fun/results</loc>
-    <lastmod>2026-03-19</lastmod>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.97</priority>
+  </url>
+
+  <!-- State-wise Results — All 36 States + UTs -->
+  <url>
+    <loc>https://ishu.fun/results/state/uttar-pradesh</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/results/state/bihar</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/results/state/rajasthan</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/results/state/madhya-pradesh</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/results/state/maharashtra</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/results/state/delhi</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/results/state/karnataka</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/results/state/tamil-nadu</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/results/state/west-bengal</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/results/state/gujarat</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/results/state/telangana</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/results/state/andhra-pradesh</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/results/state/kerala</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/results/state/punjab</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/results/state/haryana</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/results/state/jharkhand</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/results/state/chhattisgarh</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/results/state/odisha</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/results/state/assam</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/results/state/uttarakhand</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/results/state/himachal-pradesh</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/results/state/goa</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/results/state/jammu-kashmir</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/results/state/manipur</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/results/state/meghalaya</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/results/state/tripura</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/results/state/nagaland</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/results/state/mizoram</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/results/state/arunachal-pradesh</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/results/state/sikkim</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.75</priority>
+  </url>
+
+  <!-- ═══ TOOLS HUB ═══ -->
+
+  <url>
+    <loc>https://ishu.fun/tools</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
+  </url>
+
+  <!-- Video Downloader Tools — Highest Traffic -->
+  <url>
+    <loc>https://ishu.fun/tools/youtube-downloader</loc>
+    <lastmod>2026-03-20</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.95</priority>
   </url>
-
-  <!-- Tools Hub -->
-  <url>
-    <loc>https://ishu.fun/tools</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <!-- Government Jobs -->
-  <url>
-    <loc>https://ishu.fun/jobs</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <!-- News Section -->
-  <url>
-    <loc>https://ishu.fun/news</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.85</priority>
-  </url>
-
-  <!-- Live TV -->
-  <url>
-    <loc>https://ishu.fun/tv</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <!-- Video Downloader Tools — high traffic pages -->
-  <url>
-    <loc>https://ishu.fun/tools/youtube-downloader</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
   <url>
     <loc>https://ishu.fun/tools/terabox-downloader</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.92</priority>
   </url>
-
   <url>
     <loc>https://ishu.fun/tools/universal-video-downloader</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <!-- Live TV — high engagement page -->
-  <url>
-    <loc>https://ishu.fun/tv</loc>
-    <lastmod>2026-03-19</lastmod>
+    <lastmod>2026-03-20</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
 
-  <!-- CV / Resume / Bio-Data Pages -->
-  <url>
-    <loc>https://ishu.fun/cv</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.85</priority>
-  </url>
-
-  <url>
-    <loc>https://ishu.fun/cv/resume</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https://ishu.fun/cv/bio-data</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <!-- News -->
-  <url>
-    <loc>https://ishu.fun/news</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <!-- Blog -->
-  <url>
-    <loc>https://ishu.fun/blog</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <!-- About -->
-  <url>
-    <loc>https://ishu.fun/about</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <!-- Contact -->
-  <url>
-    <loc>https://ishu.fun/contact</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
-
-  <!-- PDF Tools -->
+  <!-- PDF Organize Tools -->
   <url>
     <loc>https://ishu.fun/tools/pdf-merge</loc>
-    <lastmod>2026-03-19</lastmod>
+    <lastmod>2026-03-20</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.82</priority>
   </url>
-
   <url>
     <loc>https://ishu.fun/tools/pdf-split</loc>
-    <lastmod>2026-03-19</lastmod>
+    <lastmod>2026-03-20</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.8</priority>
   </url>
-
   <url>
     <loc>https://ishu.fun/tools/pdf-compress</loc>
-    <lastmod>2026-03-19</lastmod>
+    <lastmod>2026-03-20</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.82</priority>
   </url>
-
-  <url>
-    <loc>https://ishu.fun/tools/pdf-to-word</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://ishu.fun/tools/word-to-pdf</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://ishu.fun/tools/image-to-pdf</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://ishu.fun/tools/pdf-to-image</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <!-- State Result Pages (high-traffic states) -->
-  <url>
-    <loc>https://ishu.fun/results/state/uttar-pradesh</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://ishu.fun/results/state/bihar</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://ishu.fun/results/state/rajasthan</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://ishu.fun/results/state/madhya-pradesh</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://ishu.fun/results/state/maharashtra</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://ishu.fun/results/state/delhi</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://ishu.fun/results/state/karnataka</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://ishu.fun/results/state/tamil-nadu</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://ishu.fun/results/state/west-bengal</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://ishu.fun/results/state/gujarat</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://ishu.fun/results/state/telangana</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://ishu.fun/results/state/andhra-pradesh</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://ishu.fun/results/state/kerala</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://ishu.fun/results/state/punjab</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://ishu.fun/results/state/haryana</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://ishu.fun/results/state/jharkhand</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://ishu.fun/results/state/chhattisgarh</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://ishu.fun/results/state/odisha</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://ishu.fun/results/state/assam</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://ishu.fun/results/state/uttarakhand</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <!-- More PDF Tools -->
   <url>
     <loc>https://ishu.fun/tools/pdf-rotate</loc>
-    <lastmod>2026-03-19</lastmod>
+    <lastmod>2026-03-20</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.65</priority>
+    <priority>0.72</priority>
   </url>
   <url>
     <loc>https://ishu.fun/tools/pdf-protect</loc>
-    <lastmod>2026-03-19</lastmod>
+    <lastmod>2026-03-20</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.65</priority>
+    <priority>0.72</priority>
   </url>
   <url>
     <loc>https://ishu.fun/tools/pdf-unlock</loc>
-    <lastmod>2026-03-19</lastmod>
+    <lastmod>2026-03-20</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.65</priority>
+    <priority>0.72</priority>
   </url>
   <url>
     <loc>https://ishu.fun/tools/pdf-watermark</loc>
-    <lastmod>2026-03-19</lastmod>
+    <lastmod>2026-03-20</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.65</priority>
+    <priority>0.68</priority>
   </url>
   <url>
     <loc>https://ishu.fun/tools/pdf-sign</loc>
-    <lastmod>2026-03-19</lastmod>
+    <lastmod>2026-03-20</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.65</priority>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- PDF Convert Tools -->
+  <url>
+    <loc>https://ishu.fun/tools/pdf-to-word</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.82</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tools/word-to-pdf</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.82</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tools/image-to-pdf</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tools/pdf-to-image</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.78</priority>
   </url>
   <url>
     <loc>https://ishu.fun/tools/excel-to-pdf</loc>
-    <lastmod>2026-03-19</lastmod>
+    <lastmod>2026-03-20</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.65</priority>
+    <priority>0.72</priority>
   </url>
   <url>
     <loc>https://ishu.fun/tools/pdf-to-excel</loc>
-    <lastmod>2026-03-19</lastmod>
+    <lastmod>2026-03-20</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.65</priority>
+    <priority>0.72</priority>
   </url>
   <url>
     <loc>https://ishu.fun/tools/powerpoint-to-pdf</loc>
-    <lastmod>2026-03-19</lastmod>
+    <lastmod>2026-03-20</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.65</priority>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://ishu.fun/tools/html-to-pdf</loc>
-    <lastmod>2026-03-19</lastmod>
+    <lastmod>2026-03-20</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.65</priority>
+    <priority>0.68</priority>
   </url>
   <url>
     <loc>https://ishu.fun/tools/jpg-to-pdf</loc>
-    <lastmod>2026-03-19</lastmod>
+    <lastmod>2026-03-20</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.65</priority>
+    <priority>0.72</priority>
   </url>
   <url>
     <loc>https://ishu.fun/tools/png-to-pdf</loc>
-    <lastmod>2026-03-19</lastmod>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tools/pdf-to-pptx</loc>
+    <lastmod>2026-03-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.65</priority>
   </url>
@@ -408,66 +367,147 @@
   <!-- Image Tools -->
   <url>
     <loc>https://ishu.fun/tools/image-compressor</loc>
-    <lastmod>2026-03-19</lastmod>
+    <lastmod>2026-03-20</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.78</priority>
   </url>
   <url>
     <loc>https://ishu.fun/tools/image-converter</loc>
-    <lastmod>2026-03-19</lastmod>
+    <lastmod>2026-03-20</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.65</priority>
+    <priority>0.72</priority>
   </url>
   <url>
     <loc>https://ishu.fun/tools/image-resizer</loc>
-    <lastmod>2026-03-19</lastmod>
+    <lastmod>2026-03-20</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.65</priority>
+    <priority>0.72</priority>
   </url>
   <url>
     <loc>https://ishu.fun/tools/background-remover</loc>
-    <lastmod>2026-03-19</lastmod>
+    <lastmod>2026-03-20</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.78</priority>
   </url>
 
-  <!-- Test Section -->
+  <!-- ═══ LIVE TV ═══ -->
+
   <url>
-    <loc>https://ishu.fun/test</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.65</priority>
+    <loc>https://ishu.fun/tv</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.88</priority>
   </url>
 
-  <!-- CV Section -->
+  <!-- ═══ NEWS ═══ -->
+
+  <url>
+    <loc>https://ishu.fun/news</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.88</priority>
+  </url>
+
+  <!-- ═══ JOBS ═══ -->
+
+  <url>
+    <loc>https://ishu.fun/jobs</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- ═══ CV / RESUME / BIO-DATA ═══ -->
+
+  <url>
+    <loc>https://ishu.fun/cv</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/cv/resume</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.82</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/cv/bio-data</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.82</priority>
+  </url>
   <url>
     <loc>https://ishu.fun/cv/cover-letter</loc>
-    <lastmod>2026-03-19</lastmod>
+    <lastmod>2026-03-20</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.78</priority>
   </url>
 
-  <!-- Legal Pages -->
-  <url>
-    <loc>https://ishu.fun/privacy</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.3</priority>
-  </url>
+  <!-- ═══ BLOG ═══ -->
 
   <url>
-    <loc>https://ishu.fun/terms</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.3</priority>
+    <loc>https://ishu.fun/blog</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.78</priority>
   </url>
 
-  <!-- Sitemap Page —- Human-readable site map -->
+  <!-- ═══ ABOUT / CONTACT / INFO ═══ -->
+
+  <url>
+    <loc>https://ishu.fun/about</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.65</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/contact</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.55</priority>
+  </url>
   <url>
     <loc>https://ishu.fun/sitemap</loc>
     <lastmod>2026-03-20</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
+    <priority>0.45</priority>
+  </url>
+
+  <!-- ═══ DASHBOARD / USER PAGES ═══ -->
+
+  <url>
+    <loc>https://ishu.fun/dashboard</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/tracker</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.65</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/saved</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.55</priority>
+  </url>
+
+  <!-- ═══ LEGAL PAGES ═══ -->
+
+  <url>
+    <loc>https://ishu.fun/privacy</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://ishu.fun/terms</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
   </url>
 
 </urlset>

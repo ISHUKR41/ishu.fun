@@ -10,7 +10,7 @@ import FadeInView from "@/components/animations/FadeInView";
 import GradientMesh from "@/components/animations/GradientMesh";
 import MorphingBlob from "@/components/animations/MorphingBlob";
 import SEOHead, { SEO_DATA } from "@/components/seo/SEOHead";
-import { VideoToolSchema, BreadcrumbSchema, HowToSchema } from "@/components/seo/JsonLd";
+import { VideoToolSchema, BreadcrumbSchema, HowToSchema, ToolFAQSchema } from "@/components/seo/JsonLd";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import {
@@ -230,6 +230,7 @@ const YouTubeDownloaderPage = () => {
         { name: "Select Quality", text: "Choose your preferred quality from 360p to 4K" },
         { name: "Download", text: "Click the download button to save the video" }
       ]} />
+      <ToolFAQSchema toolName="YouTube Video Downloader" toolType="video" />
       
       {/* Dynamic Background Image for YouTubeDownloaderPage (Fixed to viewport) */}
       <motion.div className="fixed inset-0 -z-10 opacity-[0.05] mix-blend-luminosity pointer-events-none scale-[1.15] origin-center" style={{

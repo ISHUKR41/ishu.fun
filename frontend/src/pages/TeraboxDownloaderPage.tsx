@@ -6,7 +6,7 @@
  */
 import Layout from "@/components/layout/Layout";
 import SEOHead, { SEO_DATA } from "@/components/seo/SEOHead";
-import { VideoToolSchema, BreadcrumbSchema, HowToSchema } from "@/components/seo/JsonLd";
+import { VideoToolSchema, BreadcrumbSchema, HowToSchema, ToolFAQSchema } from "@/components/seo/JsonLd";
 import BackendStatusBar, { wakeBackend } from "@/components/tools/BackendStatusBar";
 import FadeInView from "@/components/animations/FadeInView";
 import GradientMesh from "@/components/animations/GradientMesh";
@@ -211,6 +211,7 @@ const TeraboxDownloaderPage = () => {
       <SEOHead {...SEO_DATA.teraboxDownloader} />
       <BreadcrumbSchema items={[{ name: "Tools", url: "/tools" }, { name: "Terabox Downloader", url: "/tools/terabox-downloader" }]} />
       <VideoToolSchema name="Terabox Downloader — ISHU" description="Download Terabox videos and files for free. Paste link, preview and download." url="/tools/terabox-downloader" />
+      <ToolFAQSchema toolName="Terabox Downloader" toolType="video" />
       
       {/* Dynamic Background Image for TeraboxDownloaderPage (Fixed to viewport) */}
       <motion.div className="fixed inset-0 -z-10 opacity-[0.05] mix-blend-luminosity pointer-events-none scale-[1.15] origin-center" style={{

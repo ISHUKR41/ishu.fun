@@ -30,7 +30,7 @@ import SEOHead, { SEO_DATA } from "@/components/seo/SEOHead";
 import HeroSection from "@/components/home/HeroSection";
 import TrustedBySection from "@/components/home/TrustedBySection";
 import StatsSection from "@/components/home/StatsSection";
-import { WebsiteSchema, OrganizationSchema } from "@/components/seo/JsonLd";
+import { WebsiteSchema, OrganizationSchema, HomeFAQSchema, SiteLinksSearchBoxSchema } from "@/components/seo/JsonLd";
 
 // Below-fold sections — lazy loaded for better performance
 const PlatformOverview = lazy(() => import("@/components/home/PlatformOverview"));
@@ -63,6 +63,8 @@ const Index = () => {
       {/* SEO Schemas - invisible structured data for search engines */}
       <WebsiteSchema />
       <OrganizationSchema />
+      <HomeFAQSchema />
+      <SiteLinksSearchBoxSchema />
       
       {/* Above-fold sections rendered immediately */}
       <HeroSection />

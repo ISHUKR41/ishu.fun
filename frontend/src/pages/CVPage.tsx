@@ -16,7 +16,7 @@ import {
   HelpCircle, MessageSquare, Users, Award, TrendingUp
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { BreadcrumbSchema } from "@/components/seo/JsonLd";
+import { BreadcrumbSchema, ToolFAQSchema } from "@/components/seo/JsonLd";
 import SEOHead, { SEO_DATA } from "@/components/seo/SEOHead";
 
 const processSteps = [
@@ -107,6 +107,7 @@ const CVPage = () => {
         { name: "Home", url: "https://ishu.fun/" },
         { name: "CV", url: "https://ishu.fun/cv" },
       ]} />
+      <ToolFAQSchema toolName="CV & Resume Builder" toolType="cv" />
 
       {/* Hero with Parallax Background */}
       <section ref={heroRef} className="relative overflow-hidden min-h-[92vh] flex items-center">

@@ -219,3 +219,118 @@ export const HowToSchema = ({ name, description, steps }: {
     "totalTime": "PT2M"
   }} />
 );
+
+/** FAQPage schema — generates rich snippet accordion in Google search results */
+export const FAQSchema = ({ faqs }: { faqs: { question: string; answer: string }[] }) => (
+  <JsonLd data={{
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqs.map(faq => ({
+      "@type": "Question",
+      "name": faq.question,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": faq.answer
+      }
+    }))
+  }} />
+);
+
+/** Home page FAQ schema — improves Google rich snippet eligibility */
+export const HomeFAQSchema = () => (
+  <FAQSchema faqs={[
+    {
+      question: "What is ISHU (ishu.fun)?",
+      answer: "ISHU (Indian StudentHub University) at ishu.fun is India's #1 free platform for government exam results, sarkari naukri vacancies, admit cards, 100+ free PDF tools, 700+ live Indian TV channels, YouTube video downloader, Terabox downloader, and daily news. No signup required."
+    },
+    {
+      question: "Is ISHU completely free to use?",
+      answer: "Yes! ISHU is 100% free. All features including government exam results, PDF tools, video downloaders, live TV channels, and news are completely free with no hidden charges or subscription fees."
+    },
+    {
+      question: "How to check sarkari result on ISHU?",
+      answer: "Visit ishu.fun/results to check the latest sarkari results. You can search by exam name (UPSC, SSC, Banking, Railways, NTA JEE/NEET), filter by state (all 36 states), or browse by category. Results are updated daily."
+    },
+    {
+      question: "How to download YouTube videos on ISHU?",
+      answer: "Go to ishu.fun/tools/youtube-downloader, paste the YouTube video URL, choose your desired quality (360p to 4K/2160p), and click download. No signup needed, completely free."
+    },
+    {
+      question: "How to watch live Indian TV channels free on ISHU?",
+      answer: "Visit ishu.fun/tv to watch 700+ live Indian TV channels for free. Select your preferred language (Hindi, Tamil, Telugu, Bengali, Malayalam, etc.), browse channels by category (News, Entertainment, Movies, Sports, Kids), and start watching instantly. No app needed."
+    },
+    {
+      question: "Which PDF tools are available on ISHU?",
+      answer: "ISHU offers 100+ free PDF tools including: Merge PDF, Split PDF, Compress PDF, PDF to Word, Word to PDF, PDF to JPG, JPG to PDF, Rotate PDF, Protect PDF, Unlock PDF, Add Watermark, Sign PDF, OCR PDF (text recognition), and many more. All tools work in your browser with no upload limits."
+    },
+    {
+      question: "How to download Terabox videos on ISHU?",
+      answer: "Visit ishu.fun/tools/terabox-downloader, paste your Terabox share link, preview the file, and download instantly. Works with terabox.com, teraboxapp.com, and 1024tera.com links."
+    },
+    {
+      question: "Which government exams does ISHU cover?",
+      answer: "ISHU covers all major government exams including UPSC CSE/IAS, SSC CGL/CHSL/MTS/JE, IBPS PO/Clerk/SO, SBI PO/Clerk, RRB NTPC/Group D/JE/ALP, NTA JEE Main/Advanced, NEET, CTET, NDA, CDS, and all state-level exams across 36 states."
+    },
+    {
+      question: "How to make a free resume or CV on ISHU?",
+      answer: "Go to ishu.fun/cv to create a professional resume, CV, or bio-data for free. Choose from modern templates, fill in your details, and download as PDF instantly. No signup required."
+    },
+    {
+      question: "Does ISHU work on mobile phones?",
+      answer: "Yes! ISHU is fully responsive and works perfectly on all devices including mobile phones, tablets, desktops, and TVs. All features including PDF tools, video downloaders, live TV, and exam results are optimized for mobile use."
+    }
+  ]} />
+);
+
+/** SiteLinksSearchBox schema for enhanced Google search */
+export const SiteLinksSearchBoxSchema = () => (
+  <JsonLd data={{
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "url": SITE_URL,
+    "potentialAction": [
+      {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": `${SITE_URL}/results?q={search_term_string}`
+        },
+        "query-input": "required name=search_term_string"
+      },
+      {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": `${SITE_URL}/tools?q={search_term_string}`
+        },
+        "query-input": "required name=search_term_string"
+      }
+    ]
+  }} />
+);
+
+/** ToolFAQSchema for PDF tools and video downloader pages */
+export const ToolFAQSchema = ({ toolName, toolType }: { toolName: string; toolType: "pdf" | "video" | "cv" | "tv" }) => {
+  const faqsByType = {
+    pdf: [
+      { question: `Is ${toolName} completely free?`, answer: `Yes! ${toolName} on ISHU (ishu.fun) is 100% free. No signup, no watermark, no file size limit. Your files are processed securely in your browser.` },
+      { question: `How long does ${toolName} take?`, answer: `${toolName} on ISHU is lightning fast — most files are processed in 1-5 seconds depending on file size.` },
+      { question: "Is my file secure on ISHU?", answer: "Yes, your files are processed locally in your browser and are never stored on our servers. ISHU uses industry-standard encryption for any file uploads." },
+      { question: "What file formats does ISHU support?", answer: "ISHU supports PDF, Word (DOCX), Excel (XLSX), PowerPoint (PPTX), JPG, PNG, WebP, and many more formats across 100+ tools." }
+    ],
+    video: [
+      { question: `Is ${toolName} on ISHU free?`, answer: `Yes! ${toolName} on ISHU (ishu.fun) is completely free with no download limits, no signup required, and no watermarks.` },
+      { question: "What quality can I download videos in?", answer: "ISHU video downloader supports all qualities from 144p to 4K (2160p) including 360p, 480p, 720p HD, 1080p Full HD, and 4K Ultra HD depending on the source video." },
+      { question: "How fast is the download?", answer: "ISHU uses high-speed servers to provide maximum download speeds. Most videos download at 10-100 MB/s depending on your internet connection." }
+    ],
+    cv: [
+      { question: "Is the CV/Resume maker on ISHU free?", answer: "Yes! ISHU CV builder is 100% free. Create unlimited resumes, CVs, and bio-data and download as PDF without any charges." },
+      { question: "Can I download my CV as PDF?", answer: "Yes! After creating your CV or resume on ISHU, you can download it instantly as a professional PDF file, ready to share with employers." }
+    ],
+    tv: [
+      { question: "Is live TV on ISHU free?", answer: "Yes! Watch 700+ live Indian TV channels completely free on ISHU (ishu.fun/tv). No subscription, no app needed." },
+      { question: "Which languages are available on ISHU live TV?", answer: "ISHU live TV supports Hindi, Tamil, Telugu, Bengali, Malayalam, Kannada, Marathi, Gujarati, Punjabi, Odia, Urdu, Assamese, Bhojpuri, and English channels." }
+    ]
+  };
+  return <FAQSchema faqs={faqsByType[toolType] || faqsByType.pdf} />;
+};
