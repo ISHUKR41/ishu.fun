@@ -75,6 +75,12 @@
     <lastmod>2026-03-20T00:00:00+05:30</lastmod>
   </sitemap>
 
+  <!-- CV / Resume / Biodata sitemap -->
+  <sitemap>
+    <loc>https://ishu.fun/sitemap-cv.xml</loc>
+    <lastmod>2026-03-20</lastmod>
+  </sitemap>
+
   <!-- Educational content sitemap -->
   <sitemap>
     <loc>https://ishu.fun/sitemap-education.xml</loc>

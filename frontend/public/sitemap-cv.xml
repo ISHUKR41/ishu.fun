@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- CV / Resume / Biodata Sitemap — ishu.fun | Updated: 2026-03-20 -->
+<!-- Free CV maker, Resume builder, Biodata maker for Indian students and job seekers -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+
+  <!-- CV Hub Page -->
+  <url>
+    <loc>https://ishu.fun/cv</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="en-in" href="https://ishu.fun/cv" />
+    <xhtml:link rel="alternate" hreflang="hi-in" href="https://ishu.fun/cv" />
+    <xhtml:link rel="alternate" hreflang="ta-in" href="https://ishu.fun/cv" />
+    <xhtml:link rel="alternate" hreflang="te-in" href="https://ishu.fun/cv" />
+    <xhtml:link rel="alternate" hreflang="mr-in" href="https://ishu.fun/cv" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ishu.fun/cv" />
+    <image:image>
+      <image:loc>https://ishu.fun/og-image.png</image:loc>
+      <image:title>ISHU Free CV / Resume / Biodata Maker — ishu.fun</image:title>
+      <image:caption>Create professional CV, Resume and Biodata for free. Download PDF instantly. No signup required.</image:caption>
+    </image:image>
+  </url>
+
+  <!-- Resume Builder -->
+  <url>
+    <loc>https://ishu.fun/cv/resume</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.97</priority>
+    <xhtml:link rel="alternate" hreflang="en-in" href="https://ishu.fun/cv/resume" />
+    <xhtml:link rel="alternate" hreflang="hi-in" href="https://ishu.fun/cv/resume" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ishu.fun/cv/resume" />
+    <image:image>
+      <image:loc>https://ishu.fun/og-image.png</image:loc>
+      <image:title>ISHU Free Resume Builder — Download PDF Instantly</image:title>
+      <image:caption>Professional resume templates for government and private jobs. ATS optimized. Free download.</image:caption>
+    </image:image>
+  </url>
+
+  <!-- Biodata Maker -->
+  <url>
+    <loc>https://ishu.fun/cv/bio-data</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.97</priority>
+    <xhtml:link rel="alternate" hreflang="en-in" href="https://ishu.fun/cv/bio-data" />
+    <xhtml:link rel="alternate" hreflang="hi-in" href="https://ishu.fun/cv/bio-data" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ishu.fun/cv/bio-data" />
+    <image:image>
+      <image:loc>https://ishu.fun/og-image.png</image:loc>
+      <image:title>ISHU Free Biodata Maker — Marriage and Job Biodata PDF</image:title>
+      <image:caption>Create marriage biodata, job biodata free. Hindu, Muslim, Sikh, Christian biodata templates. Photo upload. Download PDF free.</image:caption>
+    </image:image>
+  </url>
+
+</urlset>

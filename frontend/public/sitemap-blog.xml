@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Blog Sitemap — ishu.fun | Updated: 2026-03-20 -->
+<!-- Exam preparation guides, study tips, government job strategies -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+
+  <url>
+    <loc>https://ishu.fun/blog</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.90</priority>
+    <xhtml:link rel="alternate" hreflang="en-in" href="https://ishu.fun/blog" />
+    <xhtml:link rel="alternate" hreflang="hi-in" href="https://ishu.fun/blog" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ishu.fun/blog" />
+  </url>
+
+</urlset>

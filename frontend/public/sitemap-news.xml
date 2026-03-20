@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- News Sitemap — ishu.fun | Updated: 2026-03-20 -->
+<!-- 1000+ daily news articles in 22 Indian languages -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+
+  <url>
+    <loc>https://ishu.fun/news</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="en-in" href="https://ishu.fun/news" />
+    <xhtml:link rel="alternate" hreflang="hi-in" href="https://ishu.fun/news" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ishu.fun/news" />
+    <news:news>
+      <news:publication>
+        <news:name>ISHU News — Indian StudentHub University</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-03-20T00:00:00+05:30</news:publication_date>
+      <news:title>Latest Government Exam Results, Sarkari Naukri, Education News India 2026</news:title>
+      <news:keywords>sarkari result, government jobs, exam results, sarkari naukri, education news, current affairs, UPSC, SSC, banking, railway, daily news India</news:keywords>
+    </news:news>
+  </url>
+
+</urlset>

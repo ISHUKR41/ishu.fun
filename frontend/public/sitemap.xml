@@ -748,4 +748,109 @@
     <priority>0.82</priority>
   </url>
 
+  <!-- ═══ CV / RESUME / BIODATA TOOLS ═══ -->
+
+  <url>
+    <loc>https://ishu.fun/cv</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+    <xhtml:link rel="alternate" hreflang="en-in" href="https://ishu.fun/cv" />
+    <xhtml:link rel="alternate" hreflang="hi-in" href="https://ishu.fun/cv" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ishu.fun/cv" />
+  </url>
+
+  <url>
+    <loc>https://ishu.fun/cv/resume</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.94</priority>
+    <xhtml:link rel="alternate" hreflang="en-in" href="https://ishu.fun/cv/resume" />
+    <xhtml:link rel="alternate" hreflang="hi-in" href="https://ishu.fun/cv/resume" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ishu.fun/cv/resume" />
+  </url>
+
+  <url>
+    <loc>https://ishu.fun/cv/bio-data</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.94</priority>
+    <xhtml:link rel="alternate" hreflang="en-in" href="https://ishu.fun/cv/bio-data" />
+    <xhtml:link rel="alternate" hreflang="hi-in" href="https://ishu.fun/cv/bio-data" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ishu.fun/cv/bio-data" />
+  </url>
+
+  <!-- ═══ LIVE TV ═══ -->
+
+  <url>
+    <loc>https://ishu.fun/tv</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.97</priority>
+    <xhtml:link rel="alternate" hreflang="en-in" href="https://ishu.fun/tv" />
+    <xhtml:link rel="alternate" hreflang="hi-in" href="https://ishu.fun/tv" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ishu.fun/tv" />
+  </url>
+
+  <!-- ═══ NEWS ═══ -->
+
+  <url>
+    <loc>https://ishu.fun/news</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.96</priority>
+    <xhtml:link rel="alternate" hreflang="en-in" href="https://ishu.fun/news" />
+    <xhtml:link rel="alternate" hreflang="hi-in" href="https://ishu.fun/news" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ishu.fun/news" />
+  </url>
+
+  <!-- ═══ BLOG ═══ -->
+
+  <url>
+    <loc>https://ishu.fun/blog</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.90</priority>
+    <xhtml:link rel="alternate" hreflang="en-in" href="https://ishu.fun/blog" />
+    <xhtml:link rel="alternate" hreflang="hi-in" href="https://ishu.fun/blog" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ishu.fun/blog" />
+  </url>
+
+  <!-- ═══ INFORMATION PAGES ═══ -->
+
+  <url>
+    <loc>https://ishu.fun/about</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.80</priority>
+  </url>
+
+  <url>
+    <loc>https://ishu.fun/contact</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.80</priority>
+  </url>
+
+  <url>
+    <loc>https://ishu.fun/privacy</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.60</priority>
+  </url>
+
+  <url>
+    <loc>https://ishu.fun/terms</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.60</priority>
+  </url>
+
+  <url>
+    <loc>https://ishu.fun/sitemap</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.70</priority>
+  </url>
+
 </urlset>

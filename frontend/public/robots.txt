@@ -223,6 +223,7 @@ Sitemap: https://ishu.fun/sitemap-blog.xml
 Sitemap: https://ishu.fun/sitemap-video.xml
 Sitemap: https://ishu.fun/sitemap-image.xml
 Sitemap: https://ishu.fun/sitemap-tv.xml
+Sitemap: https://ishu.fun/sitemap-cv.xml
 Sitemap: https://ishu.fun/sitemap-education.xml
 Sitemap: https://ishu.fun/sitemap-expanded.xml
 

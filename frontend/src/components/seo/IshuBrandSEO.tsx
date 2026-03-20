@@ -46,7 +46,11 @@ const IshuBrandSEO = () => {
           "Government Jobs India", "Sarkari Result", "Sarkari Naukri",
           "PDF Tools Online", "YouTube Video Downloader", "Terabox Downloader",
           "Live TV Streaming India", "Education Technology", "Student Platform",
-          "Web Development", "React JavaScript", "SEO Optimization"
+          "Web Development", "React JavaScript", "SEO Optimization",
+          "Free CV Maker", "Free Resume Builder", "Biodata Maker",
+          "UPSC Exam", "SSC CGL", "Banking Jobs", "Railway Jobs",
+          "NTA JEE NEET", "Admit Card", "Answer Key", "Sarkari Vacancy",
+          "Indian TV Channels", "Hindi News Live", "Government Exam Results"
         ],
         "jobTitle": "Founder & Full-Stack Developer",
         "worksFor": {
