@@ -48,9 +48,8 @@ const Layout = ({ children }: LayoutProps) => {
       <SmoothScroll />
       {/* Performance enhancements — CSS containment, lazy images, GPU hints */}
       <PerformanceOptimizer />
-      {/* Fixed background layers - creates depth effect */}
+      {/* Fixed background layer - base gradient (single layer, no GPU layer explosion) */}
       <div className="pointer-events-none fixed inset-0 bg-gradient-to-b from-background via-background to-background z-0" />
-      <div className="pointer-events-none fixed inset-0 mesh-gradient-advanced opacity-50 z-0" />
       
       {/* Floating ambient orbs - decorative animated circles in background (hidden on mobile via CSS) */}
       <FloatingElements variant="default" />

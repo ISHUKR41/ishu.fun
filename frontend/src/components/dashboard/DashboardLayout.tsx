@@ -8,6 +8,9 @@
  * - Responsive: sidebar hidden on mobile, shown via hamburger
  * - Animated page transitions
  * - Premium dark background with subtle effects
+ * 
+ * Performance: Uses CSS transition (not framer-motion marginLeft) to avoid
+ * JS-driven layout repaints on sidebar collapse/expand.
  */
 
 import { useState, ReactNode } from "react";
@@ -34,26 +37,24 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       />
 
       {/* ──── Main Content Area ──── */}
-      <motion.div
-        animate={{ marginLeft: sidebarCollapsed ? 72 : 260 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="flex-1 flex flex-col min-h-screen ml-0 lg:ml-[260px]"
-        style={{ marginLeft: undefined }} // Let framer-motion handle it
+      <div
+        className="flex-1 flex flex-col min-h-screen transition-[margin-left] duration-300 ease-in-out"
+        style={{ marginLeft: sidebarCollapsed ? 72 : 260 }}
       >
         {/* Top Header */}
         <DashboardHeader onMobileMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)} />
 
         {/* Page Content */}
         <main className="flex-1 overflow-y-auto">
-          {/* Subtle background effects */}
-          <div className="pointer-events-none fixed inset-0 z-0">
+          {/* Subtle static background effects — no GPU promotion needed */}
+          <div className="pointer-events-none fixed inset-0 z-0" aria-hidden="true">
             <div className="absolute top-0 right-0 h-[600px] w-[600px] rounded-full blur-[180px] opacity-30" 
               style={{ background: "radial-gradient(circle, hsl(217 100% 55% / 0.06), transparent 70%)" }} />
             <div className="absolute bottom-0 left-0 h-[400px] w-[400px] rounded-full blur-[140px] opacity-20"
               style={{ background: "radial-gradient(circle, hsl(260 100% 65% / 0.05), transparent 70%)" }} />
           </div>
 
-          {/* Animated content entrance */}
+          {/* Animated content entrance — opacity+transform only (GPU composited) */}
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -63,7 +64,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             {children}
           </motion.div>
         </main>
-      </motion.div>
+      </div>
     </div>
   );
 };

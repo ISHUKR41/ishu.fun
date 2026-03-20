@@ -5,8 +5,8 @@
  * Only animates once (won't re-animate when scrolling back up).
  *
  * Performance: Uses ONLY transform + opacity (GPU composited).
- * No layout-causing properties are animated.
- * willChange is removed after animation completes to free GPU layers.
+ * willChange is set only RIGHT BEFORE animation starts and cleared after.
+ * This prevents GPU layer promotion on all FadeInView elements simultaneously.
  *
  * Props:
  * - delay: Seconds to wait before starting animation (default 0)
@@ -40,6 +40,9 @@ const FadeInView = ({ children, delay = 0, direction = "up", className = "", amo
 
   useEffect(() => {
     if (inView) {
+      if (ref.current) {
+        ref.current.style.willChange = "transform, opacity";
+      }
       controls.start({
         opacity: 1,
         x: 0,
@@ -62,7 +65,6 @@ const FadeInView = ({ children, delay = 0, direction = "up", className = "", amo
       ref={ref}
       initial={{ opacity: 0, ...directionMap[direction] }}
       animate={controls}
-      style={{ willChange: "transform, opacity" }}
       className={className}
     >
       {children}

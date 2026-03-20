@@ -53,8 +53,8 @@ const LivePulseSection = lazy(() => import("@/components/home/LivePulseSection")
 const CallToActionSection = lazy(() => import("@/components/home/CallToActionSection"));
 const FAQSection = lazy(() => import("@/components/home/FAQSection"));
 
-// Minimal fallback to prevent layout shift while sections load
-const SectionFallback = () => <div style={{ minHeight: "200px" }} aria-hidden="true" />;
+// Minimal fallback — no height so page doesn't show blank boxes while loading
+const SectionFallback = () => <div aria-hidden="true" />;
 
 const Index = () => {
   return (

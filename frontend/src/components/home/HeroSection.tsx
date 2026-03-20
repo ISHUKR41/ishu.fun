@@ -128,15 +128,10 @@ const HeroSection = () => {
 
       <Suspense fallback={null}><HeroScene3D /></Suspense>
 
-      {/* Aurora gradient orbs — reduced to 4 key ones for 60fps performance */}
-      <motion.div animate={prefersReducedMotion ? {} : { x: [0, 100, 0], y: [0, -80, 0], scale: [1, 1.4, 1] }} transition={{ repeat: Infinity, duration: 18, ease: "easeInOut" }}
-      className="pointer-events-none absolute left-1/4 top-1/4 h-[700px] w-[700px] rounded-full bg-primary/12 blur-[100px] morph-blob" style={{ willChange: "transform" }} />
-      <motion.div animate={prefersReducedMotion ? {} : { x: [0, -80, 0], y: [0, 60, 0], scale: [1, 0.8, 1] }} transition={{ repeat: Infinity, duration: 14, ease: "easeInOut" }}
-      className="pointer-events-none absolute bottom-1/4 right-1/4 h-[600px] w-[600px] rounded-full bg-[hsl(260,100%,66%,0.10)] blur-[90px] morph-blob" style={{ willChange: "transform" }} />
-      <motion.div animate={prefersReducedMotion ? {} : { x: [0, 50, 0], y: [0, -40, 0] }} transition={{ repeat: Infinity, duration: 12, ease: "easeInOut" }}
-      className="pointer-events-none absolute right-1/3 top-1/3 h-[500px] w-[500px] rounded-full bg-[hsl(170,100%,50%,0.06)] blur-[80px]" style={{ willChange: "transform" }} />
-      <motion.div animate={prefersReducedMotion ? {} : { scale: [1, 1.3, 1], rotate: [0, 120, 0] }} transition={{ repeat: Infinity, duration: 25, ease: "easeInOut" }}
-      className="pointer-events-none absolute left-[60%] top-[10%] h-[400px] w-[400px] morph-blob bg-primary/[0.06] blur-[80px]" style={{ willChange: "transform" }} />
+      {/* Aurora gradient orbs — CSS-only animations for 0 JS jank, no willChange flicker */}
+      <div className="pointer-events-none absolute left-1/4 top-1/4 h-[600px] w-[600px] rounded-full bg-primary/[0.10] blur-[80px] css-orb" />
+      <div className="pointer-events-none absolute bottom-1/4 right-1/4 h-[500px] w-[500px] rounded-full bg-[hsl(260,100%,66%,0.08)] blur-[70px] css-orb" style={{ animationDelay: "-4s", animationDuration: "14s" }} />
+      <div className="pointer-events-none absolute right-1/3 top-1/3 h-[400px] w-[400px] rounded-full bg-[hsl(170,100%,50%,0.05)] blur-[60px] css-orb" style={{ animationDelay: "-8s", animationDuration: "16s" }} />
 
       <motion.div className="container relative z-10" style={{ y: textY, opacity, scale }}>
         <div className="mx-auto max-w-4xl text-center">
