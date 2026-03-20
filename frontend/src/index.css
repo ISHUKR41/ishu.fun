@@ -4344,10 +4344,8 @@ html, body {
 /* 3. Main layout container — no contain here, Lenis needs free scroll context */
 /* Do NOT add contain, transform, or overflow to #root > div — breaks Lenis */
 
-/* 4. Force consistent compositing for all animated elements */
-[data-framer-motion],
-[style*="opacity"],
-[style*="transform: translate"] {
+/* 4. Force consistent compositing for explicitly animated elements only */
+[data-framer-motion] {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
@@ -4384,11 +4382,10 @@ p, span, h1, h2, h3, h4, h5, h6, li {
   text-rendering: optimizeSpeed;
 }
 
-/* 11. Framer Motion elements — ensure GPU compositing */
-[class*="framer"], [class*="motion"] {
+/* 11. Framer Motion — GPU compositing without perspective (perspective creates 3D artifacts) */
+[class*="framer"] {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  perspective: 1000px;
 }
 
 /* 12. Touch scrolling containers (mobile horizontal carousels etc) */

@@ -51,20 +51,15 @@ const PerformanceOptimizer = () => {
       }
     });
 
-    // ── 3. CSS containment on sections ──
+    // ── 3. GPU layer for explicitly animated elements ──
     const applyContainment = () => {
-      document.querySelectorAll("section").forEach(el => {
-        const section = el as HTMLElement;
-        if (!section.style.contain) {
-          section.style.contain = "layout style";
-        }
-      });
-      // Apply GPU layer to animated elements
+      // Only apply to elements that explicitly use CSS animations (not framer-motion)
       document.querySelectorAll("[class*='animate-']").forEach(el => {
         const htmlEl = el as HTMLElement;
         htmlEl.style.backfaceVisibility = "hidden";
         (htmlEl.style as any).webkitBackfaceVisibility = "hidden";
       });
+      // Do NOT apply contain: layout to sections — breaks absolute positioned children
     };
 
     if (document.readyState === "complete") {
@@ -192,10 +187,7 @@ const PerformanceOptimizer = () => {
       });
     };
 
-    // ── 9. Prevent layout shift from scrollbar appear/disappear ──
-    if (!document.documentElement.style.scrollbarGutter) {
-      document.documentElement.style.scrollbarGutter = "stable";
-    }
+    // ── 9. (scrollbar-gutter intentionally removed — caused rendering artifacts) ──
 
     // ── 10. Force a single layout calculation to prevent thrashing ──
     void document.documentElement.offsetHeight;

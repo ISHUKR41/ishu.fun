@@ -140,6 +140,7 @@ const CVPage = lazy(() => import("./pages/CVPage"));
 const ResumePage = lazy(() => import("./pages/ResumePage"));
 const BioDataPage = lazy(() => import("./pages/BioDataPage"));
 const DashboardLayout = lazy(() => import("./components/dashboard/DashboardLayout"));
+const SitemapPage = lazy(() => import("./pages/SitemapPage"));
 
 // Clerk publishable key from environment
 const CLERK_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
@@ -187,6 +188,7 @@ const AppContent = () => {
       <Route path="/results/state/:stateSlug" element={<StateResultPage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
       <Route path="/terms" element={<TermsPage />} />
+      <Route path="/sitemap" element={<SitemapPage />} />
 
       {/* Auth pages - login and registration */}
       <Route path="/auth/signin" element={<SignInPage />} />

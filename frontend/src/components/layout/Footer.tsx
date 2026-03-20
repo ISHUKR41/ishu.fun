@@ -259,6 +259,7 @@ const Footer = () => {
               <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
               <Link to="/terms" className="hover:text-foreground transition-colors">Terms of Use</Link>
               <Link to="/about" className="hover:text-foreground transition-colors">About Us</Link>
+              <Link to="/sitemap" className="hover:text-foreground transition-colors">Sitemap</Link>
             </div>
             {/* Made with love message */}
             <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
