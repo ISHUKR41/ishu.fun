@@ -337,15 +337,12 @@ html.lenis-stopped {
 }
 
 @layer base {
-  /* GPU-accelerate only elements that are actively being animated */
-  /* NOTE: Removed blanket translateZ(0) from img/video/canvas/svg */
-  /* to avoid GPU layer explosion that causes scroll jank */
+  /* GPU-accelerate ONLY specific animation wrapper elements, NOT catch-all selectors.
+     Blanket backface-visibility:hidden on animate-X, transition-X, hover:X classes causes
+     GPU layer explosion (thousands of layers) which leads to flickering on ALL devices. */
 
-  /* Force hardware acceleration for all transition/animation targets */
-  [class*="animate-"],
-  [class*="transition-"],
-  [class*="hover:"],
-  .group:hover>[class*="group-hover:"] {
+  /* Only apply to elements that are genuinely being GPU-animated */
+  .gpu-layer {
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
   }
@@ -4516,4 +4513,529 @@ a:active, button:active {
 }
 a:not(:active), button:not(:active) {
   will-change: auto;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ANTI-BLINK / ANTI-FLICKER SYSTEM
+   Prevents flash-of-invisible-content on ALL devices
+   ═══════════════════════════════════════════════════════════ */
+
+/* Main layout content — always visible, no opacity flash */
+.layout-main-content {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Prevent white/dark flash on route transitions */
+#root {
+  background: hsl(0 0% 3%);
+}
+
+/* Prevent FOIC from lazy-loaded Framer Motion components */
+[data-framer-component-type] {
+  opacity: 1;
+}
+
+/* Stabilize fixed backgrounds to prevent repaint flicker */
+.fixed {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FULLY RESPONSIVE SYSTEM — ALL DEVICES (320px → 4K)
+   Mobile-first with progressive enhancement
+   ═══════════════════════════════════════════════════════════ */
+
+/* Responsive grid utilities */
+.grid-responsive-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: clamp(0.75rem, 2vw, 1.5rem);
+}
+
+.grid-responsive-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: clamp(0.75rem, 2vw, 1.5rem);
+}
+
+.grid-responsive-4 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: clamp(0.75rem, 2vw, 1.25rem);
+}
+
+/* Responsive section padding */
+.section-pad {
+  padding-block: clamp(3rem, 8vw, 6rem);
+}
+
+.section-pad-sm {
+  padding-block: clamp(2rem, 5vw, 4rem);
+}
+
+/* Responsive hero section */
+.hero-responsive {
+  min-height: clamp(480px, 80vh, 900px);
+  padding-block: clamp(4rem, 10vh, 8rem);
+}
+
+/* ═══ MOBILE OPTIMIZATIONS (≤ 640px) ═══ */
+@media (max-width: 640px) {
+  /* Prevent text overflow on small screens */
+  h1, h2, h3, h4, h5, h6, p {
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  /* Stack flex rows on mobile */
+  .mobile-stack {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  /* Full width cards on mobile */
+  .mobile-full {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Reduce card padding on mobile */
+  .card-pad-mobile {
+    padding: 1rem !important;
+  }
+
+  /* Hide decorative only elements on tiny screens */
+  .mobile-hide-deco {
+    display: none !important;
+  }
+
+  /* Better button sizing for touch */
+  .btn-mobile {
+    min-height: 48px;
+    padding-inline: 1.25rem;
+    font-size: 0.9375rem;
+  }
+
+  /* Reduce heavy blur on mobile for performance */
+  .glass {
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
+  }
+
+  .glass-strong {
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+  }
+
+  /* Disable infinite animations on mobile to prevent battery drain */
+  .morph-blob {
+    animation-duration: 25s !important;
+  }
+
+  .aurora-bg {
+    animation-duration: 30s !important;
+  }
+
+  .holo-effect {
+    animation: none !important;
+    background: hsl(210 100% 56% / 0.06) !important;
+  }
+
+  /* Mobile hero padding */
+  .hero-responsive {
+    padding-top: 5rem;
+    padding-bottom: 3rem;
+    min-height: 480px;
+  }
+
+  /* Smaller gap on mobile grids */
+  .grid-responsive-2,
+  .grid-responsive-3,
+  .grid-responsive-4 {
+    gap: 0.75rem;
+  }
+}
+
+/* ═══ TABLET OPTIMIZATIONS (641px – 1024px) ═══ */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .glass {
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+  }
+
+  .glass-strong {
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+  }
+
+  .hero-responsive {
+    min-height: 600px;
+    padding-block: clamp(3rem, 8vh, 6rem);
+  }
+}
+
+/* ═══ LARGE SCREEN (1280px+) ═══ */
+@media (min-width: 1280px) {
+  .hero-responsive {
+    min-height: 700px;
+  }
+}
+
+/* ═══ EXTRA LARGE (1920px+) ═══ */
+@media (min-width: 1920px) {
+  .container {
+    max-width: 1600px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BACKGROUND IMAGE UTILITIES
+   For pages with hero/section background images
+   ═══════════════════════════════════════════════════════════ */
+
+/* Hero background image overlay */
+.bg-hero-overlay {
+  position: relative;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.bg-hero-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    hsl(0 0% 3% / 0.7) 0%,
+    hsl(0 0% 3% / 0.5) 40%,
+    hsl(0 0% 3% / 0.85) 100%
+  );
+  z-index: 1;
+}
+
+.bg-hero-overlay > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Dark section background with image */
+.bg-section-image {
+  position: relative;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+.bg-section-image::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: hsl(0 0% 3% / 0.8);
+  z-index: 1;
+}
+
+.bg-section-image > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Parallax image wrapper */
+.parallax-img-wrap {
+  position: absolute;
+  inset: -10%;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.parallax-img-wrap img {
+  width: 100%;
+  height: 120%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Gradient overlays for image sections */
+.overlay-dark {
+  background: linear-gradient(135deg, hsl(0 0% 3% / 0.9) 0%, hsl(220 40% 8% / 0.8) 100%);
+}
+
+.overlay-top-bottom {
+  background: linear-gradient(
+    to bottom,
+    hsl(0 0% 3%) 0%,
+    transparent 30%,
+    transparent 70%,
+    hsl(0 0% 3%) 100%
+  );
+}
+
+.overlay-radial {
+  background: radial-gradient(ellipse at center, transparent 20%, hsl(0 0% 3% / 0.9) 80%);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PARALLAX EFFECT UTILITIES
+   CSS-only parallax for smooth performance
+   ═══════════════════════════════════════════════════════════ */
+
+/* CSS parallax container */
+.parallax-container {
+  perspective: 1px;
+  height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.parallax-layer {
+  position: absolute;
+  inset: 0;
+  transform-origin: center center;
+}
+
+.parallax-layer-back {
+  transform: translateZ(-1px) scale(2);
+}
+
+.parallax-layer-base {
+  transform: translateZ(0);
+}
+
+/* Scroll-driven parallax via CSS (modern browsers) */
+@supports (animation-timeline: scroll()) {
+  .parallax-scroll-slow {
+    animation: parallax-up 1s linear both;
+    animation-timeline: view();
+    animation-range: entry 0% exit 100%;
+  }
+
+  .parallax-scroll-medium {
+    animation: parallax-up-medium 1s linear both;
+    animation-timeline: view();
+    animation-range: entry 0% exit 100%;
+  }
+
+  @keyframes parallax-up {
+    from { transform: translateY(40px); }
+    to { transform: translateY(-40px); }
+  }
+
+  @keyframes parallax-up-medium {
+    from { transform: translateY(25px); }
+    to { transform: translateY(-25px); }
+  }
+}
+
+/* Mobile: disable background-attachment: fixed (causes jank on iOS) */
+@media (max-width: 1024px) {
+  .bg-section-image {
+    background-attachment: scroll;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SMOOTH PAGE TRANSITION (CSS-only, no JS blink)
+   ═══════════════════════════════════════════════════════════ */
+
+/* Ensure pages never start invisible */
+main,
+.layout-main-content,
+#root main {
+  opacity: 1 !important;
+}
+
+/* Smooth appearance for content sections */
+.page-fade-in {
+  animation: page-appear 0.4s ease-out both;
+}
+
+@keyframes page-appear {
+  from {
+    opacity: 0.6;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE FIXES FOR SPECIFIC COMPONENTS
+   ═══════════════════════════════════════════════════════════ */
+
+/* Header responsive fixes */
+@media (max-width: 768px) {
+  /* Ensure header doesn't cause layout shift */
+  header.fixed {
+    width: 100%;
+    left: 0;
+    right: 0;
+  }
+}
+
+/* Footer responsive fixes */
+@media (max-width: 640px) {
+  footer .grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  footer .grid > *:first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Card responsive fixes */
+@media (max-width: 480px) {
+  .rounded-2xl {
+    border-radius: 0.75rem;
+  }
+  
+  .rounded-3xl {
+    border-radius: 1rem;
+  }
+}
+
+/* Image responsive fixes */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Prevent horizontal scroll on all devices */
+.overflow-x-clip {
+  overflow-x: clip;
+}
+
+/* Safe text sizing on very small screens */
+@media (max-width: 360px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SMOOTH EFFECTS THAT DON'T CAUSE BLINK
+   Replaces JS-driven effects with CSS equivalents
+   ═══════════════════════════════════════════════════════════ */
+
+/* Shimmer effect for loading states */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer-effect {
+  background: linear-gradient(
+    90deg,
+    hsl(0 0% 8%) 25%,
+    hsl(0 0% 14%) 50%,
+    hsl(0 0% 8%) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* Floating animation for decorative elements */
+@keyframes float-smooth {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-12px) rotate(1deg); }
+}
+
+.float-smooth {
+  animation: float-smooth 6s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* Breathe animation for glow effects */
+@keyframes breathe {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.08); }
+}
+
+.breathe {
+  animation: breathe 4s ease-in-out infinite;
+}
+
+/* Gradient sweep for hero banners */
+@keyframes gradient-sweep {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.gradient-animated {
+  background-size: 200% 200%;
+  animation: gradient-sweep 6s ease infinite;
+}
+
+/* ═══ SCROLL REVEAL — CSS-only version (no JS needed) ═══ */
+@supports (animation-timeline: view()) {
+  .reveal-on-scroll {
+    animation: reveal-up linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 30%;
+  }
+
+  @keyframes reveal-up {
+    from {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* ═══ ANTI-BLINK for specific known issues ═══ */
+
+/* Prevent Clerk auth component flash */
+.cl-rootBox, .cl-card {
+  background: hsl(0 0% 6%) !important;
+}
+
+/* Prevent 3D canvas blink on load */
+canvas {
+  display: block;
+}
+
+/* Framer Motion exit animation cleanup */
+[data-motion-exit] {
+  pointer-events: none;
+}
+
+/* ═══ FOCUS VISIBLE (Accessibility) ═══ */
+:focus-visible {
+  outline: 2px solid hsl(210 100% 56%);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* ═══ SELECTION COLOR ═══ */
+::selection {
+  background: hsl(210 100% 56% / 0.25);
+  color: hsl(0 0% 100%);
+}
+
+/* ═══ TABLET LANDSCAPE FIXES ═══ */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+  .hero-responsive {
+    min-height: 500px;
+    padding-block: 4rem 3rem;
+  }
+}
+
+/* ═══ TV / LARGE DISPLAY (2560px+) ═══ */
+@media (min-width: 2560px) {
+  .container {
+    max-width: 2000px;
+  }
+  
+  body {
+    font-size: 18px;
+  }
 }

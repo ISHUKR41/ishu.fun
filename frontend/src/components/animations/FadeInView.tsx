@@ -6,6 +6,7 @@
  *
  * Performance: Uses ONLY transform + opacity (GPU composited).
  * No layout-causing properties are animated.
+ * willChange is removed after animation completes to free GPU layers.
  *
  * Props:
  * - delay: Seconds to wait before starting animation (default 0)
@@ -14,8 +15,8 @@
  * - amount: How much of the element must be visible to trigger (0-1, default 0.1)
  */
 
-import { motion } from "framer-motion";
-import { ReactNode } from "react";
+import { motion, useAnimation, useInView } from "framer-motion";
+import { ReactNode, useEffect, useRef } from "react";
 
 interface FadeInViewProps {
   children: ReactNode;
@@ -26,23 +27,41 @@ interface FadeInViewProps {
 }
 
 const directionMap = {
-  up:    { y: 24 },
-  down:  { y: -24 },
-  left:  { x: 24 },
-  right: { x: -24 },
+  up:    { y: 20 },
+  down:  { y: -20 },
+  left:  { x: 20 },
+  right: { x: -20 },
 };
 
 const FadeInView = ({ children, delay = 0, direction = "up", className = "", amount }: FadeInViewProps) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const controls = useAnimation();
+  const inView = useInView(ref, { once: true, margin: "-30px", amount: amount ?? 0.1 });
+
+  useEffect(() => {
+    if (inView) {
+      controls.start({
+        opacity: 1,
+        x: 0,
+        y: 0,
+        transition: {
+          duration: 0.5,
+          delay,
+          ease: [0.22, 0.61, 0.36, 1],
+        },
+      }).then(() => {
+        if (ref.current) {
+          ref.current.style.willChange = "auto";
+        }
+      });
+    }
+  }, [inView, controls, delay]);
+
   return (
     <motion.div
+      ref={ref}
       initial={{ opacity: 0, ...directionMap[direction] }}
-      whileInView={{ opacity: 1, x: 0, y: 0 }}
-      viewport={{ once: true, margin: "-30px", amount: amount ?? 0.1 }}
-      transition={{
-        duration: 0.5,
-        delay,
-        ease: [0.22, 0.61, 0.36, 1],
-      }}
+      animate={controls}
       style={{ willChange: "transform, opacity" }}
       className={className}
     >

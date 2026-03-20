@@ -163,6 +163,7 @@ function SceneContent() {
 const HeroScene3D = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(true);
+  const [contextLost, setContextLost] = useState(false);
   const enabled = shouldUse3D();
 
   useEffect(() => {
@@ -181,15 +182,25 @@ const HeroScene3D = () => {
 
   return (
     <div ref={containerRef} className="pointer-events-none absolute inset-0 z-[1]">
-      {isVisible && (
+      {isVisible && !contextLost && (
         <Scene3DErrorBoundary>
           <Canvas
             camera={{ position: [0, 0, 5], fov: 60 }}
             dpr={[1, IS_MOBILE ? 1 : 1.5]}
             performance={{ min: 0.5 }}
-            gl={{ antialias: SCENE_3D_CONFIG.antialias, alpha: true, powerPreference: "high-performance" }}
+            gl={{ antialias: SCENE_3D_CONFIG.antialias, alpha: true, powerPreference: "default" }}
             style={{ background: "transparent" }}
             frameloop={SCENE_3D_CONFIG.frameloop}
+            onCreated={({ gl }) => {
+              const canvas = gl.domElement;
+              const handleContextLost = (e: Event) => {
+                e.preventDefault();
+                setContextLost(true);
+                setTimeout(() => setContextLost(false), 2000);
+              };
+              canvas.addEventListener("webglcontextlost", handleContextLost);
+              return () => canvas.removeEventListener("webglcontextlost", handleContextLost);
+            }}
           >
             <Suspense fallback={null}>
               <SceneContent />

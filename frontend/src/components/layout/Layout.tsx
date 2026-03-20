@@ -18,7 +18,6 @@
  */
 
 import { ReactNode, lazy, Suspense } from "react";
-import { LazyMotion, domAnimation, m } from "framer-motion";
 import Header from "./Header";
 import Footer from "./Footer";
 import ScrollProgress from "../animations/ScrollProgress";
@@ -66,22 +65,15 @@ const Layout = ({ children }: LayoutProps) => {
       <ScrollToTop />         {/* "Back to top" button appears on scroll */}
       <Header />              {/* Navigation bar */}
       
-      {/* Main content area with fade-in only — no y movement (prevents layout reflow) */}
-      <LazyMotion features={domAnimation}>
-      <m.main
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.2, ease: "easeOut" }}
-        className="relative flex-1 pt-16 z-10"
-      >
+      {/* Main content area — no opacity animation to prevent blink/flicker on all devices */}
+      <main className="relative flex-1 pt-16 z-10 layout-main-content">
         <div className="border-b border-border/60 bg-card/40">
           <div className="container py-2 text-center text-[8px] font-medium uppercase tracking-[0.14em] text-muted-foreground sm:text-[10px] md:text-xs">
             ISHU — Indian StudentHub University
           </div>
         </div>
         {children}
-      </m.main>
-      </LazyMotion>
+      </main>
       
       <Footer />              {/* Site footer with links and contact info */}
     </div>
