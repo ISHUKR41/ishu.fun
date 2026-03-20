@@ -32,7 +32,7 @@ import Fuse from "fuse.js";
 import Tilt from "react-parallax-tilt";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { BreadcrumbSchema, CollectionPageSchema } from "@/components/seo/JsonLd";
+import { BreadcrumbSchema, CollectionPageSchema, ToolFAQSchema } from "@/components/seo/JsonLd";
 import SEOHead, { SEO_DATA } from "@/components/seo/SEOHead";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -88,11 +88,14 @@ const trustBadges = [
   { icon: Clock, label: "Always Free", desc: "No hidden costs ever" },
 ];
 
+const PAGE_SIZE = 48;
+
 const ToolsPage = () => {
   const { scrollY } = useScroll();
   const bgY = useTransform(scrollY, [0, 2000], [0, -150]);
   const [activeCat, setActiveCat] = useState("All");
   const [search, setSearch] = useState("");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const gridRef = useRef<HTMLDivElement>(null);
   const howRef = useRef<HTMLElement>(null);
   const trustRef = useRef<HTMLElement>(null);
@@ -130,13 +133,20 @@ const ToolsPage = () => {
       items = items.filter(t => t.category === activeCat);
     }
     if (search.trim()) {
-      // Use the module-level fuse for full search, then filter by category if needed
       const results = fuse.search(search.trim());
       const matchedItems = results.map(r => r.item);
       items = activeCat !== "All" ? matchedItems.filter(t => t.category === activeCat) : matchedItems;
     }
     return items;
   }, [activeCat, search]);
+
+  // Reset visible count whenever filter/search changes
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [activeCat, search]);
+
+  const visibleTools = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
+  const hasMore = visibleCount < filtered.length;
 
   const popularFiltered = useMemo(() => allToolsData.filter(t => popularTools.includes(t.name)), []);
 
@@ -339,7 +349,7 @@ const ToolsPage = () => {
             </div>
           </FadeInView>
           <div ref={gridRef} className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 contain-layout">
-            {filtered.map((tool) => (
+            {visibleTools.map((tool) => (
               <ToolGridCard key={tool.slug} tool={tool} />
             ))}
           </div>
@@ -351,6 +361,23 @@ const ToolsPage = () => {
                 className="mt-4 rounded-lg bg-primary px-6 py-2 text-sm font-medium text-primary-foreground">
                 Reset Filters
               </button>
+            </div>
+          )}
+
+          {hasMore && (
+            <div className="mt-8 flex flex-col items-center gap-2">
+              <p className="text-sm text-muted-foreground">
+                Showing {visibleTools.length} of {filtered.length} tools
+              </p>
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setVisibleCount(c => c + PAGE_SIZE)}
+                className="flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-8 py-3 text-sm font-semibold text-primary transition-all hover:bg-primary hover:text-primary-foreground hover:shadow-glow"
+              >
+                <ArrowRight size={16} />
+                Load More Tools ({filtered.length - visibleTools.length} remaining)
+              </motion.button>
             </div>
           )}
         </div>
@@ -550,6 +577,13 @@ const ToolsPage = () => {
           }
         })
       }} />
+      <CollectionPageSchema
+        name="100+ Free PDF & Document Tools — ISHU"
+        description="India's largest collection of free online PDF tools. Merge, split, compress, convert, edit, sign, protect, OCR & more. No signup required, 100% free."
+        url="https://ishu.fun/tools"
+        items={allToolsData.slice(0, 20).map(t => ({ name: t.name, url: `https://ishu.fun/tools/${t.slug}` }))}
+      />
+      <ToolFAQSchema toolName="PDF Tools Collection" toolType="pdf" />
     </Layout>
   );
 };

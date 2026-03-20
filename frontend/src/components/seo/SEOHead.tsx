@@ -187,6 +187,36 @@ const SEOHead = ({
       <meta name="facebook-domain-verification" content="ishu_facebook_verification" />
       <meta name="google-site-verification" content="ishu_google_site_verification" />
 
+      {/* ═══ AI SEARCH ENGINE OPTIMIZATION ═══ */}
+      {/* For ChatGPT, Perplexity, Gemini, Copilot, and AI-powered search */}
+      <meta name="ai-content-declaration" content="human-created educational content for Indian students" />
+      <meta name="content-type" content="educational, tools, entertainment, news" />
+      <meta name="audience" content="students, job seekers, competitive exam aspirants, India" />
+      <meta name="classification" content="education, utilities, entertainment" />
+      <meta name="category" content="Education, Tools, Government Exams, PDF Tools, Live TV, Video Downloader" />
+      <meta name="subject" content="Government Exam Results, PDF Tools, Live Indian TV, Video Downloader, Career Guidance" />
+      <meta name="coverage" content="India, All 36 States, Global" />
+      <meta name="target" content="Indian Students, Job Seekers, Competitive Exam Aspirants" />
+      <meta name="HandheldFriendly" content="True" />
+      <meta name="MobileOptimized" content="320" />
+
+      {/* ═══ FRESHNESS & DATE SIGNALS ═══ */}
+      <meta name="DC.date" content="2026-03-20" />
+      <meta name="DC.language" content="en-IN" />
+      <meta name="DC.type" content="Service" />
+      <meta name="DC.format" content="text/html" />
+      <meta name="DC.identifier" content={canonicalUrl || SITE_URL} />
+      <meta name="DC.publisher" content={SITE_NAME} />
+      <meta name="DC.description" content={description} />
+      <meta property="article:published_time" content="2024-01-01T00:00:00+05:30" />
+      <meta property="article:modified_time" content="2026-03-20T00:00:00+05:30" />
+
+      {/* ═══ ADDITIONAL SEARCH ENGINE META ═══ */}
+      <meta name="norton-safeweb-site-verification" content="ishu-norton-verification" />
+      <meta name="wot-verification" content="ishu-wot-verification" />
+      <meta name="alexaVerifyID" content="ishu-alexa-verification" />
+      <meta name="p:domain_verify" content="ishu-pinterest-verification" />
+
       {/* ═══ LEGACY & COMPATIBILITY ═══ */}
       <meta name="imagetoolbar" content="no" />
       <meta name="MSSmartTagsPreventParsing" content="true" />

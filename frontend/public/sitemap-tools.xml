@@ -1,195 +1,135 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Tools Sitemap for ISHU.fun - All PDF, Video, and Online Tools -->
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  
+<!-- Tools Sitemap for ISHU.fun - All 107 PDF, Video, and Online Tools -->
+<!-- Updated: 2026-03-20 -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+
   <!-- Tools Hub -->
   <url>
     <loc>https://ishu.fun/tools</loc>
-    <lastmod>2026-03-19</lastmod>
+    <lastmod>2026-03-20</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.95</priority>
   </url>
-  
-  <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
-  <!-- PDF TOOLS (40+ tools) -->
-  <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
-  <url>
-    <loc>https://ishu.fun/tools/pdf-merger</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://ishu.fun/tools/pdf-splitter</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://ishu.fun/tools/pdf-compressor</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://ishu.fun/tools/pdf-to-word</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://ishu.fun/tools/word-to-pdf</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://ishu.fun/tools/pdf-to-image</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://ishu.fun/tools/image-to-pdf</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://ishu.fun/tools/pdf-editor</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://ishu.fun/tools/pdf-watermark</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://ishu.fun/tools/pdf-rotate</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  
-  <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
-  <!-- VIDEO DOWNLOADER TOOLS (10+ tools) -->
-  <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
-  <url>
-    <loc>https://ishu.fun/tools/youtube-downloader</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.95</priority>
-  </url>
-  <url>
-    <loc>https://ishu.fun/tools/terabox-downloader</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.95</priority>
-  </url>
-  <url>
-    <loc>https://ishu.fun/tools/instagram-downloader</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://ishu.fun/tools/tiktok-downloader</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://ishu.fun/tools/facebook-downloader</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://ishu.fun/tools/twitter-downloader</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://ishu.fun/tools/universal-video-downloader</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  
-  <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
-  <!-- IMAGE TOOLS (15+ tools) -->
-  <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
-  <url>
-    <loc>https://ishu.fun/tools/image-converter</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://ishu.fun/tools/image-compressor</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://ishu.fun/tools/image-resizer</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://ishu.fun/tools/image-cropper</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  
-  <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
-  <!-- DOCUMENT/OTHER UTILITIES (20+ tools) -->
-  <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
-  <url>
-    <loc>https://ishu.fun/tools/file-converter</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://ishu.fun/tools/text-to-speech</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://ishu.fun/tools/qr-code-generator</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  
-  <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
-  <!-- PRODUCTIVITY TOOLS (15+ tools) -->
-  <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
-  <url>
-    <loc>https://ishu.fun/tools/resume-builder</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://ishu.fun/tools/bio-data-maker</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://ishu.fun/tools/cv-builder</loc>
-    <lastmod>2026-03-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  
+
+  <!-- VIDEO TOOLS -->
+  <url><loc>https://ishu.fun/tools/youtube-downloader</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.95</priority></url>
+  <url><loc>https://ishu.fun/tools/terabox-downloader</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.95</priority></url>
+  <url><loc>https://ishu.fun/tools/universal-video-downloader</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.90</priority></url>
+
+  <!-- ORGANIZE PDF TOOLS -->
+  <url><loc>https://ishu.fun/tools/merge-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.90</priority></url>
+  <url><loc>https://ishu.fun/tools/split-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.90</priority></url>
+  <url><loc>https://ishu.fun/tools/compress-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.90</priority></url>
+  <url><loc>https://ishu.fun/tools/organize-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://ishu.fun/tools/rotate-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://ishu.fun/tools/crop-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.80</priority></url>
+  <url><loc>https://ishu.fun/tools/delete-pages</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.80</priority></url>
+  <url><loc>https://ishu.fun/tools/rearrange-pages</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.80</priority></url>
+  <url><loc>https://ishu.fun/tools/extract-pages</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.80</priority></url>
+
+  <!-- CONVERT TO PDF TOOLS -->
+  <url><loc>https://ishu.fun/tools/word-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.90</priority></url>
+  <url><loc>https://ishu.fun/tools/powerpoint-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.90</priority></url>
+  <url><loc>https://ishu.fun/tools/excel-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.90</priority></url>
+  <url><loc>https://ishu.fun/tools/jpg-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.90</priority></url>
+  <url><loc>https://ishu.fun/tools/png-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://ishu.fun/tools/image-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://ishu.fun/tools/html-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://ishu.fun/tools/url-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.80</priority></url>
+  <url><loc>https://ishu.fun/tools/docx-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://ishu.fun/tools/pptx-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://ishu.fun/tools/epub-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.80</priority></url>
+  <url><loc>https://ishu.fun/tools/txt-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.80</priority></url>
+  <url><loc>https://ishu.fun/tools/odt-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://ishu.fun/tools/rtf-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://ishu.fun/tools/csv-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://ishu.fun/tools/svg-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://ishu.fun/tools/heic-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://ishu.fun/tools/heif-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.70</priority></url>
+  <url><loc>https://ishu.fun/tools/webp-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://ishu.fun/tools/bmp-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.70</priority></url>
+  <url><loc>https://ishu.fun/tools/tiff-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.70</priority></url>
+  <url><loc>https://ishu.fun/tools/gif-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.70</priority></url>
+  <url><loc>https://ishu.fun/tools/jfif-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.70</priority></url>
+  <url><loc>https://ishu.fun/tools/djvu-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.70</priority></url>
+  <url><loc>https://ishu.fun/tools/pages-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://ishu.fun/tools/mobi-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.70</priority></url>
+  <url><loc>https://ishu.fun/tools/xml-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.70</priority></url>
+  <url><loc>https://ishu.fun/tools/md-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://ishu.fun/tools/ebook-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://ishu.fun/tools/dwg-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.70</priority></url>
+  <url><loc>https://ishu.fun/tools/dxf-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.70</priority></url>
+  <url><loc>https://ishu.fun/tools/pub-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.70</priority></url>
+  <url><loc>https://ishu.fun/tools/xps-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.70</priority></url>
+  <url><loc>https://ishu.fun/tools/hwp-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.65</priority></url>
+  <url><loc>https://ishu.fun/tools/chm-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.65</priority></url>
+  <url><loc>https://ishu.fun/tools/fb2-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.65</priority></url>
+  <url><loc>https://ishu.fun/tools/wps-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.65</priority></url>
+  <url><loc>https://ishu.fun/tools/eml-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.65</priority></url>
+  <url><loc>https://ishu.fun/tools/zip-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.65</priority></url>
+  <url><loc>https://ishu.fun/tools/cbz-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.65</priority></url>
+  <url><loc>https://ishu.fun/tools/cbr-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.65</priority></url>
+  <url><loc>https://ishu.fun/tools/ai-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.70</priority></url>
+
+  <!-- CONVERT FROM PDF TOOLS -->
+  <url><loc>https://ishu.fun/tools/pdf-to-word</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.90</priority></url>
+  <url><loc>https://ishu.fun/tools/pdf-to-powerpoint</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.90</priority></url>
+  <url><loc>https://ishu.fun/tools/pdf-to-excel</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.90</priority></url>
+  <url><loc>https://ishu.fun/tools/pdf-to-jpg</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.90</priority></url>
+  <url><loc>https://ishu.fun/tools/pdf-to-png</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://ishu.fun/tools/pdf-to-image</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://ishu.fun/tools/pdf-to-html</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.80</priority></url>
+  <url><loc>https://ishu.fun/tools/pdf-to-docx</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://ishu.fun/tools/pdf-to-epub</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.80</priority></url>
+  <url><loc>https://ishu.fun/tools/pdf-to-txt</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.80</priority></url>
+  <url><loc>https://ishu.fun/tools/pdf-to-odt</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://ishu.fun/tools/pdf-to-rtf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://ishu.fun/tools/pdf-to-csv</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://ishu.fun/tools/pdf-to-svg</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.70</priority></url>
+  <url><loc>https://ishu.fun/tools/pdf-to-bmp</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.70</priority></url>
+  <url><loc>https://ishu.fun/tools/pdf-to-tiff</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.70</priority></url>
+  <url><loc>https://ishu.fun/tools/pdf-to-gif</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.70</priority></url>
+  <url><loc>https://ishu.fun/tools/pdf-to-mobi</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.70</priority></url>
+  <url><loc>https://ishu.fun/tools/pdf-to-pdfa</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://ishu.fun/tools/pdf-to-ppt</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://ishu.fun/tools/pdf-converter</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
+
+  <!-- EDIT PDF TOOLS -->
+  <url><loc>https://ishu.fun/tools/edit-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.90</priority></url>
+  <url><loc>https://ishu.fun/tools/edit-pdf-text</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://ishu.fun/tools/add-text</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.80</priority></url>
+  <url><loc>https://ishu.fun/tools/add-image-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.80</priority></url>
+  <url><loc>https://ishu.fun/tools/sign-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://ishu.fun/tools/watermark</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.80</priority></url>
+  <url><loc>https://ishu.fun/tools/page-numbers</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://ishu.fun/tools/header-and-footer</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://ishu.fun/tools/annotate-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.80</priority></url>
+  <url><loc>https://ishu.fun/tools/highlight-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.80</priority></url>
+  <url><loc>https://ishu.fun/tools/pdf-filler</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.80</priority></url>
+
+  <!-- SECURITY TOOLS -->
+  <url><loc>https://ishu.fun/tools/protect-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://ishu.fun/tools/unlock-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://ishu.fun/tools/redact-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.80</priority></url>
+  <url><loc>https://ishu.fun/tools/flatten-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://ishu.fun/tools/remove-metadata</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://ishu.fun/tools/edit-metadata</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+
+  <!-- AI & OTHER TOOLS -->
+  <url><loc>https://ishu.fun/tools/ocr-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.90</priority></url>
+  <url><loc>https://ishu.fun/tools/compare-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://ishu.fun/tools/translate-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://ishu.fun/tools/chat-with-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://ishu.fun/tools/summarize</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://ishu.fun/tools/repair-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.80</priority></url>
+  <url><loc>https://ishu.fun/tools/scan-to-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.80</priority></url>
+  <url><loc>https://ishu.fun/tools/pdf-viewer</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.80</priority></url>
+  <url><loc>https://ishu.fun/tools/create-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.80</priority></url>
+  <url><loc>https://ishu.fun/tools/resize-pages</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://ishu.fun/tools/extract-text</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.80</priority></url>
+  <url><loc>https://ishu.fun/tools/extract-images</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.80</priority></url>
+  <url><loc>https://ishu.fun/tools/whiteout-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://ishu.fun/tools/grayscale-pdf</loc><lastmod>2026-03-20</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+
 </urlset>

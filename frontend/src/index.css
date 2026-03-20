@@ -4493,3 +4493,46 @@ video, canvas {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
+
+/* 26. Tools grid cards — GPU compositing for smooth hover */
+.contain-layout > * {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  isolation: isolate;
+}
+
+/* 27. Reduce paint on large grids — enable GPU rasterization hint */
+.contain-layout {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+/* 28. Card hover animations — promote to own layer only during interaction */
+.contain-layout > *:hover {
+  will-change: transform;
+}
+.contain-layout > *:not(:hover) {
+  will-change: auto;
+}
+
+/* 29. Mobile scroll performance — passive scroll listeners */
+@media (max-width: 768px) {
+  .contain-layout {
+    /* Use CSS scroll snapping for smooth mobile grid scrolling */
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Reduce animation complexity on mobile */
+  .contain-layout > * {
+    transition: transform 0.15s ease, opacity 0.15s ease;
+  }
+}
+
+/* 30. Ensure all interactive cards use GPU layer for tap response */
+a:active, button:active {
+  will-change: transform;
+}
+a:not(:active), button:not(:active) {
+  will-change: auto;
+}

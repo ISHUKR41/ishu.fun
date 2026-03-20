@@ -309,6 +309,36 @@ export const SiteLinksSearchBoxSchema = () => (
   }} />
 );
 
+/** ResultsFAQSchema - for government exam results page */
+export const ResultsFAQSchema = () => (
+  <FAQSchema faqs={[
+    {
+      question: "How to check sarkari result on ISHU?",
+      answer: "Visit ishu.fun/results to check the latest sarkari results. Search by exam name (UPSC, SSC, Banking, Railways, NTA JEE/NEET), filter by state, or browse by category. Results are updated daily."
+    },
+    {
+      question: "Which government exams does ISHU cover for results?",
+      answer: "ISHU covers results for UPSC CSE/IAS, SSC CGL/CHSL/MTS/JE, IBPS PO/Clerk/SO, SBI PO/Clerk, RRB NTPC/Group D/JE/ALP, NTA JEE Main/Advanced, NEET, CTET, NDA, CDS, and all state-level exams across 36 states."
+    },
+    {
+      question: "How often are government exam results updated on ISHU?",
+      answer: "ISHU updates government exam results daily. You can bookmark ishu.fun/results and check back for the latest announcements from UPSC, SSC, IBPS, SBI, RRB, NTA, state PSCs, and other recruitment boards."
+    },
+    {
+      question: "Can I download admit cards from ISHU?",
+      answer: "Yes! ISHU provides links and information for admit card downloads for all major government exams including UPSC, SSC, IBPS, SBI, RRB, NTA, and all state-level recruitment exams."
+    },
+    {
+      question: "Is ISHU free for checking exam results?",
+      answer: "Yes! ISHU (ishu.fun) is 100% free. All government exam results, admit cards, answer keys, and recruitment notifications are available for free without any signup or subscription."
+    },
+    {
+      question: "Which states' government exam results are available on ISHU?",
+      answer: "ISHU covers government exam results for all 36 states and union territories of India including UP, Bihar, Rajasthan, MP, Maharashtra, Karnataka, Tamil Nadu, Telangana, Gujarat, Punjab, Haryana, Delhi, and all others."
+    }
+  ]} />
+);
+
 /** ToolFAQSchema for PDF tools and video downloader pages */
 export const ToolFAQSchema = ({ toolName, toolType }: { toolName: string; toolType: "pdf" | "video" | "cv" | "tv" }) => {
   const faqsByType = {
