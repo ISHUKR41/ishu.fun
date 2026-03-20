@@ -48,11 +48,17 @@ export default defineConfig(({ mode }) => ({
       'gsap',
       'lenis',
       'hls.js',
+      'three',
+      '@react-three/fiber',
+      '@react-three/drei',
+      'react-reconciler',
       '@radix-ui/react-dialog',
       '@radix-ui/react-dropdown-menu',
       '@radix-ui/react-tooltip',
     ],
-    exclude: ['@react-three/fiber', '@react-three/drei', 'three'],
+    esbuildOptions: {
+      target: 'es2020',
+    },
   },
   build: {
     target: "es2020",

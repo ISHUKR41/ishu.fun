@@ -210,8 +210,21 @@ export const getOptimalImageSize = (): string => {
   return IMAGE_CONFIG.sizes.desktop;
 };
 
+export const isWebGLSupported = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  try {
+    const canvas = document.createElement('canvas');
+    return !!(
+      window.WebGLRenderingContext &&
+      (canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))
+    );
+  } catch {
+    return false;
+  }
+};
+
 export const shouldUse3D = (): boolean => {
-  return SCENE_3D_CONFIG.enabled;
+  return SCENE_3D_CONFIG.enabled && isWebGLSupported();
 };
 
 // CSS will-change helper (use sparingly!)
@@ -262,3 +275,4 @@ export const rafThrottle = <T extends (...args: any[]) => any>(
     });
   };
 };
+

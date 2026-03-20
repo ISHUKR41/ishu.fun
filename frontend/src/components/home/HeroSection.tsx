@@ -200,15 +200,15 @@ const HeroSection = () => {
           </motion.div>
 
           {/* Stats bar with Tilt */}
-          <div ref={statsBarRef} className="mt-16 inline-block">
+          <div ref={statsBarRef} className="mt-16 w-full max-w-2xl mx-auto">
             <Tilt tiltMaxAngleX={prefersReducedMotion ? 0 : 5} tiltMaxAngleY={prefersReducedMotion ? 0 : 5} glareEnable={!prefersReducedMotion} glareMaxOpacity={0.06} glareBorderRadius="1rem" scale={prefersReducedMotion ? 1 : 1.01}>
-              <div className="inline-flex items-center gap-6 rounded-2xl glass-strong px-8 py-5 animate-breathe border border-border">
+              <div className="grid grid-cols-2 sm:flex sm:flex-row sm:items-center sm:justify-center gap-4 sm:gap-6 rounded-2xl glass-strong px-4 sm:px-8 py-5 animate-breathe border border-border">
                 {liveStats.map((stat, i) =>
-                <div key={stat.label} className={`stat-item flex items-center gap-3 text-center ${i > 0 ? "border-l border-border pl-6" : ""}`}>
-                    <stat.icon size={16} className="text-primary hidden sm:block" />
+                <div key={stat.label} className={`stat-item flex items-center gap-3 ${i > 0 ? "sm:border-l sm:border-border sm:pl-6" : ""}`}>
+                    <stat.icon size={16} className="text-primary hidden sm:block shrink-0" />
                     <div>
-                      <p className="font-display text-lg font-bold text-foreground md:text-xl">{stat.value}</p>
-                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{stat.label}</p>
+                      <p className="font-display text-base sm:text-lg font-bold text-foreground md:text-xl">{stat.value}</p>
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground leading-tight">{stat.label}</p>
                     </div>
                   </div>
                 )}

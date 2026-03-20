@@ -5,10 +5,18 @@
  * All sub-components wrapped in React.memo.
  */
 
-import { useRef, useMemo, Suspense, memo, useState, useEffect } from "react";
+import { useRef, useMemo, Suspense, memo, useState, useEffect, Component, ReactNode } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Float, MeshDistortMaterial, Icosahedron, Box, Torus } from "@react-three/drei";
 import * as THREE from "three";
+import { shouldUse3D } from "@/config/performance";
+
+class Scene3DErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: ReactNode }) { super(props); this.state = { hasError: false }; }
+  static getDerivedStateFromError() { return { hasError: true }; }
+  componentDidCatch() {}
+  render() { if (this.state.hasError) return null; return this.props.children; }
+}
 
 const IS_MOBILE = typeof window !== "undefined" && (window.innerWidth < 768 || /Mobi|Android/i.test(navigator.userAgent));
 
@@ -111,8 +119,10 @@ function SceneContent() {
 const ToolsScene3D = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(true);
+  const enabled = shouldUse3D();
 
   useEffect(() => {
+    if (!enabled) return;
     const el = containerRef.current;
     if (!el) return;
     const observer = new IntersectionObserver(
@@ -121,23 +131,27 @@ const ToolsScene3D = () => {
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [enabled]);
+
+  if (!enabled) return null;
 
   return (
     <div ref={containerRef} className="pointer-events-none absolute inset-0 z-0">
       {isVisible && (
-        <Canvas
-          camera={{ position: [0, 0, 4], fov: 50 }}
-          frameloop="demand"
-          dpr={[1, IS_MOBILE ? 1 : 1.5]}
-          performance={{ min: 0.5 }}
-          gl={{ antialias: false, alpha: true, powerPreference: "high-performance" }}
-          style={{ background: "transparent" }}
-        >
-          <Suspense fallback={null}>
-            <SceneContent />
-          </Suspense>
-        </Canvas>
+        <Scene3DErrorBoundary>
+          <Canvas
+            camera={{ position: [0, 0, 4], fov: 50 }}
+            frameloop="demand"
+            dpr={[1, IS_MOBILE ? 1 : 1.5]}
+            performance={{ min: 0.5 }}
+            gl={{ antialias: false, alpha: true, powerPreference: "high-performance" }}
+            style={{ background: "transparent" }}
+          >
+            <Suspense fallback={null}>
+              <SceneContent />
+            </Suspense>
+          </Canvas>
+        </Scene3DErrorBoundary>
       )}
     </div>
   );
