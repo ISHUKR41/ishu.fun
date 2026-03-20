@@ -725,6 +725,267 @@
       }
     </script>
 
+    <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+    <!-- ADVANCED SCHEMAS — VOICE SEARCH, GOVERNMENT SERVICE, VIDEO, BREADCRUMBS      -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+
+    <!-- WebPage + SpeakableSpecification — Ranks for voice search (Google Assistant, Alexa) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "@id": "https://ishu.fun/#webpage",
+        "name": "ISHU — India's #1 Sarkari Result, Government Jobs, Free PDF Tools, Live TV",
+        "description": "ISHU (ishu.fun) — Sarkari Result 2026, Sarkari Naukri, Government Exam Results, Admit Cards, 100+ Free PDF Tools, 700+ Live Indian TV Channels, YouTube Downloader, Terabox Downloader, Free CV/Resume/Biodata Maker.",
+        "url": "https://ishu.fun",
+        "isPartOf": { "@id": "https://ishu.fun/#website" },
+        "about": { "@id": "https://ishu.fun/#organization" },
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "url": "https://ishu.fun/og-image-1200x630.png",
+          "width": 1200,
+          "height": 630
+        },
+        "dateModified": "2026-03-20T00:00:00+05:30",
+        "inLanguage": "en-IN",
+        "speakable": {
+          "@type": "SpeakableSpecification",
+          "cssSelector": ["h1", "h2", ".seo-speakable", "#hero-description"]
+        },
+        "breadcrumb": {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "ISHU Home", "item": "https://ishu.fun" }
+          ]
+        }
+      }
+    </script>
+
+    <!-- GovernmentService Schema — Makes Results page rank as an official government service -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "GovernmentService",
+        "@id": "https://ishu.fun/results#govservice",
+        "name": "Sarkari Result — Government Exam Results Notification Service",
+        "alternateName": [
+          "Sarkari Result ISHU", "ISHU Sarkari Result", "ishu.fun sarkari result",
+          "Sarkari Naukri ISHU", "Government Jobs ISHU", "ishu government exam result"
+        ],
+        "description": "Free government exam result and sarkari naukri notification service. Covers UPSC, SSC, IBPS, SBI, RRB, NTA, CDS, NDA, CTET, UPTET, Police, Forest, Judiciary, and all 36 state PSC exams. Daily updates on vacancies, admit cards, answer keys, and final results.",
+        "url": "https://ishu.fun/results",
+        "provider": {
+          "@type": "Organization",
+          "name": "ISHU — Indian StudentHub University",
+          "url": "https://ishu.fun"
+        },
+        "audience": {
+          "@type": "Audience",
+          "audienceType": "Government Job Aspirants, Students, Job Seekers",
+          "geographicArea": { "@type": "Country", "name": "India" }
+        },
+        "areaServed": { "@type": "Country", "name": "India" },
+        "serviceType": "Government Exam Results, Sarkari Naukri, Admit Card, Vacancy Notification",
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://ishu.fun/results",
+          "serviceLocation": { "@type": "Place", "name": "Online — ishu.fun" }
+        },
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "INR" },
+        "isAccessibleForFree": true,
+        "keywords": "sarkari result 2026, sarkari naukri 2026, government exam results India, UPSC result, SSC CGL result, IBPS result, SBI result, RRB NTPC result, NTA JEE NEET result, admit card download, answer key download, government vacancy 2026, freejobalert, rojgar result, employment news India, sarkari job alert today, government recruitment news"
+      }
+    </script>
+
+    <!-- VideoObject Schema — Makes ISHU Live TV rank for video search -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "VideoObject",
+        "@id": "https://ishu.fun/tv#video",
+        "name": "700+ Live Indian TV Channels Free Online — ISHU Live TV",
+        "description": "Watch 700+ live Indian TV channels absolutely free on ishu.fun. Includes Aaj Tak, NDTV, Republic Bharat, Star Plus, Zee TV, Sony TV, Colors, Sun TV, Vijay TV, DD National, DD News, Star Sports, live cricket streaming, kids channels, devotional channels. All Hindi, regional, news, entertainment, sports channels. No signup, no payment!",
+        "thumbnailUrl": "https://ishu.fun/og-image-1200x630.png",
+        "contentUrl": "https://ishu.fun/tv",
+        "embedUrl": "https://ishu.fun/tv",
+        "uploadDate": "2024-01-01T00:00:00+05:30",
+        "duration": "PT24H",
+        "author": { "@type": "Organization", "name": "ISHU — Indian StudentHub University" },
+        "publisher": {
+          "@type": "Organization",
+          "name": "ISHU — Indian StudentHub University",
+          "logo": { "@type": "ImageObject", "url": "https://ishu.fun/logo.png" }
+        },
+        "inLanguage": ["en-IN", "hi-IN", "ta-IN", "te-IN", "bn-IN"],
+        "keywords": "live TV India free, 700 Indian TV channels, Aaj Tak live, NDTV live, Republic TV live, Star Plus live, Zee TV live, DD National live, live cricket streaming, Hindi news live, Tamil TV live, Telugu TV live, Bengali TV live, free live streaming India"
+      }
+    </script>
+
+    <!-- More HowTo Schemas — Sarkari Result, Terabox, Biodata, Merge PDF -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "HowTo",
+        "name": "How to Check Sarkari Result on ISHU — Free",
+        "description": "Check government exam sarkari results free on ishu.fun — UPSC, SSC, Banking, Railways, NTA, all state exams.",
+        "totalTime": "PT1M",
+        "step": [
+          { "@type": "HowToStep", "position": 1, "name": "Open ISHU Results Page", "text": "Go to ishu.fun/results in your browser — no login needed.", "url": "https://ishu.fun/results" },
+          { "@type": "HowToStep", "position": 2, "name": "Search or Browse", "text": "Search for your exam (UPSC, SSC CGL, IBPS, RRB, NTA JEE NEET) or browse by state or category." },
+          { "@type": "HowToStep", "position": 3, "name": "View Result Details", "text": "Click on the result to see full details including merit list, cut-off, interview schedule, and official notification link." }
+        ]
+      }
+    </script>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "HowTo",
+        "name": "How to Download Terabox Video Free on ISHU",
+        "description": "Download Terabox videos and files for free using ISHU Terabox Downloader — no app, no signup.",
+        "totalTime": "PT2M",
+        "step": [
+          { "@type": "HowToStep", "position": 1, "name": "Open Terabox Downloader", "text": "Visit ishu.fun/tools/terabox-downloader in your browser.", "url": "https://ishu.fun/tools/terabox-downloader" },
+          { "@type": "HowToStep", "position": 2, "name": "Paste Terabox Link", "text": "Copy your Terabox share link (terabox.com, teraboxapp.com, or 1024tera.com) and paste it in the input box." },
+          { "@type": "HowToStep", "position": 3, "name": "Click Fetch", "text": "Click Fetch to load the file details and preview the video or file." },
+          { "@type": "HowToStep", "position": 4, "name": "Download for Free", "text": "Click the Download button to save the Terabox file to your device — completely free!" }
+        ]
+      }
+    </script>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "HowTo",
+        "name": "How to Merge PDF Free on ISHU",
+        "description": "Merge multiple PDF files into one for free on ishu.fun — no signup, no watermark, instant download.",
+        "totalTime": "PT2M",
+        "step": [
+          { "@type": "HowToStep", "position": 1, "name": "Open Merge PDF Tool", "text": "Go to ishu.fun/tools/merge-pdf in your browser.", "url": "https://ishu.fun/tools/merge-pdf" },
+          { "@type": "HowToStep", "position": 2, "name": "Upload PDF Files", "text": "Click 'Select Files' or drag and drop your PDF files. You can add multiple PDFs." },
+          { "@type": "HowToStep", "position": 3, "name": "Arrange Order", "text": "Drag to rearrange the order of the PDF files if needed." },
+          { "@type": "HowToStep", "position": 4, "name": "Merge & Download", "text": "Click Merge PDF and download your combined PDF file for free. No watermark, no signup!" }
+        ]
+      }
+    </script>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "HowTo",
+        "name": "How to Make Free Marriage Biodata on ISHU",
+        "description": "Create professional marriage biodata for free on ishu.fun/cv/bio-data — download as PDF instantly.",
+        "totalTime": "PT5M",
+        "step": [
+          { "@type": "HowToStep", "position": 1, "name": "Open Biodata Maker", "text": "Visit ishu.fun/cv/bio-data in your browser — free and no signup.", "url": "https://ishu.fun/cv/bio-data" },
+          { "@type": "HowToStep", "position": 2, "name": "Choose Biodata Template", "text": "Select from Hindu, Muslim, Christian, or Sikh biodata templates, or a general format." },
+          { "@type": "HowToStep", "position": 3, "name": "Enter Personal Details", "text": "Fill in name, age, caste, religion, education, profession, family background, and upload photo." },
+          { "@type": "HowToStep", "position": 4, "name": "Download Biodata PDF", "text": "Click Download PDF to get your professional marriage biodata instantly — 100% free!" }
+        ]
+      }
+    </script>
+
+    <!-- SiteNavigationElement — Signals site structure to Google -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SiteNavigationElement",
+        "@id": "https://ishu.fun/#navigation",
+        "name": "ISHU Main Navigation",
+        "url": "https://ishu.fun",
+        "hasPart": [
+          { "@type": "SiteNavigationElement", "name": "Government Results & Sarkari Naukri", "url": "https://ishu.fun/results" },
+          { "@type": "SiteNavigationElement", "name": "100+ Free PDF Tools", "url": "https://ishu.fun/tools" },
+          { "@type": "SiteNavigationElement", "name": "Free CV / Resume / Biodata Maker", "url": "https://ishu.fun/cv" },
+          { "@type": "SiteNavigationElement", "name": "700+ Live Indian TV Channels", "url": "https://ishu.fun/tv" },
+          { "@type": "SiteNavigationElement", "name": "YouTube Video Downloader HD", "url": "https://ishu.fun/tools/youtube-downloader" },
+          { "@type": "SiteNavigationElement", "name": "Terabox Downloader Free", "url": "https://ishu.fun/tools/terabox-downloader" },
+          { "@type": "SiteNavigationElement", "name": "Latest News India", "url": "https://ishu.fun/news" },
+          { "@type": "SiteNavigationElement", "name": "ISHU Blog", "url": "https://ishu.fun/blog" }
+        ]
+      }
+    </script>
+
+    <!-- BreadcrumbList for all major pages -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "ISHU Home — ishu.fun", "item": "https://ishu.fun" },
+          { "@type": "ListItem", "position": 2, "name": "Sarkari Result — Government Exam Results", "item": "https://ishu.fun/results" },
+          { "@type": "ListItem", "position": 3, "name": "Free PDF Tools", "item": "https://ishu.fun/tools" },
+          { "@type": "ListItem", "position": 4, "name": "Free CV / Resume / Biodata Maker", "item": "https://ishu.fun/cv" },
+          { "@type": "ListItem", "position": 5, "name": "Live Indian TV Channels Free", "item": "https://ishu.fun/tv" },
+          { "@type": "ListItem", "position": 6, "name": "Latest News India", "item": "https://ishu.fun/news" },
+          { "@type": "ListItem", "position": 7, "name": "ISHU Blog", "item": "https://ishu.fun/blog" }
+        ]
+      }
+    </script>
+
+    <!-- ItemList — Top 20 Most Searched Tools on ISHU -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        "name": "Top 20 Free Tools on ISHU — Most Popular",
+        "description": "Most popular free tools on ISHU (ishu.fun) — used by millions of Indian students",
+        "url": "https://ishu.fun/tools",
+        "numberOfItems": 20,
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "YouTube Video Downloader HD Free", "url": "https://ishu.fun/tools/youtube-downloader", "description": "Download YouTube videos in HD 1080p, 4K quality free. No signup." },
+          { "@type": "ListItem", "position": 2, "name": "Terabox Video Downloader Free", "url": "https://ishu.fun/tools/terabox-downloader", "description": "Download Terabox videos and files free. All Terabox domains supported." },
+          { "@type": "ListItem", "position": 3, "name": "Merge PDF Free Online", "url": "https://ishu.fun/tools/merge-pdf", "description": "Merge multiple PDF files into one free. No signup, instant download." },
+          { "@type": "ListItem", "position": 4, "name": "Compress PDF Free", "url": "https://ishu.fun/tools/compress-pdf", "description": "Reduce PDF file size free online. Best quality compression. No watermark." },
+          { "@type": "ListItem", "position": 5, "name": "PDF to Word Converter Free", "url": "https://ishu.fun/tools/pdf-to-word", "description": "Convert PDF to editable Word DOCX free. 100% accurate conversion." },
+          { "@type": "ListItem", "position": 6, "name": "Word to PDF Converter Free", "url": "https://ishu.fun/tools/word-to-pdf", "description": "Convert Word DOCX to PDF free online. Professional quality." },
+          { "@type": "ListItem", "position": 7, "name": "PDF to JPG Converter Free", "url": "https://ishu.fun/tools/pdf-to-jpg", "description": "Convert PDF pages to high-quality JPG images free." },
+          { "@type": "ListItem", "position": 8, "name": "JPG to PDF Converter Free", "url": "https://ishu.fun/tools/jpg-to-pdf", "description": "Convert JPG/PNG images to PDF free. Multiple images to one PDF." },
+          { "@type": "ListItem", "position": 9, "name": "Split PDF Free Online", "url": "https://ishu.fun/tools/split-pdf", "description": "Split PDF into multiple files free. Extract specific pages." },
+          { "@type": "ListItem", "position": 10, "name": "Universal Video Downloader", "url": "https://ishu.fun/tools/universal-video-downloader", "description": "Download videos from 1000+ sites — Instagram, TikTok, Facebook, Twitter free." },
+          { "@type": "ListItem", "position": 11, "name": "OCR PDF — Extract Text Free", "url": "https://ishu.fun/tools/ocr-pdf", "description": "Extract text from scanned PDF documents free. Supports Hindi & English." },
+          { "@type": "ListItem", "position": 12, "name": "Protect PDF with Password Free", "url": "https://ishu.fun/tools/protect-pdf", "description": "Add password protection to PDF free. Secure your documents." },
+          { "@type": "ListItem", "position": 13, "name": "Sign PDF Free Online", "url": "https://ishu.fun/tools/sign-pdf", "description": "Add digital signature to PDF free. Draw, type or upload signature." },
+          { "@type": "ListItem", "position": 14, "name": "Edit PDF Free Online", "url": "https://ishu.fun/tools/edit-pdf", "description": "Edit text, images and pages in PDF free. Full PDF editor online." },
+          { "@type": "ListItem", "position": 15, "name": "Translate PDF Free", "url": "https://ishu.fun/tools/translate-pdf", "description": "Translate PDF documents to any language free. Supports Hindi, English, Tamil." },
+          { "@type": "ListItem", "position": 16, "name": "Summarize PDF with AI Free", "url": "https://ishu.fun/tools/summarize", "description": "AI-powered PDF summarization free. Get key points instantly." },
+          { "@type": "ListItem", "position": 17, "name": "PDF to Excel Converter Free", "url": "https://ishu.fun/tools/pdf-to-excel", "description": "Convert PDF tables to Excel free. Accurate data extraction." },
+          { "@type": "ListItem", "position": 18, "name": "Unlock PDF Free", "url": "https://ishu.fun/tools/unlock-pdf", "description": "Remove password from PDF free. Unlock protected PDF documents." },
+          { "@type": "ListItem", "position": 19, "name": "Watermark PDF Free", "url": "https://ishu.fun/tools/watermark", "description": "Add text or image watermark to PDF free. Custom opacity and position." },
+          { "@type": "ListItem", "position": 20, "name": "Rotate PDF Free Online", "url": "https://ishu.fun/tools/rotate-pdf", "description": "Rotate PDF pages free. Rotate 90°, 180°, or 270°. All pages or specific pages." }
+        ]
+      }
+    </script>
+
+    <!-- Speakable — Google Assistant voice search optimization -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "@id": "https://ishu.fun/#article",
+        "headline": "ISHU — India's #1 Free Platform for Sarkari Result, Government Jobs, PDF Tools & Live TV",
+        "description": "ISHU (ishu.fun) is India's number 1 free platform. Get sarkari result 2026, sarkari naukri, government exam results for UPSC SSC Banking Railways NTA. Use 100+ free PDF tools. Watch 700+ live Indian TV channels. Download YouTube and Terabox videos. Create free CV Resume Biodata. All 36 states covered. No signup required.",
+        "url": "https://ishu.fun",
+        "image": "https://ishu.fun/og-image-1200x630.png",
+        "author": { "@type": "Person", "name": "Ishu", "url": "https://ishu.fun" },
+        "publisher": {
+          "@type": "Organization",
+          "name": "ISHU — Indian StudentHub University",
+          "logo": { "@type": "ImageObject", "url": "https://ishu.fun/logo.png" }
+        },
+        "datePublished": "2024-01-01T00:00:00+05:30",
+        "dateModified": "2026-03-20T00:00:00+05:30",
+        "speakable": {
+          "@type": "SpeakableSpecification",
+          "xpath": [
+            "/html/head/title",
+            "/html/head/meta[@name='description']/@content"
+          ]
+        },
+        "keywords": "ISHU, ishu.fun, Ishu website, sarkari result, sarkari naukri, government jobs India, free PDF tools, YouTube downloader, Terabox downloader, live TV India, CV maker, resume builder, biodata maker, Indian education platform"
+      }
+    </script>
+
     <!-- Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-YOUR-TRACKING-ID"></script>
     <script>

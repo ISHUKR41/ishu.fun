@@ -20,7 +20,7 @@ import FadeInView from "@/components/animations/FadeInView";
 import GradientMesh from "@/components/animations/GradientMesh";
 import MorphingBlob from "@/components/animations/MorphingBlob";
 import AnimatedCounter from "@/components/animations/AnimatedCounter";
-import { BreadcrumbSchema, ToolFAQSchema } from "@/components/seo/JsonLd";
+import { BreadcrumbSchema, ToolFAQSchema, VideoStreamingSchema } from "@/components/seo/JsonLd";
 import SEOHead, { SEO_DATA } from "@/components/seo/SEOHead";
 import { useState, useEffect, useRef, useMemo, useCallback, memo, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -1567,6 +1567,7 @@ const TVPage = () => {
       }} />
       <SEOHead {...SEO_DATA.tv} />
       <BreadcrumbSchema items={[{ name: "Home", url: "/" }, { name: "Live TV", url: "/tv" }]} />
+      <VideoStreamingSchema />
       <ToolFAQSchema toolName="Live Indian TV" toolType="tv" />
       <div className="min-h-screen">
 

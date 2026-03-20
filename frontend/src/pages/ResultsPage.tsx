@@ -27,7 +27,7 @@ import { useState, useEffect, useRef } from "react";
 import Tilt from "react-parallax-tilt";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { BreadcrumbSchema, ResultsFAQSchema } from "@/components/seo/JsonLd";
+import { BreadcrumbSchema, ResultsFAQSchema, GovernmentServiceSchema } from "@/components/seo/JsonLd";
 import SEOHead, { SEO_DATA } from "@/components/seo/SEOHead";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -392,6 +392,7 @@ const ResultsPage = () => {
     <Layout>
       <SEOHead {...SEO_DATA.results} />
       <BreadcrumbSchema items={[{ name: "Results", url: "/results" }]} />
+      <GovernmentServiceSchema />
       <ResultsFAQSchema />
 
       {/* Dynamic Background Image */}

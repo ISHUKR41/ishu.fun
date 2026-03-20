@@ -40,32 +40,101 @@ export const WebsiteSchema = () => (
 export const OrganizationSchema = () => (
   <JsonLd data={{
     "@context": "https://schema.org",
-    "@type": "EducationalOrganization",
+    "@type": ["Organization", "EducationalOrganization"],
+    "@id": `${SITE_URL}/#organization`,
     "name": SITE_NAME,
-    "alternateName": ["ISHU", "Indian StudentHub University"],
+    "alternateName": [
+      "ISHU", "Indian StudentHub University", "ishu.fun", "ISHU Platform",
+      "ISHU India", "Ishu Education", "इशु", "ISHU Sarkari Result",
+      "ISHU PDF Tools", "ISHU Live TV", "ISHU CV Maker"
+    ],
     "url": SITE_URL,
-    "logo": `${SITE_URL}/favicon.ico`,
-    "description": "India's leading educational platform providing instant government exam results, job vacancies, free PDF tools, live TV streaming, video downloaders & daily news for students and job seekers across all 36 states.",
+    "logo": {
+      "@type": "ImageObject",
+      "url": `${SITE_URL}/logo.png`,
+      "width": 200,
+      "height": 200
+    },
+    "image": `${SITE_URL}/og-image-1200x630.png`,
+    "description": "ISHU (ishu.fun) is India's #1 free educational platform. Government exam results, sarkari naukri, 100+ PDF tools, 700+ live Indian TV channels, YouTube downloader, Terabox downloader, free CV/Resume/Biodata maker, and daily news — all free, no signup!",
     "foundingDate": "2024",
+    "email": "support@ishu.fun",
+    "telephone": "+918986985813",
     "contactPoint": [
       {
         "@type": "ContactPoint",
         "telephone": "+918986985813",
         "contactType": "customer support",
-        "email": "ishukryk@gmail.com",
-        "availableLanguage": ["English", "Hindi"],
+        "email": "support@ishu.fun",
+        "availableLanguage": ["English", "Hindi", "Tamil", "Telugu", "Bengali", "Marathi"],
         "areaServed": "IN"
       }
     ],
-    "address": {
-      "@type": "PostalAddress",
-      "addressCountry": "IN"
-    },
-    "sameAs": [],
+    "address": { "@type": "PostalAddress", "addressCountry": "IN" },
+    "areaServed": { "@type": "Country", "name": "India" },
+    "sameAs": [
+      "https://twitter.com/ishufun",
+      "https://facebook.com/ishufun",
+      "https://instagram.com/ishu.fun",
+      "https://youtube.com/@ishufun"
+    ],
     "knowsAbout": [
-      "Government Exam Results", "Sarkari Naukri", "UPSC", "SSC CGL", "Banking Jobs",
-      "Railway Jobs", "NTA JEE NEET", "PDF Tools", "Video Downloader", "Live TV India"
-    ]
+      "Government Exam Results", "Sarkari Naukri 2026", "Sarkari Result 2026",
+      "UPSC IAS IPS", "SSC CGL CHSL", "Banking Jobs IBPS SBI",
+      "Railway Jobs RRB NTPC", "NTA JEE Main NEET", "Admit Card Download",
+      "Answer Key Download", "PDF Tools Online", "YouTube Video Downloader",
+      "Terabox Downloader", "Live TV India", "Hindi News TV",
+      "CV Maker Free", "Resume Builder India", "Biodata Maker Marriage",
+      "ATS Resume Templates", "Government Job Notification"
+    ],
+    "numberOfEmployees": { "@type": "QuantitativeValue", "value": "50+" }
+  }} />
+);
+
+/** GovernmentServiceSchema — for sarkari result/jobs pages */
+export const GovernmentServiceSchema = () => (
+  <JsonLd data={{
+    "@context": "https://schema.org",
+    "@type": "GovernmentService",
+    "name": "Sarkari Result — Government Exam Results & Vacancies — ISHU",
+    "alternateName": [
+      "Sarkari Result ISHU", "ISHU Sarkari Result", "ishu.fun sarkari result",
+      "Sarkari Naukri ISHU", "Government Jobs ISHU"
+    ],
+    "description": "Free government exam results and sarkari naukri alerts for UPSC, SSC, IBPS, SBI, RRB, NTA JEE NEET, CDS, NDA, CTET, Police, and all 36 Indian state exams. Daily updates on vacancies, admit cards, answer keys.",
+    "url": `${SITE_URL}/results`,
+    "provider": { "@type": "Organization", "name": SITE_NAME, "url": SITE_URL },
+    "audience": {
+      "@type": "Audience",
+      "audienceType": "Students, Government Job Aspirants, Job Seekers",
+      "geographicArea": { "@type": "Country", "name": "India" }
+    },
+    "areaServed": { "@type": "Country", "name": "India" },
+    "serviceType": "Sarkari Result, Government Exam Results, Sarkari Naukri, Admit Card, Vacancy",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "INR" },
+    "isAccessibleForFree": true,
+    "keywords": "sarkari result 2026, sarkari naukri 2026, government exam results, UPSC result, SSC CGL result, IBPS result, SBI PO result, RRB NTPC result, NTA JEE result, NEET result, admit card 2026, answer key 2026, government vacancy 2026, UP sarkari result, Bihar sarkari result, Rajasthan sarkari result, MP sarkari result"
+  }} />
+);
+
+/** VideoStreamingSchema — for Live TV page */
+export const VideoStreamingSchema = () => (
+  <JsonLd data={{
+    "@context": "https://schema.org",
+    "@type": "BroadcastService",
+    "name": "ISHU Live Indian TV — 700+ Free Channels",
+    "alternateName": ["ISHU Live TV", "ISHU TV", "ishu live tv", "ishu tv channels"],
+    "description": "Watch 700+ live Indian TV channels free on ishu.fun. Hindi news, entertainment, sports, regional, kids, devotional channels. Aaj Tak, NDTV, Star Plus, Zee TV, DD National live streaming free.",
+    "url": `${SITE_URL}/tv`,
+    "broadcastDisplayName": "ISHU Live Indian TV",
+    "broadcaster": {
+      "@type": "Organization",
+      "name": SITE_NAME,
+      "url": SITE_URL
+    },
+    "inLanguage": ["hi-IN", "ta-IN", "te-IN", "bn-IN", "mr-IN", "gu-IN", "kn-IN", "ml-IN", "en-IN"],
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "INR" }
   }} />
 );
 

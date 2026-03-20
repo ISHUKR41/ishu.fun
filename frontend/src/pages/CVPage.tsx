@@ -135,7 +135,7 @@ const CVPage = () => {
         <div className="pointer-events-none absolute inset-0 opacity-[0.015]"
           style={{ backgroundImage:"linear-gradient(rgba(59,130,246,0.8) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,0.8) 1px,transparent 1px)", backgroundSize:"60px 60px" }}/>
 
-        <motion.div className="container relative z-10 py-20" style={{ opacity: heroOpacity }}>
+        <motion.div className="container relative z-10 py-10 sm:py-16" style={{ opacity: heroOpacity }}>
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Left content */}
             <div>
