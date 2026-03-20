@@ -73,16 +73,16 @@ const HeroSection = () => {
     if (!headlineRef.current) return;
     const ctx = gsap.context(() => {
       if (statsBarRef.current) {
-        gsap.fromTo(statsBarRef.current, { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 1, delay: 2, ease: "power4.out", clearProps: "all" });
+        gsap.fromTo(statsBarRef.current, { y: 20, opacity: 0.4 }, { y: 0, opacity: 1, duration: 0.7, delay: 0.4, ease: "power4.out", clearProps: "all" });
         gsap.fromTo(statsBarRef.current.querySelectorAll(".stat-item"),
-        { scale: 0.5, opacity: 0 },
-        { scale: 1, opacity: 1, duration: 0.6, stagger: 0.12, delay: 2.3, ease: "back.out(1.7)", clearProps: "all" }
+        { scale: 0.85, opacity: 0.4 },
+        { scale: 1, opacity: 1, duration: 0.5, stagger: 0.08, delay: 0.5, ease: "back.out(1.7)", clearProps: "all" }
         );
       }
       if (featuresRef.current) {
         gsap.fromTo(featuresRef.current.querySelectorAll(".feature-chip"),
-        { y: 20, opacity: 0, scale: 0.9 },
-        { y: 0, opacity: 1, scale: 1, duration: 0.5, stagger: 0.1, delay: 1.8, ease: "power3.out", clearProps: "all" }
+        { y: 10, opacity: 0.3, scale: 0.95 },
+        { y: 0, opacity: 1, scale: 1, duration: 0.4, stagger: 0.06, delay: 0.3, ease: "power3.out", clearProps: "all" }
         );
       }
     }, containerRef);
@@ -164,7 +164,7 @@ const HeroSection = () => {
           </h1>
 
           {/* Subtitle */}
-          <motion.p initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 1.2 }}
+          <motion.p initial={{ opacity: 0.3, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }}
           className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-muted-foreground md:text-xl">
             Results, Vacancies, 100+ PDF Tools, Live News & More — Everything you need for UPSC, SSC, Banking, Railways, NTA & State exams.
           </motion.p>
@@ -181,7 +181,7 @@ const HeroSection = () => {
           </div>
 
           {/* CTA Buttons */}
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 1.5 }}
+          <motion.div initial={{ opacity: 0.3, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.45 }}
           className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <MagneticButton>
               <Link to="/results"
@@ -217,7 +217,7 @@ const HeroSection = () => {
           </div>
 
           {/* Trusted by badge */}
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2.8 }}
+          <motion.div initial={{ opacity: 0.2 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
           className="mt-8 flex items-center justify-center gap-2 text-xs text-muted-foreground">
             <div className="flex -space-x-2">
               {[...Array(5)].map((_, i) =>
@@ -230,7 +230,7 @@ const HeroSection = () => {
           </motion.div>
 
           {/* Scroll indicator */}
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2.5 }} className="mt-10 flex justify-center">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }} className="mt-10 flex justify-center">
             <motion.div animate={{ y: [0, 12, 0] }} transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }} className="flex flex-col items-center gap-2">
               <span className="text-[10px] uppercase tracking-widest text-muted-foreground/60">Scroll</span>
               <ChevronDown size={16} className="text-primary/60" />

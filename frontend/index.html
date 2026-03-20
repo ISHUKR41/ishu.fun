@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr" prefix="og: https://ogp.me/ns#">
   <head>
+    <!-- CRITICAL: Anti-flash CSS — must be first, prevents white screen before React loads -->
+    <style>
+      html, body { background-color: #080808 !important; color: #f2f2f2; margin: 0; padding: 0; }
+      #root { min-height: 100vh; background-color: #080808 !important; }
+      * { box-sizing: border-box; }
+    </style>
     <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
     <!-- MAXIMUM SEO OPTIMIZATION FOR GLOBAL RANKING                                     -->
     <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
@@ -667,21 +673,17 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <!-- NUCLEAR SCROLL FIX — runs BEFORE React, keeps running FOREVER -->
+    <!-- SCROLL FIX — runs BEFORE React, fixes overflow without breaking Lenis smooth scroll -->
     <script>
       (function(){
-        // Force scroll to work — removes Lenis classes and forces overflow
+        // Fix scroll WITHOUT removing Lenis classes (Lenis needs its classes to work)
+        // Only remove overflow:hidden from body when NO modal is open
         function fix(){
           var h=document.documentElement, b=document.body;
-          // Remove Lenis classes that set overflow:hidden
-          h.classList.remove('lenis','lenis-smooth','lenis-stopped','lenis-scrolling');
-          // Force scrollable
-          h.style.setProperty('overflow-y','auto','important');
-          h.style.setProperty('overflow-x','hidden','important');
+          // NOTE: Do NOT remove lenis/lenis-smooth classes — Lenis needs them for smooth scroll
+          // Only fix height constraints that block scrolling
           h.style.setProperty('height','auto','important');
           h.style.setProperty('max-height','none','important');
-          b.style.setProperty('overflow-y','auto','important');
-          b.style.setProperty('overflow-x','hidden','important');
           b.style.setProperty('height','auto','important');
           b.style.setProperty('max-height','none','important');
           var r=document.getElementById('root');
@@ -690,40 +692,36 @@
             r.style.setProperty('height','auto','important');
             r.style.setProperty('max-height','none','important');
           }
+          // Only fix overflow if body has overflow:hidden AND no modal is open
+          var hasModal = document.querySelector("[role='dialog']") || document.querySelector("[aria-modal='true']");
+          if(!hasModal && b.style.overflow === 'hidden'){
+            b.style.removeProperty('overflow');
+            b.style.removeProperty('overflow-y');
+          }
         }
-        // Run immediately
+        // Run a few times at startup (not forever — prevents Lenis conflict)
         fix();
-        // Run again after delays (React might override)
-        setTimeout(fix,100);
-        setTimeout(fix,500);
-        setTimeout(fix,1000);
-        setTimeout(fix,2000);
-        setTimeout(fix,3000);
-        setTimeout(fix,5000);
-        // Keep running every 500ms FOREVER
-        setInterval(fix,500);
-        // Watch for ANY changes to html/body style/class
+        setTimeout(fix, 100);
+        setTimeout(fix, 500);
+        setTimeout(fix, 1500);
+        // Watch only for body overflow:hidden changes (from modals), not Lenis class changes
         if(window.MutationObserver){
           var obs=new MutationObserver(function(muts){
             for(var i=0;i<muts.length;i++){
               var m=muts[i];
-              if(m.attributeName==='style'||m.attributeName==='class'){
-                var cs=window.getComputedStyle(m.target);
-                if(cs.overflowY==='hidden'||cs.overflowY==='clip'||
-                   m.target.classList.contains('lenis-stopped')||
-                   m.target.classList.contains('lenis')){
-                  fix();
+              if(m.attributeName==='style' && m.target === document.body){
+                var hasModal2 = document.querySelector("[role='dialog']") || document.querySelector("[aria-modal='true']");
+                if(!hasModal2 && document.body.style.overflow === 'hidden'){
+                  setTimeout(function(){ document.body.style.removeProperty('overflow'); }, 50);
                 }
               }
             }
           });
-          obs.observe(document.documentElement,{attributes:true,attributeFilter:['style','class']});
-          // Observe body when it's ready
           if(document.body){
-            obs.observe(document.body,{attributes:true,attributeFilter:['style','class']});
+            obs.observe(document.body,{attributes:true,attributeFilter:['style']});
           } else {
             document.addEventListener('DOMContentLoaded',function(){
-              obs.observe(document.body,{attributes:true,attributeFilter:['style','class']});
+              obs.observe(document.body,{attributes:true,attributeFilter:['style']});
             });
           }
         }
