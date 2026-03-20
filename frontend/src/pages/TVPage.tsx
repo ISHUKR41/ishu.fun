@@ -611,6 +611,29 @@ async function fetchAllChannels(
     { url: "https://iptv-org.github.io/iptv/subdivisions/in-hp.m3u", lang: "Hindi" },
     { url: "https://iptv-org.github.io/iptv/subdivisions/in-uk.m3u", lang: "Hindi" },
     { url: "https://iptv-org.github.io/iptv/subdivisions/in-ga.m3u", lang: "Hindi" },
+    // Additional high-quality curated repos
+    { url: "https://raw.githubusercontent.com/ChaudharyAnkitKumar/Indian-Live-TV/main/live-tv.m3u", lang: "Hindi" },
+    { url: "https://raw.githubusercontent.com/dragonhunter4/tata-sky-iptv/main/tata_sky.m3u", lang: "Hindi" },
+    { url: "https://raw.githubusercontent.com/rohitmenonhart-xhfw/indian-tv-m3u/main/india.m3u", lang: "Hindi" },
+    { url: "https://raw.githubusercontent.com/prateek-sawhney97/indian-iptv/main/India.m3u", lang: "Hindi" },
+    { url: "https://raw.githubusercontent.com/vortexman100/iptv/master/india.m3u", lang: "Hindi" },
+    { url: "https://raw.githubusercontent.com/patelpp/indian-iptv-playlist/main/Indian-Channels.m3u", lang: "Hindi" },
+    // Extra South Indian language sources
+    { url: "https://raw.githubusercontent.com/tamil-iptv/playlist/main/tamil.m3u", lang: "Tamil" },
+    { url: "https://raw.githubusercontent.com/Telugu-IPTV/Telugu-Channels/main/Telugu.m3u", lang: "Telugu" },
+    { url: "https://raw.githubusercontent.com/mallutv/channels/main/malayalam.m3u", lang: "Malayalam" },
+    // Bangladeshi/Bengali aggregator
+    { url: "https://raw.githubusercontent.com/FunctionError/PiratesTV/main/combined_playlist.m3u", lang: "Bengali" },
+    // iptv-org verified working streams for India (direct API)
+    { url: "https://iptv-org.github.io/iptv/index.country.in.m3u", lang: "Hindi" },
+    // Extra DD Free Dish & Prasar Bharati
+    { url: "https://raw.githubusercontent.com/theravenous/ddfeed/main/dd.m3u", lang: "Hindi" },
+    // More religious/devotional (Aastha, Sadhna, etc.)
+    { url: "https://iptv-org.github.io/iptv/categories/religious.m3u", lang: "Hindi" },
+    // Punjabi-specific
+    { url: "https://raw.githubusercontent.com/IPTV-Punjabi/playlist/main/punjabi.m3u", lang: "Punjabi" },
+    // Gujarati-specific  
+    { url: "https://raw.githubusercontent.com/gujarati-iptv/channels/main/gujarati.m3u", lang: "Gujarati" },
   ];
 
   // Fetch each M3U source with individual 12s timeout to avoid slow sources blocking everything

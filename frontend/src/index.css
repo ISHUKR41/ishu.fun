@@ -64,21 +64,25 @@
 }
 
 /* ═══ SCROLL SAFETY NET ═══ */
-/* Fallback rules — Lenis manages overflow via its own CSS.
-   These only apply if Lenis hasn't loaded yet. */
+/* Lenis manages all smooth scrolling. These are safety fallbacks. */
 html {
   overflow-x: hidden;
   pointer-events: auto;
+  /* Prevent browser from competing with Lenis on scroll boundaries */
+  overscroll-behavior: none;
 }
 
 body {
   overflow-x: hidden;
+  overscroll-behavior: none;
 }
 
 /* Lenis adds .lenis class — let it manage scroll */
 html.lenis,
 html.lenis-smooth {
   height: auto;
+  /* Lenis requires overflow to be unset on html when active */
+  overflow: unset;
 }
 
 /* When Lenis stops (e.g. modal open), allow native scroll fallback */
@@ -104,17 +108,16 @@ html.lenis-stopped {
 
   /* ═══ 120fps PERFORMANCE OPTIMIZATIONS ═══ */
   html {
-    /* Lenis handles scroll behavior — keep auto for non-Lenis fallback */
-    scroll-behavior: auto;
+    /* Lenis handles all scroll behavior — always keep auto */
+    scroll-behavior: auto !important;
     max-width: 100vw;
-    /* GPU compositing for touch devices */
-    -webkit-overflow-scrolling: touch;
     /* Prevent layout shift from scrollbar appearing/disappearing */
     scrollbar-gutter: stable;
     image-rendering: auto;
     height: auto;
     min-height: 100%;
-    touch-action: manipulation;
+    /* Allow both axes for Lenis to intercept */
+    touch-action: pan-x pan-y;
   }
 
   /* Mobile: disable smooth scroll to prevent jank during fast scrolling */
@@ -144,8 +147,8 @@ html.lenis-stopped {
     padding-left: env(safe-area-inset-left, 0);
     padding-right: env(safe-area-inset-right, 0);
     padding-bottom: env(safe-area-inset-bottom, 0);
-    /* Prevent trackpad over-scroll bounce */
-    overscroll-behavior-y: none;
+    /* Prevent browser bounce — Lenis handles all scroll momentum */
+    overscroll-behavior: none;
     /* Improve font rendering */
     font-display: optional;
     /* Allow touch scrolling on all mobile devices */
