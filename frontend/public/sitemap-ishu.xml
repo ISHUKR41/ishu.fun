@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ISHU Personal Brand Sitemap — ishu.fun
+  Purpose: Help search engines rank "Ishu" personal name searches
+  Covers: All Ishu brand pages, tools, and features
+  Updated: 2026-03-20
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+
+  <!-- ISHU Homepage — Primary brand page -->
+  <url>
+    <loc>https://ishu.fun/</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ishu.fun/" />
+    <xhtml:link rel="alternate" hreflang="en-in" href="https://ishu.fun/" />
+    <xhtml:link rel="alternate" hreflang="hi-in" href="https://ishu.fun/" />
+    <image:image>
+      <image:loc>https://ishu.fun/og-image-1200x630.png</image:loc>
+      <image:title>ISHU — Indian StudentHub University</image:title>
+      <image:caption>Ishu website — India's #1 free education and government jobs platform</image:caption>
+    </image:image>
+  </url>
+
+  <!-- ISHU Results — Ishu sarkari result page -->
+  <url>
+    <loc>https://ishu.fun/results</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.99</priority>
+    <xhtml:link rel="alternate" hreflang="en-in" href="https://ishu.fun/results" />
+    <xhtml:link rel="alternate" hreflang="hi-in" href="https://ishu.fun/results" />
+  </url>
+
+  <!-- ISHU Tools — Ishu PDF tools page -->
+  <url>
+    <loc>https://ishu.fun/tools</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.98</priority>
+  </url>
+
+  <!-- ISHU YouTube Downloader — Ishu youtube downloader -->
+  <url>
+    <loc>https://ishu.fun/tools/youtube-downloader</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.98</priority>
+  </url>
+
+  <!-- ISHU Terabox Downloader — Ishu terabox downloader -->
+  <url>
+    <loc>https://ishu.fun/tools/terabox-downloader</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.97</priority>
+  </url>
+
+  <!-- ISHU Universal Video Downloader -->
+  <url>
+    <loc>https://ishu.fun/tools/universal-video-downloader</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.96</priority>
+  </url>
+
+  <!-- ISHU Live TV — Ishu live TV channels -->
+  <url>
+    <loc>https://ishu.fun/tv</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.95</priority>
+  </url>
+
+  <!-- ISHU News — Ishu latest news -->
+  <url>
+    <loc>https://ishu.fun/news</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.95</priority>
+  </url>
+
+  <!-- ISHU CV Builder — Ishu CV resume maker -->
+  <url>
+    <loc>https://ishu.fun/cv</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+
+  <!-- ISHU Resume Builder -->
+  <url>
+    <loc>https://ishu.fun/cv/resume</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.88</priority>
+  </url>
+
+  <!-- ISHU Bio Data Builder -->
+  <url>
+    <loc>https://ishu.fun/cv/bio-data</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.87</priority>
+  </url>
+
+  <!-- ISHU Blog — Ishu blog page -->
+  <url>
+    <loc>https://ishu.fun/blog</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <!-- ISHU About — About Ishu platform -->
+  <url>
+    <loc>https://ishu.fun/about</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.80</priority>
+  </url>
+
+  <!-- ISHU Contact — Contact Ishu team -->
+  <url>
+    <loc>https://ishu.fun/contact</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.75</priority>
+  </url>
+
+</urlset>

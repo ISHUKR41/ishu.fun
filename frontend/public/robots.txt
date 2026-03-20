@@ -212,12 +212,18 @@ Disallow: /private/
 # ═══════════════════════════════════════════════════════════════
 Sitemap: https://ishu.fun/sitemap.xml
 Sitemap: https://ishu.fun/sitemap-index.xml
+Sitemap: https://ishu.fun/sitemap-main.xml
+Sitemap: https://ishu.fun/sitemap-ishu.xml
+Sitemap: https://ishu.fun/sitemap-states.xml
 Sitemap: https://ishu.fun/sitemap-tools.xml
 Sitemap: https://ishu.fun/sitemap-jobs.xml
+Sitemap: https://ishu.fun/sitemap-results.xml
 Sitemap: https://ishu.fun/sitemap-news.xml
+Sitemap: https://ishu.fun/sitemap-blog.xml
 Sitemap: https://ishu.fun/sitemap-video.xml
 Sitemap: https://ishu.fun/sitemap-image.xml
 Sitemap: https://ishu.fun/sitemap-tv.xml
+Sitemap: https://ishu.fun/sitemap-education.xml
 Sitemap: https://ishu.fun/sitemap-expanded.xml
 
 # Host
