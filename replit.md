@@ -123,3 +123,8 @@ All pages optimized for 120fps via global CSS rules at the end of `frontend/src/
 - Root `package.json` scripts updated to use pnpm
 - Two workflows configured: "Start application" (frontend) and "Start Backend"
 - Error screen updated to reference Replit Secrets (not Vercel)
+- Fixed Helmet `crossOriginOpenerPolicy` — `"same-site-allow-popups"` → `"same-origin-allow-popups"` (invalid value caused backend crash)
+- Added `backend/.env` with `PORT=3001` so backend listens on the correct port (workflow `waitForPort: 3001`)
+- Added `app.set('trust proxy', 1)` to fix `express-rate-limit` X-Forwarded-For validation error in Replit's proxied environment
+- Removed incorrect `Content-Encoding: br` header from `compressionHintsMiddleware` (was causing `ERR_CONTENT_DECODING_FAILED`)
+- Installed Python 3.11 system module so the bundled `yt-dlp` binary works correctly

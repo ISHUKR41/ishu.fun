@@ -88,6 +88,9 @@ process.on('SIGINT', () => {
 
 // ─── MIDDLEWARE ──────────────────────────────────────────────
 
+// Trust proxy — required for Replit/Render environments (behind reverse proxy)
+app.set('trust proxy', 1);
+
 // CORS — Allow requests from multiple local dev origins + production
 const allowedOrigins = [
     process.env.FRONTEND_URL || 'http://localhost:3000',

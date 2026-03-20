@@ -81,7 +81,7 @@ const getHelmetConfig = () => {
     },
 
     // Cross-Origin Policy
-    crossOriginOpenerPolicy: { policy: "same-site-allow-popups" },
+    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
 
     // X-Frame-Options for clickjacking protection
     frameguard: {
@@ -363,11 +363,6 @@ const cacheControlMiddleware = (req, res, next) => {
 const compressionHintsMiddleware = (req, res, next) => {
   // Accept-Encoding header support
   res.setHeader("Vary", "Accept-Encoding");
-
-  // Brotli compression support for modern browsers
-  if (req.headers["accept-encoding"]?.includes("br")) {
-    res.setHeader("Content-Encoding", "br");
-  }
 
   next();
 };
