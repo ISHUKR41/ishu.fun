@@ -4341,12 +4341,8 @@ html, body {
   overscroll-behavior-x: none;
 }
 
-/* 3. Main layout container — GPU compositing for smooth scroll */
-#root > div {
-  /* transform: translateZ(0) here would prevent Lenis from working */
-  /* So we isolate without creating a new stacking context */
-  contain: layout;
-}
+/* 3. Main layout container — no contain here, Lenis needs free scroll context */
+/* Do NOT add contain, transform, or overflow to #root > div — breaks Lenis */
 
 /* 4. Force consistent compositing for all animated elements */
 [data-framer-motion],
@@ -4356,34 +4352,29 @@ html, body {
   -webkit-backface-visibility: hidden;
 }
 
-/* 5. Prevent layout thrashing during scroll */
-.sticky, [class*="sticky"] {
+/* 5. Prevent layout thrashing during scroll — sticky headers only */
+header.sticky, nav.sticky {
   transform: translateZ(0);
   will-change: transform;
 }
 
-/* 6. Optimize fixed position elements (header, scroll progress) */
-[class*="fixed"] {
+/* 6. Optimize fixed position UI elements (header, scroll progress bar) */
+header[class*="fixed"],
+nav[class*="fixed"],
+[role="navigation"][class*="fixed"] {
   transform: translateZ(0);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
 
-/* 7. Cards and interactive grid items — GPU layer isolation */
-.card, [class*="rounded-"], [class*="border"] {
+/* 7. Cards — GPU layer isolation (be specific, not wildcard) */
+.card {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
 
-/* 8. Optimize gradient backgrounds (very expensive) */
-[class*="bg-gradient"] {
-  will-change: auto;
-  transform: translateZ(0);
-}
-
-/* 9. Images — prevent jank during scroll */
+/* 8. Images — prevent jank during scroll */
 img {
-  transform: translateZ(0);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
