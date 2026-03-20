@@ -535,7 +535,7 @@ const NewsPage = () => {
 
       {/* ═══ HERO ═══ */}
       <motion.section ref={heroRef} style={{ y: heroY, opacity: heroOpacity }}
-        className="relative overflow-hidden bg-gradient-hero py-20 md:py-28">
+        className="relative overflow-hidden bg-gradient-hero pt-8 pb-16 md:pt-10 md:pb-24">
         {/* Multi-layered background effects */}
         <div className="pointer-events-none absolute inset-0 bg-dots opacity-20" />
         <div className="pointer-events-none absolute inset-0 cyber-grid opacity-30" />

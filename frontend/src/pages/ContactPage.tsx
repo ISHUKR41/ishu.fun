@@ -176,7 +176,7 @@ const ContactPage = () => {
       <BreadcrumbSchema items={[{ name: "Contact", url: "/contact" }]} />
 
       {/* ═══════════════ HERO ═══════════════ */}
-      <section ref={heroRef} onMouseMove={handleHeroMouse} className="relative bg-gradient-hero py-36 md:py-44 overflow-hidden funky-hero-pattern">
+      <section ref={heroRef} onMouseMove={handleHeroMouse} className="relative bg-gradient-hero pt-10 pb-28 md:pt-14 md:pb-36 overflow-hidden funky-hero-pattern">
         {/* Dynamic Background Image */}
         <div className="absolute inset-0 opacity-[0.10] mix-blend-luminosity pointer-events-none" style={{
           backgroundImage: "url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=2070&q=80')",

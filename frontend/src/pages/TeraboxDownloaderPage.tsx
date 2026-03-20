@@ -222,7 +222,7 @@ const TeraboxDownloaderPage = () => {
       }} />
 
       {/* Hero */}
-      <section className="relative bg-gradient-hero py-20 overflow-hidden">
+      <section className="relative bg-gradient-hero pt-8 pb-16 overflow-hidden">
         {/* Dynamic Background Image */}
         <div className="absolute inset-0 opacity-[0.10] mix-blend-luminosity" style={{
           backgroundImage: "url('https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&w=2070&q=80')",

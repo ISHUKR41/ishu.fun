@@ -86,7 +86,7 @@ const PrivacyPage = () => {
       }} />
 
       {/* Hero */}
-      <section className="relative bg-gradient-hero py-28 overflow-hidden">
+      <section className="relative bg-gradient-hero pt-8 pb-16 overflow-hidden">
         <div className="bg-dots pointer-events-none absolute inset-0 opacity-20" />
         <motion.div animate={{ x: [0, 40, 0], y: [0, -20, 0] }} transition={{ repeat: Infinity, duration: 12, ease: "easeInOut" }}
           className="pointer-events-none absolute left-[15%] top-[20%] h-[400px] w-[400px] rounded-full bg-primary/5 blur-[120px]" />

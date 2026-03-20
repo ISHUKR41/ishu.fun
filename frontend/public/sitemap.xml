@@ -4,7 +4,7 @@
         xmlns:video="http://www.google.com/schemas/sitemap-video/1.1"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
 
-  <!-- ═══ CORE PAGES ═══ -->
+  <!-- ═══ CORE PAGES — MAXIMUM PRIORITY ═══ -->
 
   <url>
     <loc>https://ishu.fun/</loc>
@@ -12,18 +12,22 @@
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://ishu.fun/" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://ishu.fun/?lang=en" />
-    <xhtml:link rel="alternate" hreflang="en-in" href="https://ishu.fun/?lang=en" />
-    <xhtml:link rel="alternate" hreflang="hi" href="https://ishu.fun/?lang=hi" />
-    <xhtml:link rel="alternate" hreflang="ta" href="https://ishu.fun/?lang=ta" />
-    <xhtml:link rel="alternate" hreflang="te" href="https://ishu.fun/?lang=te" />
-    <xhtml:link rel="alternate" hreflang="bn" href="https://ishu.fun/?lang=bn" />
-    <xhtml:link rel="alternate" hreflang="mr" href="https://ishu.fun/?lang=mr" />
-    <xhtml:link rel="alternate" hreflang="gu" href="https://ishu.fun/?lang=gu" />
-    <xhtml:link rel="alternate" hreflang="kn" href="https://ishu.fun/?lang=kn" />
-    <xhtml:link rel="alternate" hreflang="ml" href="https://ishu.fun/?lang=ml" />
-    <xhtml:link rel="alternate" hreflang="pa" href="https://ishu.fun/?lang=pa" />
-    <xhtml:link rel="alternate" hreflang="or" href="https://ishu.fun/?lang=or" />
+    <xhtml:link rel="alternate" hreflang="en-in" href="https://ishu.fun/" />
+    <xhtml:link rel="alternate" hreflang="hi-in" href="https://ishu.fun/" />
+    <xhtml:link rel="alternate" hreflang="ta-in" href="https://ishu.fun/" />
+    <xhtml:link rel="alternate" hreflang="te-in" href="https://ishu.fun/" />
+    <xhtml:link rel="alternate" hreflang="bn-in" href="https://ishu.fun/" />
+    <xhtml:link rel="alternate" hreflang="mr-in" href="https://ishu.fun/" />
+    <xhtml:link rel="alternate" hreflang="gu-in" href="https://ishu.fun/" />
+    <xhtml:link rel="alternate" hreflang="kn-in" href="https://ishu.fun/" />
+    <xhtml:link rel="alternate" hreflang="ml-in" href="https://ishu.fun/" />
+    <xhtml:link rel="alternate" hreflang="pa-in" href="https://ishu.fun/" />
+    <xhtml:link rel="alternate" hreflang="or-in" href="https://ishu.fun/" />
+    <image:image>
+      <image:loc>https://ishu.fun/og-image.png</image:loc>
+      <image:title>ISHU — Indian StudentHub University | ishu.fun</image:title>
+      <image:caption>India's #1 Free Platform: Government Exam Results, PDF Tools, Live TV, Video Downloader</image:caption>
+    </image:image>
   </url>
 
   <!-- ═══ GOVERNMENT EXAM RESULTS ═══ -->
@@ -32,7 +36,10 @@
     <loc>https://ishu.fun/results</loc>
     <lastmod>2026-03-20</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.97</priority>
+    <priority>0.99</priority>
+    <xhtml:link rel="alternate" hreflang="en-in" href="https://ishu.fun/results" />
+    <xhtml:link rel="alternate" hreflang="hi-in" href="https://ishu.fun/results" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ishu.fun/results" />
   </url>
 
   <!-- State-wise Results — All 36 States + UTs -->
@@ -222,8 +229,11 @@
   <url>
     <loc>https://ishu.fun/tools</loc>
     <lastmod>2026-03-20</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.92</priority>
+    <changefreq>weekly</changefreq>
+    <priority>0.97</priority>
+    <xhtml:link rel="alternate" hreflang="en-in" href="https://ishu.fun/tools" />
+    <xhtml:link rel="alternate" hreflang="hi-in" href="https://ishu.fun/tools" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ishu.fun/tools" />
   </url>
 
   <!-- Video Downloader Tools — Highest Traffic -->
@@ -231,19 +241,28 @@
     <loc>https://ishu.fun/tools/youtube-downloader</loc>
     <lastmod>2026-03-20</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.95</priority>
+    <priority>0.98</priority>
+    <xhtml:link rel="alternate" hreflang="en-in" href="https://ishu.fun/tools/youtube-downloader" />
+    <xhtml:link rel="alternate" hreflang="hi-in" href="https://ishu.fun/tools/youtube-downloader" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ishu.fun/tools/youtube-downloader" />
   </url>
   <url>
     <loc>https://ishu.fun/tools/terabox-downloader</loc>
     <lastmod>2026-03-20</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.92</priority>
+    <priority>0.97</priority>
+    <xhtml:link rel="alternate" hreflang="en-in" href="https://ishu.fun/tools/terabox-downloader" />
+    <xhtml:link rel="alternate" hreflang="hi-in" href="https://ishu.fun/tools/terabox-downloader" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ishu.fun/tools/terabox-downloader" />
   </url>
   <url>
     <loc>https://ishu.fun/tools/universal-video-downloader</loc>
     <lastmod>2026-03-20</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.9</priority>
+    <priority>0.96</priority>
+    <xhtml:link rel="alternate" hreflang="en-in" href="https://ishu.fun/tools/universal-video-downloader" />
+    <xhtml:link rel="alternate" hreflang="hi-in" href="https://ishu.fun/tools/universal-video-downloader" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ishu.fun/tools/universal-video-downloader" />
   </url>
 
   <!-- PDF Organize Tools -->

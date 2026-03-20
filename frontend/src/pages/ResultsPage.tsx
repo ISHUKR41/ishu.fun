@@ -403,7 +403,7 @@ const ResultsPage = () => {
       }} />
 
       {/* Hero */}
-      <section ref={heroRef} className="relative bg-gradient-hero py-24 overflow-hidden">
+      <section ref={heroRef} className="relative bg-gradient-hero pt-10 pb-20 overflow-hidden">
         {/* Enhanced background effects */}
         <GradientMesh variant="default" />
         <div className="pointer-events-none absolute inset-0 bg-dots opacity-15" />

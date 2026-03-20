@@ -241,7 +241,7 @@ const YouTubeDownloaderPage = () => {
       }} />
 
       {/* Hero Section */}
-      <section className="relative bg-gradient-hero py-20 overflow-hidden">
+      <section className="relative bg-gradient-hero pt-8 pb-16 overflow-hidden">
         {/* Dynamic Background Image */}
         <div className="absolute inset-0 opacity-[0.12] mix-blend-luminosity" style={{
           backgroundImage: "url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=2064&q=80')",

@@ -209,7 +209,7 @@ const UniversalVideoDownloaderPage = () => {
       }} />
 
       {/* Hero */}
-      <section className="relative bg-gradient-hero py-20 overflow-hidden">
+      <section className="relative bg-gradient-hero pt-8 pb-16 overflow-hidden">
         {/* Dynamic Background Image */}
         <div className="absolute inset-0 opacity-[0.12] mix-blend-luminosity" style={{
           backgroundImage: "url('https://images.unsplash.com/photo-1478720568477-152d9b164e26?auto=format&fit=crop&w=2070&q=80')",

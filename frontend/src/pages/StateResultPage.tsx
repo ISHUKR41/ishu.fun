@@ -148,7 +148,7 @@ const StateResultPage = () => {
         y: bgY
       }} />
 
-      <section className="bg-gradient-hero py-20">
+      <section className="bg-gradient-hero pt-8 pb-14">
         <div className="container">
           <FadeInView>
             <Link to="/results" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">

@@ -171,7 +171,7 @@ const ToolsPage = () => {
       }} />
 
       {/* Hero Section */}
-      <section className="relative bg-gradient-hero py-28 overflow-hidden">
+      <section className="relative bg-gradient-hero pt-10 pb-24 overflow-hidden">
         <img src={toolsHero} alt="" className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-15" loading="eager" />
         <GradientMesh variant="aurora" />
         <div className="pointer-events-none absolute inset-0 cross-grid opacity-15" />

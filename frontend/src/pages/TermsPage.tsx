@@ -74,7 +74,7 @@ const TermsPage = () => {
       }} />
 
       {/* Hero */}
-      <section className="relative bg-gradient-hero py-28 overflow-hidden">
+      <section className="relative bg-gradient-hero pt-8 pb-16 overflow-hidden">
         <div className="bg-dots pointer-events-none absolute inset-0 opacity-20" />
         <motion.div animate={{ x: [0, -30, 0], y: [0, 25, 0] }} transition={{ repeat: Infinity, duration: 14, ease: "easeInOut" }}
           className="pointer-events-none absolute right-[15%] top-[20%] h-[400px] w-[400px] rounded-full bg-primary/5 blur-[120px]" />

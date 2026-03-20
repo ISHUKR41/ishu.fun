@@ -126,7 +126,7 @@ const BlogPage = () => {
       }} />
 
       {/* Hero Section */}
-      <section ref={heroRef} className="relative bg-gradient-hero py-28 overflow-hidden">
+      <section ref={heroRef} className="relative bg-gradient-hero pt-10 pb-24 overflow-hidden">
         <GradientMesh variant="cool" />
         <div className="pointer-events-none absolute inset-0 bg-dots opacity-15" />
         <div className="pointer-events-none absolute inset-0 cross-grid opacity-15" />
