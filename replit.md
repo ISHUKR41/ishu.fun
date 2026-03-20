@@ -91,9 +91,35 @@ FragLoadPolicy: 8s TTFB, 20s max load.
 - Universal: cobalt.tools API v10 with 4 fallback community instances tried in order
 
 ## Performance Architecture (120fps Layer)
-All pages optimized for 120fps via global CSS rules at the end of `frontend/src/index.css`:
-- Buttons/links/cards: `will-change: transform, opacity` + `backfaceVisibility: hidden` on hover/active
-- Fixed/sticky elements: forced GPU layer via `translateZ(0)`
+All pages optimized for 120fps via global CSS rules at the end of `frontend/src/index.css`.
+
+### CRITICAL: GPU Layer Rules (prevents blinking/flickering)
+**DO NOT** add `will-change`, `backface-visibility: hidden`, or `transform: translateZ(0)` to broad selectors.
+Applying GPU hints to hundreds/thousands of elements creates "GPU layer explosion" causing severe flickering on all devices.
+
+Only apply GPU hints to specific elements that ARE actively being animated:
+- `.css-orb` / `.css-mesh-orb` — animated background orbs (3-6 per page max)
+- `.morph-blob` — morphing shape (1 per page max)
+- `.animate-page-in`, `.animate-pop-in`, `.animate-slide-*` — during active CSS keyframe animations
+- `.gpu-layer` — explicit GPU layer utility (use sparingly)
+- `.gpu-accelerated` — explicit GPU utility (use sparingly)
+
+### What NOT to do (causes GPU explosion = flickering)
+- `button:hover, a:hover { will-change: transform; }` — promotes EVERY hover to GPU
+- `img { backface-visibility: hidden; }` — one GPU layer per image
+- `[class*="card"] { backface-visibility: hidden; }` — one layer per card
+- `[class*="fixed"] { transform: translateZ(0); }` — promotes all fixed backgrounds
+- `.smooth-transition { will-change: ...; }` — applied to hundreds of elements
+- `.card-perf { transform: translateZ(0); }` — applied to hundreds of cards
+
+### Safe performance techniques
+- `contain: layout style paint` — safe for all elements (no GPU layer created)
+- `contain: layout style` — safe for sections
+- `isolation: isolate` — safe, no GPU layer
+- `overscroll-behavior-y: contain` — safe for scroll containers
+- Framer Motion manages its own GPU hints per animated element
+
+### Remaining global CSS rules
 - Smooth scrolling with momentum + `overscroll-behavior-y: contain`
 - Sections: `contain: layout style` for paint isolation
 - Tablet (768–1024px): adjusted grid columns and container padding
@@ -101,6 +127,10 @@ All pages optimized for 120fps via global CSS rules at the end of `frontend/src/
 - Touch targets: min 44px on mobile for all interactive elements
 - Reduced-motion: all custom animations disabled respectfully
 - Utility classes: `.animate-page-in`, `.animate-pop-in`, `.skeleton`, `.grid-auto-{xs/sm/md/lg/xl}`
+
+### Layout / Header fixes
+- `Layout.tsx`: Animated marquee ticker replaces the tiny 8px-text invisible banner (fixes blank space below header)
+- `Header.tsx`: `initial={{ y: 0 }}` prevents animation blink on page load/navigation
 
 ## TV Streaming Architecture
 - 23 CORS proxies (`BACKEND_PROXY_IDX = 22`) tried in order after 6 parallel direct probes

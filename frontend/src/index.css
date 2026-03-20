@@ -176,11 +176,11 @@ html.lenis-stopped {
   }
 
   /* ═══ GPU-ACCELERATED ANIMATIONS (60fps+) ═══ */
-  /* Only animate transform and opacity for best performance */
+  /* NOTE: transform:translateZ(0) and backface-visibility removed from .animate-smooth
+     Applying GPU layers to every .animate-smooth element causes compositor overload = flickering.
+     Use .gpu-layer or .gpu-accelerated only on elements that are actually being animated. */
   .animate-smooth {
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
-    backface-visibility: hidden;
+    /* Intentionally empty — use .gpu-layer for specific animated elements only */
   }
 
   /* ═══ SCROLL PERFORMANCE ═══ */
@@ -400,13 +400,12 @@ html.lenis-stopped {
 
 /* ═══ 120FPS SMOOTH TRANSITION OPTIMIZATION ═══ */
 /* Only use GPU-friendly properties for transitions */
+/* NOTE: will-change and backface-visibility REMOVED — applying to all elements
+   causes GPU layer explosion (thousands of compositor layers) = flickering on all devices */
 .smooth-transition {
   transition-property: transform, opacity, background-color, border-color, color, fill, stroke, box-shadow;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
-  will-change: transform, opacity;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
 }
 
 /* Page section isolation for better compositing */
@@ -422,11 +421,10 @@ html.lenis-stopped {
 }
 
 /* Card performance optimization */
+/* NOTE: transform:translateZ(0) and backface-visibility REMOVED — applying GPU acceleration
+   to hundreds of cards causes GPU layer explosion = flickering. Use contain only. */
 .card-perf {
   contain: layout style paint;
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
 }
 
 /* ═══ HIGH REFRESH RATE ANIMATIONS ═══ */
@@ -3797,9 +3795,14 @@ img[loading="lazy"] {
 /* ═══════════════════════════════════════════════════════════════
    ISHU — GLOBAL 120fps PERFORMANCE LAYER (all pages)
    Applied after all component styles so it wins specificity
+   
+   IMPORTANT: DO NOT add will-change, backface-visibility, or translateZ(0)
+   to broad selectors. Doing so creates thousands of GPU compositor layers
+   which causes BLINKING/FLICKERING on all devices.
+   Only apply GPU hints to specific, individually animated elements.
    ═══════════════════════════════════════════════════════════════ */
 
-/* ── 1. Buttons & Links — GPU composite only ── */
+/* ── 1. Buttons & Links — touch optimizations only ── */
 button,
 a,
 [role="button"] {
@@ -3807,49 +3810,39 @@ a,
   touch-action: manipulation;
 }
 
-button:not(:disabled):hover,
-a:hover {
-  will-change: transform, opacity;
-}
+/* NOTE: will-change on hover REMOVED — promotes EVERY hovered button/link to GPU layer
+   causing massive compositor overload and flickering on all devices */
 
 button:not(:disabled):active,
 a:active {
-  transform: scale(0.97) translateZ(0);
+  transform: scale(0.97);
 }
 
-/* ── 2. Interactive cards — GPU composite hover ── */
-[class*="card"]:not([data-no-hover]) {
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-
-[class*="card"]:not([data-no-hover]):hover {
-  will-change: transform, box-shadow;
-}
+/* ── 2. Interactive cards — NO global GPU promotion ── */
+/* NOTE: backface-visibility on ALL [class*="card"] elements REMOVED.
+   This was creating GPU layers for EVERY card = thousands of layers = flickering.
+   Individual card animations in framer-motion handle their own GPU hints. */
 
 /* ── 3. All transitions — only GPU-friendly properties ── */
 [class*="transition-"]:not([class*="transition-none"]) {
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ── 4. All fixed/sticky elements — force GPU layer ── */
-[class*="fixed"],
-[class*="sticky"] {
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-  backface-visibility: hidden;
-}
+/* ── 4. Fixed/sticky elements — GPU layer only for header and scroll progress ── */
+/* NOTE: Removed from all [class*="fixed"] — this was creating GPU layers for EVERY
+   fixed element (background divs, orbs, etc.) = flickering.
+   The header already gets GPU compositing from framer-motion transforms. */
 
-/* ── 5. All images — prevent CLS + GPU composite ── */
+/* ── 5. All images — standard sizing only, no GPU layer per-image ── */
+/* NOTE: backface-visibility: hidden REMOVED from all img — creates a GPU layer
+   for every image on the page = massive compositor overload = flickering */
 img {
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
   max-width: 100%;
   height: auto;
 }
 
 img[loading="lazy"] {
-  will-change: opacity;
+  /* NOTE: will-change: opacity REMOVED — not needed for lazy images */
 }
 
 /* ── 6. Scrollable containers — momentum scroll ── */
@@ -3875,11 +3868,9 @@ section {
   contain: layout style;
 }
 
-/* ── 8. Modal overlays — GPU composite ── */
-[class*="fixed inset"] {
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-}
+/* ── 8. Modal overlays — no global GPU promotion ── */
+/* NOTE: transform:translateZ(0) on [class*="fixed inset"] REMOVED
+   This was promoting EVERY fixed overlay div (background orbs, gradients, etc.) to GPU layers */
 
 /* ── 9. Keyframes — 120fps-safe animations ── */
 @keyframes page-fade-in {
@@ -4192,10 +4183,9 @@ section {
 }
 
 /* Ultra-smooth transition system for interactive elements */
+/* NOTE: backface-visibility removed — broad GPU promotion causes flickering */
 .ultra-smooth {
   transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
 }
 
 .ultra-smooth:hover {

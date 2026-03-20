@@ -66,9 +66,34 @@ const Layout = ({ children }: LayoutProps) => {
       
       {/* Main content area — no opacity animation to prevent blink/flicker on all devices */}
       <main className="relative flex-1 pt-16 z-10 layout-main-content">
-        <div className="border-b border-border/60 bg-card/40">
-          <div className="container py-2 text-center text-[8px] font-medium uppercase tracking-[0.14em] text-muted-foreground sm:text-[10px] md:text-xs">
-            ISHU — Indian StudentHub University
+        {/* Animated Info Ticker Bar */}
+        <div className="overflow-hidden border-b border-border/40 bg-gradient-to-r from-primary/5 via-card/80 to-primary/5 backdrop-blur-sm">
+          <div className="flex animate-marquee whitespace-nowrap py-1.5 items-center gap-0">
+            {[
+              "🎓 ISHU — Indian StudentHub University",
+              "📋 100+ Free PDF Tools",
+              "📰 1000+ Daily News Updates",
+              "🏛️ All 36 States Covered",
+              "📺 700+ Live Indian TV Channels",
+              "💼 Latest Sarkari Naukri Alerts",
+              "📄 Free CV / Resume Builder",
+              "⚡ Instant Results — No Signup Needed",
+              "🔒 100% Private — Files Never Leave Your Device",
+              "🎓 ISHU — Indian StudentHub University",
+              "📋 100+ Free PDF Tools",
+              "📰 1000+ Daily News Updates",
+              "🏛️ All 36 States Covered",
+              "📺 700+ Live Indian TV Channels",
+              "💼 Latest Sarkari Naukri Alerts",
+              "📄 Free CV / Resume Builder",
+              "⚡ Instant Results — No Signup Needed",
+              "🔒 100% Private — Files Never Leave Your Device",
+            ].map((item, i) => (
+              <span key={i} className="inline-flex items-center gap-2 px-6 text-[10px] sm:text-xs font-medium text-muted-foreground/80">
+                {item}
+                <span className="h-1 w-1 rounded-full bg-primary/40 inline-block" />
+              </span>
+            ))}
           </div>
         </div>
         {children}

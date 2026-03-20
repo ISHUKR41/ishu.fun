@@ -55,6 +55,7 @@ const Header = () => {
 
   return (
     <motion.header
+      initial={{ y: 0 }}
       animate={{ y: hidden ? -80 : 0 }}                   // Slide up to hide, slide down to show
       transition={{ duration: 0.3, ease: "easeInOut" }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
