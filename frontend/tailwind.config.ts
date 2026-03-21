@@ -14,6 +14,9 @@ export default {
       },
       screens: {
         "2xl": "1400px",
+        "3xl": "1920px", // Full HD displays
+        "4xl": "2560px", // 2K displays
+        "5xl": "3840px", // 4K TVs and displays
       },
     },
     extend: {
