@@ -63,6 +63,71 @@
   }
 }
 
+/* ═══ GLOBAL RESPONSIVE UTILITIES ═══ */
+/* Ensure all pages are fully responsive across all devices */
+* {
+  /* Prevent horizontal overflow on all elements */
+  max-width: 100%;
+  /* Ensure box-sizing is consistent */
+  box-sizing: border-box;
+}
+
+/* Prevent text from overflowing containers */
+p, h1, h2, h3, h4, h5, h6, span, div, a, button, input, textarea, select, label {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+/* Ensure images are responsive */
+img, video, iframe, embed, object {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Prevent tables from causing horizontal scroll */
+table {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  display: block;
+}
+
+/* Mobile-first responsive containers */
+@media (max-width: 640px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* ═══ PERFORMANCE OPTIMIZATIONS ═══ */
+/* CSS containment for better layout performance */
+.container, section, article, aside, main {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 500px;
+}
+
+/* GPU acceleration for animated elements */
+.animate-\[^[]*\], [class*="motion-"], [class*="gsap-"], .will-change-transform {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Reduce paint on scroll */
+.fixed, .sticky {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Optimize text rendering */
+body {
+  text-rendering: optimizeSpeed;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 /* ═══ SCROLL SAFETY NET (Lenis-compatible) ═══ */
 /*
  * CRITICAL: Do NOT set overflow-x: hidden on <html> when using Lenis.

@@ -1,15 +1,15 @@
 /**
- * TVPage.tsx - Live Indian TV (v5 - Backend-First Ultra Reliability)
+ * TVPage.tsx - Live Indian TV (v6 - Enhanced Timeout & Server Fallback)
  *
  * Flow: Language Selection → Category-Grouped Channels → Player
  *
- * Key Improvements v5:
+ * Key Improvements v6:
+ * - Optimized timeout strategy: 5-7 seconds per server attempt for smooth experience
  * - Backend proxy moved to 2nd priority (after direct) for maximum reliability
  * - LocalStorage per-channel success cache: channels that worked before load instantly
- * - Backend proxy timeout extended to 6s (proper CORS + referrer support)
- * - Timeout: direct 2.5s, backend 6s, public proxies 4s, stall 5s
+ * - Backend proxy timeout: 7s, direct: 5s, public proxies: 6s, stall: 6s
  * - Language-first: user picks language, sees ALL channels organized by category
- * - 12 CORS proxies + backend: allorigins, corsproxy.io, etc + backend as #2 choice
+ * - 20 CORS proxies + backend: allorigins, corsproxy.io, etc + backend as #2 choice
  * - 800+ channels from iptv-org + 55+ M3U sources (added more India repos)
  * - Quality selector with real HLS level switching + ABR
  * - Fuzzy search with live suggestions, keyboard navigation, highlight matching
@@ -1201,13 +1201,13 @@ function useRobustPlayer(
     const isProxied = attempt.proxyIdx >= 0;
     const loadUrl = isProxied ? CORS_PROXIES[attempt.proxyIdx](attempt.url) : attempt.url;
 
-    // ── Timeout strategy v9 — RELIABLE SWITCH (5-7s per attempt) ──────────────
-    // v9: Balanced — give servers enough time to connect but switch within 5-7s
-    const manifestTimeout = !isProxied ? 4000 : (attempt.proxyIdx === BACKEND_PROXY_IDX ? 6000 : 5000);
+    // ── Timeout strategy v10 — OPTIMIZED 5-7s SWITCH ──────────────
+    // v10: Optimized as requested — 5-7 seconds timeout for better user experience
+    const manifestTimeout = !isProxied ? 5000 : (attempt.proxyIdx === BACKEND_PROXY_IDX ? 7000 : 6000);
     // How long to wait after manifest loads for video to START playing (currentTime > 0)
-    const playStartTimeout = 6000; // 6s to start playing after manifest — then switch
+    const playStartTimeout = 7000; // 7s to start playing after manifest — then switch
     // How long a video freeze before switching (playing watchdog)
-    const stallTimeoutMs = 5000; // 5s freeze → switch (reliable stall detection)
+    const stallTimeoutMs = 6000; // 6s freeze → switch (reliable stall detection)
 
     // ── CRITICAL FIX: Interval-based watchdog ─────────────────────────────────
     // Replace flawed timeupdate-based stall detection with setInterval that
