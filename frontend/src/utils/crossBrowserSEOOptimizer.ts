@@ -21,7 +21,7 @@ interface BrowserOptimizationConfig {
     serviceWorkers: boolean;
     indexedDB: boolean;
     webComponents: boolean;
-    intersection Observer: boolean;
+    intersectionObserver: boolean;
     mutationObserver: boolean;
     performanceAPI: boolean;
   };

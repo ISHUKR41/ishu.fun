@@ -215,7 +215,7 @@ export const STATE_JOBS_EXPANDED = [
   "TN engineer recruitment", "TN doctor jobs", "TN nurse recruitment",
   "TNSTC jobs", "TANGEDCO recruitment", "Tamil Nadu Electricity Board",
   "TN latest updates", "Chennai metro jobs", "TN exam schedule",
-  "TN admit card", "TN result";
+  "TN admit card", "TN result",
   // KARNATAKA (25+)
   "Karnataka government jobs", "Karnataka recruitment", "Bangalore naukri", "Bangalore jobs notification",
   "Mysore government jobs", "Belgaum naukri", "Mangalore jobs", "Hubli government jobs",

@@ -20,7 +20,7 @@ import Layout from "@/components/layout/Layout";
 import FadeInView from "@/components/animations/FadeInView";
 import GradientMesh from "@/components/animations/GradientMesh";
 import MorphingBlob from "@/components/animations/MorphingBlob";
-import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Search, Calendar, Users, MapPin, FileText, ChevronDown, ChevronUp, ArrowRight, Clock, AlertCircle, CheckCircle, BookOpen, Filter, Bell, Sparkles, TrendingUp, Zap, Shield } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
@@ -350,8 +350,6 @@ const statusToFilter: Record<string, string> = {
 };
 
 const ResultsPage = () => {
-  const { scrollY } = useScroll();
-  const bgY = useTransform(scrollY, [0, 2000], [0, -150]);
   const [activeCategory, setActiveCategory] = useState("All");
   const [activeType, setActiveType] = useState("All Types");
   const [activeStatus, setActiveStatus] = useState("All Status");
@@ -395,12 +393,11 @@ const ResultsPage = () => {
       <GovernmentServiceSchema />
       <ResultsFAQSchema />
 
-      {/* Dynamic Background Image */}
-      <motion.div className="fixed inset-0 -z-10 opacity-[0.05] mix-blend-luminosity pointer-events-none scale-[1.15] origin-center" style={{
+      {/* Subtle Background Texture — absolute, NOT fixed (no scroll follow) */}
+      <div className="absolute inset-0 -z-10 opacity-[0.03] mix-blend-luminosity pointer-events-none" style={{
         backgroundImage: "url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=2071&q=80')",
         backgroundSize: "cover",
         backgroundPosition: "center",
-        y: bgY
       }} />
 
       {/* Hero */}
@@ -505,8 +502,8 @@ const ResultsPage = () => {
         <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background to-transparent" />
       </section>
 
-      {/* Sticky Filter Bar */}
-      <div className="sticky top-16 z-40 border-b border-border bg-card/95 backdrop-blur-xl">
+      {/* Filter Bar — non-sticky for smooth scroll (was sticky top-16 causing scroll-follow issue) */}
+      <div className="relative z-40 border-b border-border bg-card/95 backdrop-blur-md">
         <div className="container py-4">
           {/* Search */}
           <div className="flex flex-col gap-3 sm:flex-row">

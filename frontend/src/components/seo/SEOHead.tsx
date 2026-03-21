@@ -177,6 +177,59 @@ const SEOHead = ({
         </script>
       )}
 
+      {/* ═══ ORGANIZATION SCHEMA (Site-wide) ═══ */}
+      <script type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          "name": "ISHU — Indian StudentHub University",
+          "alternateName": ["ISHU", "ishu.fun", "Indian StudentHub University", "इशु"],
+          "url": "https://ishu.fun",
+          "logo": "https://ishu.fun/logo-icon.png",
+          "description": "India's #1 free platform for sarkari result, government exam results, free PDF tools, live Indian TV channels, YouTube/Terabox downloader, resume/CV/biodata maker, and daily news.",
+          "email": "ishukryk@gmail.com",
+          "telephone": "+918986985813",
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "telephone": "+918986985813",
+            "contactType": "customer support",
+            "availableLanguage": ["English", "Hindi"]
+          },
+          "sameAs": [
+            "https://ishu.fun",
+            "https://wa.me/918986985813",
+            "https://www.linkedin.com/in/ishu-kumar-5a0940281/",
+            "https://www.instagram.com/ishukr10",
+            "https://www.youtube.com/@ishu-fun",
+            "https://x.com/ISHU_IITP"
+          ],
+          "areaServed": {
+            "@type": "Country",
+            "name": "India"
+          },
+          "knowsAbout": ["Sarkari Result", "Government Exams", "PDF Tools", "Live TV", "Resume Builder", "Video Downloader"]
+        })}
+      </script>
+
+      {/* ═══ WEBSITE SCHEMA WITH SEARCH ACTION (for Google sitelinks search box) ═══ */}
+      <script type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "ISHU — Indian StudentHub University",
+          "alternateName": ["ISHU", "ishu.fun", "इशु"],
+          "url": "https://ishu.fun",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://ishu.fun/results?q={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
+        })}
+      </script>
+
       {/* ═══ MOBILE OPTIMIZATION ═══ */}
       <link rel="manifest" href="/manifest.json" />
       <meta name="mobile-web-app-capable" content="yes" />
@@ -209,7 +262,7 @@ const SEOHead = ({
       <meta name="DC.publisher" content={SITE_NAME} />
       <meta name="DC.description" content={description} />
       <meta property="article:published_time" content="2024-01-01T00:00:00+05:30" />
-      <meta property="article:modified_time" content="2026-03-21T00:00:00+05:30" />
+      <meta property="article:modified_time" content="2026-03-21T08:00:00+05:30" />
 
       {/* ═══ ADDITIONAL SEARCH ENGINE META ═══ */}
       <meta name="norton-safeweb-site-verification" content="ishu-norton-verification" />

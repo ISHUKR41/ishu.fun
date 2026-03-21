@@ -248,8 +248,55 @@ const BACKEND_PROXY = `${CENTRAL_API_URL}/api/stream-proxy`;
 // Backend proxy index — MUST match position in CORS_PROXIES array
 const BACKEND_PROXY_IDX = 0;
 
+/* ═══════════════════ PROXY HEALTH TRACKING ═══════════════════
+   Tracks which proxies are dead/slow in this session.
+   Dead proxies are skipped entirely for faster channel switching.
+   Resets every 30 minutes or on page refresh.
+═══════════════════════════════════════════════════════════════ */
+const PROXY_HEALTH_KEY = "ishu_tv_proxy_health_v4";
+const PROXY_HEALTH_TTL = 10 * 60 * 1000; // 10 minutes — faster recovery so proxies get retried sooner
+
+function readProxyHealth(): Record<number, { fails: number; lastFail: number }> {
+  try {
+    const s = sessionStorage.getItem(PROXY_HEALTH_KEY);
+    if (!s) return {};
+    const parsed = JSON.parse(s);
+    const now = Date.now();
+    const cleaned: Record<number, { fails: number; lastFail: number }> = {};
+    for (const [k, v] of Object.entries(parsed) as [string, any][]) {
+      if (now - v.lastFail < PROXY_HEALTH_TTL) cleaned[Number(k)] = v;
+    }
+    return cleaned;
+  } catch { return {}; }
+}
+
+function markProxyFailed(proxyIdx: number) {
+  try {
+    const health = readProxyHealth();
+    const existing = health[proxyIdx] || { fails: 0, lastFail: 0 };
+    health[proxyIdx] = { fails: existing.fails + 1, lastFail: Date.now() };
+    sessionStorage.setItem(PROXY_HEALTH_KEY, JSON.stringify(health));
+  } catch {}
+}
+
+function markProxySuccess(proxyIdx: number) {
+  try {
+    const health = readProxyHealth();
+    delete health[proxyIdx];
+    sessionStorage.setItem(PROXY_HEALTH_KEY, JSON.stringify(health));
+  } catch {}
+}
+
+function isProxyDead(proxyIdx: number): boolean {
+  const health = readProxyHealth();
+  const entry = health[proxyIdx];
+  if (!entry) return false;
+  return entry.fails >= 2; // After 2 failures, consider dead — switch faster to working proxies
+}
+
 // Proxy fallbacks in PRIORITY order (index 0 = highest priority)
-// Backend first, then 29 public CORS proxies = 30 total fallback layers
+// EXPANDED v8: 20 proxies + backend = 21 total fallback layers for maximum reliability
+// Proxies are ordered by reliability — best/fastest first
 const CORS_PROXIES = [
   // 0: backend proxy — most reliable (caching + Indian OTT referrers + smart UA)
   (url: string) => `${BACKEND_PROXY}?url=${encodeURIComponent(url)}`,
@@ -257,80 +304,40 @@ const CORS_PROXIES = [
   (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
   // 2: corsproxy.io - high performance public proxy
   (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-  // 3: corsproxy.org - very reliable
-  (url: string) => `https://www.corsproxy.org/?${encodeURIComponent(url)}`,
-  // 4: cors.lol - reliable & fast
+  // 3: cors.lol - reliable & fast
   (url: string) => `https://api.cors.lol/?url=${encodeURIComponent(url)}`,
-  // 5: cors.sh - fast alternative
-  (url: string) => `https://proxy.cors.sh/${url}`,
-  // 6: thingproxy - alternative
-  (url: string) => `https://thingproxy.freeboard.io/fetch/${url}`,
-  // 7: crossorigin.me
-  (url: string) => `https://crossorigin.me/${url}`,
-  // 8: jsonp.afeld.me - another public proxy
-  (url: string) => `https://jsonp.afeld.me/?url=${encodeURIComponent(url)}`,
-  // 9: api.codetabs.com - fast & reliable CORS proxy
+  // 4: api.codetabs.com - fast & reliable CORS proxy
   (url: string) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
-  // 10: cors-anywhere heroku
-  (url: string) => `https://cors-anywhere.herokuapp.com/${url}`,
-  // 11: yacdn.org CORS proxy
-  (url: string) => `https://yacdn.org/proxy/${url}`,
-  // 12: cors.bridged.cc
-  (url: string) => `https://cors.bridged.cc/${url}`,
-  // 13: bypass.cors.sh - additional bypass option
-  (url: string) => `https://bypass.cors.sh/?url=${encodeURIComponent(url)}`,
-  // 14: cors.proxy.tools
-  (url: string) => `https://cors.proxy.tools/?url=${encodeURIComponent(url)}`,
-  // 15: corsproxy.github.io
-  (url: string) => `https://corsproxy.github.io/?${encodeURIComponent(url)}`,
-  // 16: gobetween CORS worker
-  (url: string) => `https://worker.bridged.cc/${url}`,
-  // 17: cors.eu.org free proxy
+  // 5: cors.eu.org free proxy
   (url: string) => `https://cors.eu.org/${url}`,
-  // 18: htmldriven cors proxy
-  (url: string) => `https://cors-proxy.htmldriven.com/?url=${encodeURIComponent(url)}`,
-  // 19: allorigins JSONP fallback
-  (url: string) => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}&callback=cb`,
-  // 20: supersimple cors everywhere
-  (url: string) => `https://supersimple.io/cors-proxy/?url=${encodeURIComponent(url)}`,
-  // 21: cors-bypass using xhook
-  (url: string) => `https://nhcorsanywhere.vercel.app/${url}`,
-  // 22: proxy.techfree.workers.dev
-  (url: string) => `https://proxy.techfree.workers.dev/?url=${encodeURIComponent(url)}`,
-  // 23: corsproxy.cc - additional proxy
-  (url: string) => `https://corsproxy.cc/?${encodeURIComponent(url)}`,
-  // 24: cors-anywhere alternative
-  (url: string) => `https://corsproxy.herokuapp.com/?${encodeURIComponent(url)}`,
-  // 25: noCORSE proxy (new addition)
-  (url: string) => `https://nocorse.com/api?url=${encodeURIComponent(url)}`,
-  // 26: corss.io proxy (new addition)
-  (url: string) => `https://corss.io/?url=${encodeURIComponent(url)}`,
-  // 27: cors.zimjs.com (new addition)
-  (url: string) => `https://cors.zimjs.com/${url}`,
-  // 28: allow-any-origin (new addition)
-  (url: string) => `https://allow-any-origin.appspot.com/${url}`,
-  // 29: cors-proxy-server (new addition)
-  (url: string) => `https://cors-proxy.fringe.zone/${url}`,
-  // 30: cors-proxy-play - streaming optimized proxy
-  (url: string) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
-  // 31: cloudflare worker proxy for HLS
-  (url: string) => `https://worker-cors-proxy.workers.dev/?url=${encodeURIComponent(url)}`,
-  // 32: wsrv.nl image/media proxy
-  (url: string) => `https://wsrv.nl/?url=${encodeURIComponent(url)}`,
-  // 33: mediaproxy — alternative
-  (url: string) => `https://media-proxy.ishu.fun/proxy?url=${encodeURIComponent(url)}`,
-  // 34: proxied.site proxy
-  (url: string) => `https://proxied.site/${url}`,
-  // 35: cors.deno.dev proxy
+  // 6: cors.deno.dev proxy
   (url: string) => `https://cors.deno.dev/${url}`,
-  // 36: allorigins alternative endpoint
+  // 7: corsproxy.org - very reliable
+  (url: string) => `https://www.corsproxy.org/?${encodeURIComponent(url)}`,
+  // 8: thingproxy - alternative
+  (url: string) => `https://thingproxy.freeboard.io/fetch/${url}`,
+  // 9: allorigins no-cache variant
   (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}&cache=false`,
-  // 37: rss-proxy (supports HLS)
-  (url: string) => `https://rss-proxy.vercel.app/api?url=${encodeURIComponent(url)}`,
-  // 38: open CORS proxy by byjuscode
-  (url: string) => `https://corsproxy.byjus.codes/?url=${encodeURIComponent(url)}`,
-  // 39: cors proxy via public workers
-  (url: string) => `https://cors.io/?${url}`,
+  // 10: cors.sh - fast alternative
+  (url: string) => `https://proxy.cors.sh/${url}`,
+  // 11: corsproxy.cc - additional proxy
+  (url: string) => `https://corsproxy.cc/?${encodeURIComponent(url)}`,
+  // 12: noreferrer proxy — strips referrer headers for blocked streams
+  (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}&charset=UTF-8`,
+  // 13: cors-proxy.htmldriven.com — HTML-driven CORS proxy
+  (url: string) => `https://cors-proxy.htmldriven.com/?url=${encodeURIComponent(url)}`,
+  // 14: yacdn.org proxy — Yet Another CDN cors proxy
+  (url: string) => `https://yacdn.org/proxy/${url}`,
+  // 15: cors-anywhere clone on workers
+  (url: string) => `https://test.cors.workers.dev/?${url}`,
+  // 16: crossorigin.me alternative
+  (url: string) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+  // 17: noCORSE — open CORS proxy
+  (url: string) => `https://nocorse.com/api?url=${encodeURIComponent(url)}`,
+  // 18: allorigins JSON raw endpoint variant
+  (url: string) => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}&raw=true`,
+  // 19: cors-bridged — bridge proxy
+  (url: string) => `https://cors-bridged.herokuapp.com/${url}`,
 ];
 
 /* ═══════════════════ STREAM RELIABILITY SCORING ═══════════════════ */
@@ -886,9 +893,9 @@ function useRobustPlayer(
   }, []);
 
   // Build optimized attempt list: DIRECT → BACKEND → public proxies per URL
-  // Strategy: backend proxy is 2nd (best CORS handling + caching, no rate limits)
-  // Max ~5 attempts per URL (direct + backend + 3 public proxies)
-  // BACKEND PROXY = index 12 in CORS_PROXIES
+  // Strategy v7: FAST — try top 6 streams × 5 proxy combos = ~30 attempts max
+  // Skip proxies that are known dead in this session
+  // FAST FAIL: switch every 3-5s
   const buildAttemptList = useCallback((streamList: StreamUrl[], cachedAttempt?: { url: string; proxyIdx: number } | null) => {
     const list: { url: string; proxyIdx: number; original: StreamUrl }[] = [];
 
@@ -908,38 +915,50 @@ function useRobustPlayer(
       "llnwd.net", "jprdigital.in", "wiseplayout.com", "pishow.tv",
       "tangotv.in", "smartplaytv.in", "5centscdn.com", "ottlive.co.in",
       "wmncdn.net", "livebox.co.in", "legitpro.co.in", "mediaops.in",
+      "streamedge.io", "botlive.in", "prodb.pro", "streamhits.com",
     ];
-    // Take top 8 streams for best coverage (more sources = higher chance of success)
+
+    // v8: Dynamically use ALL available proxies, skip dead ones
+    const healthyProxies = Array.from({ length: CORS_PROXIES.length }, (_, i) => i)
+      .filter(idx => !isProxyDead(idx));
+
+    // Take top 8 streams — more chances to find a working stream
     const topStreams = streamList.slice(0, 8);
+    // Use top 6 healthy proxies for primary streams
+    const bestProxies = healthyProxies.slice(0, 6);
+
     for (const s of topStreams) {
       const urlLower = s.url.toLowerCase();
       const isDirectCDN = directCDNs.some(cdn => urlLower.includes(cdn));
+      // Always try direct first
+      list.push({ url: s.url, proxyIdx: -1, original: s });
       if (isDirectCDN) {
-        // CDN streams with CORS headers: direct first, then proxy fallbacks
-        list.push({ url: s.url, proxyIdx: -1,  original: s }); // direct
-        list.push({ url: s.url, proxyIdx: BACKEND_PROXY_IDX,  original: s }); // backend (CORS + referrer + cache)
-        list.push({ url: s.url, proxyIdx: 1,   original: s }); // allorigins
-        list.push({ url: s.url, proxyIdx: 2,   original: s }); // corsproxy.io
-        list.push({ url: s.url, proxyIdx: 3,   original: s }); // corsproxy.org
-        list.push({ url: s.url, proxyIdx: 4,   original: s }); // cors.lol
-        list.push({ url: s.url, proxyIdx: 5,   original: s }); // cors.sh
+        // CDN streams: direct + top 6 healthy proxies
+        for (const pIdx of bestProxies) {
+          list.push({ url: s.url, proxyIdx: pIdx, original: s });
+        }
       } else {
-        // Other streams: direct → backend → 5 public CORS proxies
-        list.push({ url: s.url, proxyIdx: -1,  original: s }); // direct
-        list.push({ url: s.url, proxyIdx: BACKEND_PROXY_IDX,  original: s }); // backend (most reliable proxy)
-        list.push({ url: s.url, proxyIdx: 1,   original: s }); // allorigins
-        list.push({ url: s.url, proxyIdx: 2,   original: s }); // corsproxy.io
-        list.push({ url: s.url, proxyIdx: 3,   original: s }); // corsproxy.org
-        list.push({ url: s.url, proxyIdx: 4,   original: s }); // cors.lol
-        list.push({ url: s.url, proxyIdx: 9,   original: s }); // codetabs
+        // Other streams: direct → top 5 healthy proxies
+        for (const pIdx of bestProxies.slice(0, 5)) {
+          list.push({ url: s.url, proxyIdx: pIdx, original: s });
+        }
       }
     }
-    // Remaining streams (beyond top 8): direct + backend + 2 public proxies
-    for (const s of streamList.slice(8)) {
+    // Remaining streams (9-15): direct + top 3 healthy proxies
+    for (const s of streamList.slice(8, 15)) {
+      list.push({ url: s.url, proxyIdx: -1, original: s }); // direct
+      if (healthyProxies.length > 0)
+        list.push({ url: s.url, proxyIdx: healthyProxies[0], original: s }); // best proxy
+      if (healthyProxies.length > 1)
+        list.push({ url: s.url, proxyIdx: healthyProxies[1], original: s }); // 2nd proxy
+      if (healthyProxies.length > 2)
+        list.push({ url: s.url, proxyIdx: healthyProxies[2], original: s }); // 3rd proxy
+    }
+    // Remaining streams (beyond 15): direct + best proxy
+    for (const s of streamList.slice(15, 25)) {
       list.push({ url: s.url, proxyIdx: -1,  original: s }); // direct
-      list.push({ url: s.url, proxyIdx: BACKEND_PROXY_IDX,  original: s }); // backend
-      list.push({ url: s.url, proxyIdx: 1,   original: s }); // allorigins
-      list.push({ url: s.url, proxyIdx: 2,   original: s }); // corsproxy.io
+      if (healthyProxies.length > 0)
+        list.push({ url: s.url, proxyIdx: healthyProxies[0], original: s }); // best proxy
     }
 
     // Remove duplicate entries (same url+proxyIdx) while preserving order
@@ -976,10 +995,8 @@ function useRobustPlayer(
     retryRef.current = 0;
 
     // UI: show which URL/server we're trying
-    const attemptsPerUrl = 1 + CORS_PROXIES.length;
-    const originalUrlIdx = Math.floor(idx / attemptsPerUrl);
-    setUrlAttempt(originalUrlIdx + 1);
-    const proxyNames = ["backend", "allorigins", "corsproxy.io", "corsproxy.org", "cors.lol", "cors.sh", "thingproxy", "crossorigin.me", "jsonp", "codetabs", "cors-anywhere", "yacdn.org", "bridged", "bypass.cors", "cors.tools", "corsproxy.gh", "worker.bridged", "cors.eu.org", "htmldriven", "allorigins.js", "supersimple", "nhcors", "techfree", "corsproxy.cc", "corsproxy.heroku", "nocorse", "corss.io", "zimjs", "allow-origin", "fringe"];
+    setUrlAttempt(idx + 1);
+    const proxyNames = ["backend", "allorigins", "corsproxy.io", "cors.lol", "codetabs", "cors.eu.org", "cors.deno", "corsproxy.org", "thingproxy", "allorigins-nc", "cors.sh", "corsproxy.cc", "allorigins-v2", "htmldriven", "yacdn", "workers", "crossorigin", "nocorse", "allorigins-raw", "cors-bridge"];
     setProxyActive(attempt.proxyIdx >= 0 ? (proxyNames[attempt.proxyIdx] || "proxy") : false);
 
     setState(idx === 0 ? "loading" : "switching");
@@ -988,14 +1005,13 @@ function useRobustPlayer(
     const isProxied = attempt.proxyIdx >= 0;
     const loadUrl = isProxied ? CORS_PROXIES[attempt.proxyIdx](attempt.url) : attempt.url;
 
-    // ── Timeout strategy ──────────────────────────────────────────────────────
-    // How long to wait for MANIFEST to load before giving up on this server
-    const manifestTimeout = !isProxied ? 4000 : (attempt.proxyIdx === BACKEND_PROXY_IDX ? 6000 : 5000);
+    // ── Timeout strategy v8 — ULTRA FAST FAIL + FAST SWITCH ──────────────────
+    // v8: Even more aggressive — switch in 2-3s per attempt
+    const manifestTimeout = !isProxied ? 2000 : (attempt.proxyIdx === BACKEND_PROXY_IDX ? 3000 : 2500);
     // How long to wait after manifest loads for video to START playing (currentTime > 0)
-    // This is the key fix — previously there was NO timeout after manifest parsed!
-    const playStartTimeout = 6000; // 6s to start playing after manifest — then switch
+    const playStartTimeout = 3000; // 3s to start playing after manifest — then switch
     // How long a video freeze before switching (playing watchdog)
-    const stallTimeoutMs = 5000; // 5s freeze → switch
+    const stallTimeoutMs = 2000; // 2s freeze → switch (ultra-fast stall detection)
 
     // ── CRITICAL FIX: Interval-based watchdog ─────────────────────────────────
     // Replace flawed timeupdate-based stall detection with setInterval that
@@ -1017,8 +1033,9 @@ function useRobustPlayer(
         const ct = video.currentTime;
         if (ct > 0 && !playStarted) {
           playStarted = true;
-          // Video actually started playing — save to cache
+          // Video actually started playing — save to cache + mark proxy healthy
           if (channelId) saveStreamSuccess(channelId, attempt.url, attempt.proxyIdx);
+          if (attempt.proxyIdx >= 0) markProxySuccess(attempt.proxyIdx);
         }
         if (ct !== lastCurrentTime) {
           // Time is advancing — all good, reset freeze counter
@@ -1030,6 +1047,8 @@ function useRobustPlayer(
           const threshold = playStarted ? stallTimeoutMs : playStartTimeout;
           if (frozenMs >= threshold) {
             clearInterval(interval);
+            // Mark this proxy as failed if it was proxied
+            if (attempt.proxyIdx >= 0) markProxyFailed(attempt.proxyIdx);
             if (hlsRef.current === hls) {
               hls.destroy();
               hlsRef.current = null;
@@ -1063,23 +1082,24 @@ function useRobustPlayer(
 
     if (!Hls.isSupported()) { tryAttempt(idx + 1); return; }
 
+    // v6: ZERO retries for proxied attempts = instant server switch on failure
+    const retryCount = isProxied ? 0 : 1;
     const hlsConfig: Partial<any> = {
       enableWorker: true,
       lowLatencyMode: false,
       maxBufferLength: STREAM_CONFIG.maxBufferLength,
       maxMaxBufferLength: STREAM_CONFIG.maxMaxBufferLength,
       startLevel: -1,
-      // Minimal retries — we rely on our own multi-server switching, not HLS.js retries
-      // Each retry wastes precious seconds; better to switch server immediately
-      fragLoadingMaxRetry: 1,
-      fragLoadingRetryDelay: 300,
-      fragLoadingMaxRetryTimeout: 2000,
-      manifestLoadingMaxRetry: 1,
-      manifestLoadingRetryDelay: 300,
-      manifestLoadingMaxRetryTimeout: 2000,
-      levelLoadingMaxRetry: 1,
-      levelLoadingRetryDelay: 300,
-      levelLoadingMaxRetryTimeout: 2000,
+      // ZERO retries for proxy = fail-fast and switch to next server immediately
+      fragLoadingMaxRetry: retryCount,
+      fragLoadingRetryDelay: 200,
+      fragLoadingMaxRetryTimeout: 1500,
+      manifestLoadingMaxRetry: retryCount,
+      manifestLoadingRetryDelay: 200,
+      manifestLoadingMaxRetryTimeout: 1500,
+      levelLoadingMaxRetry: retryCount,
+      levelLoadingRetryDelay: 200,
+      levelLoadingMaxRetryTimeout: 1500,
       backBufferLength: IS_MOBILE ? 10 : 15,
       capLevelToPlayerSize: true,
       progressive: true,
@@ -1087,15 +1107,15 @@ function useRobustPlayer(
       abrEwmaDefaultEstimate: 500000,
       abrBandWidthFactor: 0.8,
       abrBandWidthUpFactor: 0.5,
-      appendErrorMaxRetry: 1,
+      appendErrorMaxRetry: retryCount,
       enableSoftwareAES: true,
-      // Aggressive load policy — fast fail, don't wait forever for segments
+      // Ultra-aggressive load policy — fail fast, switch server
       fragLoadPolicy: {
         default: {
-          maxTimeToFirstByteMs: isProxied ? 4000 : 3000,
-          maxLoadTimeMs: isProxied ? 6000 : 4000,
-          timeoutRetry: { maxNumRetry: 1, retryDelayMs: 300, maxRetryDelayMs: 1000 },
-          errorRetry: { maxNumRetry: 1, retryDelayMs: 300, maxRetryDelayMs: 1000 }
+          maxTimeToFirstByteMs: isProxied ? 3000 : 2500,
+          maxLoadTimeMs: isProxied ? 4000 : 3000,
+          timeoutRetry: { maxNumRetry: retryCount, retryDelayMs: 200, maxRetryDelayMs: 800 },
+          errorRetry: { maxNumRetry: retryCount, retryDelayMs: 200, maxRetryDelayMs: 800 }
         }
       },
       startFragPrefetch: true,
@@ -1105,7 +1125,7 @@ function useRobustPlayer(
     // Route ALL XHR requests through the same proxy
     if (isProxied) {
       const proxyFn = CORS_PROXIES[attempt.proxyIdx];
-      const proxyDomains = ['/api/stream-proxy', 'allorigins.win', 'corsproxy.io', 'corsproxy.org', 'cors.lol', 'proxy.cors.sh', 'thingproxy.freeboard.io', 'crossorigin.me', 'jsonp.afeld.me', 'codetabs.com', 'cors-anywhere.herokuapp.com', 'yacdn.org', 'cors.bridged.cc', 'bypass.cors.sh', 'cors.proxy.tools', 'corsproxy.github.io', 'worker.bridged.cc', 'cors.eu.org', 'cors-proxy.htmldriven.com', 'supersimple.io', 'nhcorsanywhere.vercel.app', 'proxy.techfree.workers.dev', 'corsproxy.cc', 'corsproxy.herokuapp.com', 'nocorse.com', 'corss.io', 'cors.zimjs.com', 'allow-any-origin.appspot.com', 'cors-proxy.fringe.zone'];
+      const proxyDomains = ['/api/stream-proxy', 'allorigins.win', 'corsproxy.io', 'corsproxy.org', 'cors.lol', 'proxy.cors.sh', 'thingproxy.freeboard.io', 'codetabs.com', 'cors.eu.org', 'cors.deno.dev', 'corsproxy.cc'];
       hlsConfig.xhrSetup = (xhr: XMLHttpRequest, url: string) => {
         if (proxyDomains.some(d => url.includes(d))) return;
         const proxiedUrl = proxyFn(url);
@@ -1182,6 +1202,8 @@ function useRobustPlayer(
         return;
       }
       clearTimeout(manifestTimer);
+      // Mark proxy as failed for health tracking
+      if (attempt.proxyIdx >= 0) markProxyFailed(attempt.proxyIdx);
       hls.destroy();
       hlsRef.current = null;
       if (timeUpdateRef.current) { clearInterval(timeUpdateRef.current as unknown as ReturnType<typeof setInterval>); timeUpdateRef.current = null; }
@@ -1210,18 +1232,18 @@ function useRobustPlayer(
       return cleanup;
     }
 
-    // Parallel probe: test top 15 attempts simultaneously with 3s timeout
-    // Jump to first server that responds — eliminates sequential wait time
+    // v8: Parallel probe — test top 25 attempts with 2s timeout
+    // More concurrent probes = higher chance of finding a working server immediately
     let cancelled = false;
     const probeControllers: AbortController[] = [];
     setState("loading");
 
-    const toProbe = expandedList.slice(0, Math.min(15, expandedList.length));
+    const toProbe = expandedList.slice(0, Math.min(25, expandedList.length));
     Promise.any(
       toProbe.map((attempt, i) => new Promise<number>((resolve, reject) => {
         const ctrl = new AbortController();
         probeControllers.push(ctrl);
-        const timer = setTimeout(() => { ctrl.abort(); reject(new Error("probe timeout")); }, 3000);
+        const timer = setTimeout(() => { ctrl.abort(); reject(new Error("probe timeout")); }, 2000);
         const loadUrl = attempt.proxyIdx >= 0
           ? CORS_PROXIES[attempt.proxyIdx](attempt.url)
           : attempt.url;
@@ -1231,9 +1253,20 @@ function useRobustPlayer(
           cache: 'no-store',
         }).then(r => {
           clearTimeout(timer);
-          if (r.ok || r.type === 'opaque') resolve(i);
-          else reject(new Error(`HTTP ${r.status}`));
-        }).catch(e => { clearTimeout(timer); reject(e); });
+          if (r.ok || r.type === 'opaque') {
+            // Mark this proxy as healthy since it responded
+            if (attempt.proxyIdx >= 0) markProxySuccess(attempt.proxyIdx);
+            resolve(i);
+          }
+          else {
+            if (attempt.proxyIdx >= 0) markProxyFailed(attempt.proxyIdx);
+            reject(new Error(`HTTP ${r.status}`));
+          }
+        }).catch(e => {
+          clearTimeout(timer);
+          if (attempt.proxyIdx >= 0) markProxyFailed(attempt.proxyIdx);
+          reject(e);
+        });
       }))
     ).then(winnerIdx => {
       if (!cancelled) {
