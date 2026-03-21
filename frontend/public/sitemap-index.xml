@@ -93,4 +93,10 @@
     <lastmod>2026-03-21</lastmod>
   </sitemap>
 
+  <!-- Sarkari Result dedicated sitemap — all state/exam/category result pages -->
+  <sitemap>
+    <loc>https://ishu.fun/sitemap-sarkari.xml</loc>
+    <lastmod>2026-03-21T00:00:00+05:30</lastmod>
+  </sitemap>
+
 </sitemapindex>

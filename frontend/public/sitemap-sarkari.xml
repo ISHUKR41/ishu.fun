@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ISHU Sarkari Result Sitemap — ishu.fun
+  Purpose: Maximum indexing for all sarkari result, sarkari naukri, admit card and exam result pages
+  Strategy: All high-priority sarkari result URLs with daily update frequency
+  Updated: 2026-03-21
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+
+  <!-- MAIN SARKARI RESULT PAGE -->
+  <url>
+    <loc>https://ishu.fun/results</loc>
+    <lastmod>2026-03-21</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="en-in" href="https://ishu.fun/results" />
+    <xhtml:link rel="alternate" hreflang="hi-in" href="https://ishu.fun/results" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ishu.fun/results" />
+  </url>
+
+  <!-- CENTRAL GOVERNMENT RESULTS -->
+  <url><loc>https://ishu.fun/results?category=central</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.98</priority></url>
+
+  <!-- UPSC RESULTS -->
+  <url><loc>https://ishu.fun/results?exam=upsc</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.97</priority></url>
+  <url><loc>https://ishu.fun/results?exam=upsc-cse</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.96</priority></url>
+  <url><loc>https://ishu.fun/results?exam=upsc-capf</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.94</priority></url>
+  <url><loc>https://ishu.fun/results?exam=upsc-cds</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.94</priority></url>
+  <url><loc>https://ishu.fun/results?exam=upsc-nda</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.93</priority></url>
+
+  <!-- SSC RESULTS -->
+  <url><loc>https://ishu.fun/results?exam=ssc</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.97</priority></url>
+  <url><loc>https://ishu.fun/results?exam=ssc-cgl</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.96</priority></url>
+  <url><loc>https://ishu.fun/results?exam=ssc-chsl</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.95</priority></url>
+  <url><loc>https://ishu.fun/results?exam=ssc-mts</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.94</priority></url>
+  <url><loc>https://ishu.fun/results?exam=ssc-gd</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.94</priority></url>
+  <url><loc>https://ishu.fun/results?exam=ssc-je</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.93</priority></url>
+  <url><loc>https://ishu.fun/results?exam=ssc-cpo</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.93</priority></url>
+
+  <!-- BANKING RESULTS -->
+  <url><loc>https://ishu.fun/results?category=banking</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.97</priority></url>
+  <url><loc>https://ishu.fun/results?exam=ibps-po</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.96</priority></url>
+  <url><loc>https://ishu.fun/results?exam=ibps-clerk</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.95</priority></url>
+  <url><loc>https://ishu.fun/results?exam=ibps-so</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.94</priority></url>
+  <url><loc>https://ishu.fun/results?exam=sbi-po</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.95</priority></url>
+  <url><loc>https://ishu.fun/results?exam=sbi-clerk</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.94</priority></url>
+  <url><loc>https://ishu.fun/results?exam=rbi-grade-b</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.93</priority></url>
+  <url><loc>https://ishu.fun/results?exam=nabard</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.92</priority></url>
+
+  <!-- RAILWAY RESULTS -->
+  <url><loc>https://ishu.fun/results?category=railway</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.97</priority></url>
+  <url><loc>https://ishu.fun/results?exam=rrb-ntpc</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.96</priority></url>
+  <url><loc>https://ishu.fun/results?exam=rrb-group-d</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.95</priority></url>
+  <url><loc>https://ishu.fun/results?exam=rrb-je</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.94</priority></url>
+  <url><loc>https://ishu.fun/results?exam=rrb-sse</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.93</priority></url>
+  <url><loc>https://ishu.fun/results?exam=rrb-alp</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.93</priority></url>
+  <url><loc>https://ishu.fun/results?exam=rpf</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.92</priority></url>
+
+  <!-- NTA / JEE / NEET RESULTS -->
+  <url><loc>https://ishu.fun/results?category=nta</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.97</priority></url>
+  <url><loc>https://ishu.fun/results?exam=jee-main</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.96</priority></url>
+  <url><loc>https://ishu.fun/results?exam=jee-advanced</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.95</priority></url>
+  <url><loc>https://ishu.fun/results?exam=neet-ug</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.96</priority></url>
+  <url><loc>https://ishu.fun/results?exam=neet-pg</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.94</priority></url>
+  <url><loc>https://ishu.fun/results?exam=cuet</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.94</priority></url>
+  <url><loc>https://ishu.fun/results?exam=cmat</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.92</priority></url>
+
+  <!-- DEFENCE RESULTS -->
+  <url><loc>https://ishu.fun/results?category=defence</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.96</priority></url>
+  <url><loc>https://ishu.fun/results?exam=cds</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.95</priority></url>
+  <url><loc>https://ishu.fun/results?exam=nda</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.95</priority></url>
+  <url><loc>https://ishu.fun/results?exam=afcat</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.93</priority></url>
+  <url><loc>https://ishu.fun/results?exam=territorial-army</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.92</priority></url>
+  <url><loc>https://ishu.fun/results?exam=agniveer</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.94</priority></url>
+
+  <!-- TEACHING RESULTS -->
+  <url><loc>https://ishu.fun/results?category=teaching</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.96</priority></url>
+  <url><loc>https://ishu.fun/results?exam=ctet</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.95</priority></url>
+  <url><loc>https://ishu.fun/results?exam=uptet</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.94</priority></url>
+  <url><loc>https://ishu.fun/results?exam=bihar-stet</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.93</priority></url>
+  <url><loc>https://ishu.fun/results?exam=rajasthan-reet</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.93</priority></url>
+  <url><loc>https://ishu.fun/results?exam=mptet</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.92</priority></url>
+  <url><loc>https://ishu.fun/results?exam=htet</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.92</priority></url>
+  <url><loc>https://ishu.fun/results?exam=ktet</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.91</priority></url>
+  <url><loc>https://ishu.fun/results?exam=tntet</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.91</priority></url>
+  <url><loc>https://ishu.fun/results?exam=aptet</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.91</priority></url>
+  <url><loc>https://ishu.fun/results?exam=tspsc-tet</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.90</priority></url>
+
+  <!-- STATE PCS RESULTS — ALL MAJOR STATES -->
+  <url><loc>https://ishu.fun/results?category=state-pcs</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.96</priority></url>
+  <url><loc>https://ishu.fun/results?exam=uppsc</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.95</priority></url>
+  <url><loc>https://ishu.fun/results?exam=bpsc</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.95</priority></url>
+  <url><loc>https://ishu.fun/results?exam=rpsc</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.94</priority></url>
+  <url><loc>https://ishu.fun/results?exam=mppsc</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.94</priority></url>
+  <url><loc>https://ishu.fun/results?exam=hpsc</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.93</priority></url>
+  <url><loc>https://ishu.fun/results?exam=hpas</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.92</priority></url>
+  <url><loc>https://ishu.fun/results?exam=ukpsc</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.93</priority></url>
+  <url><loc>https://ishu.fun/results?exam=jpsc</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.92</priority></url>
+  <url><loc>https://ishu.fun/results?exam=opsc</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.92</priority></url>
+  <url><loc>https://ishu.fun/results?exam=cgpsc</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.91</priority></url>
+  <url><loc>https://ishu.fun/results?exam=gppsc</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.91</priority></url>
+  <url><loc>https://ishu.fun/results?exam=mpsc</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.92</priority></url>
+  <url><loc>https://ishu.fun/results?exam=kpsc</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.91</priority></url>
+  <url><loc>https://ishu.fun/results?exam=tnpsc</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.92</priority></url>
+  <url><loc>https://ishu.fun/results?exam=appsc</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.91</priority></url>
+  <url><loc>https://ishu.fun/results?exam=tspsc</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.91</priority></url>
+  <url><loc>https://ishu.fun/results?exam=keralapsc</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.91</priority></url>
+  <url><loc>https://ishu.fun/results?exam=wbpsc</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.91</priority></url>
+  <url><loc>https://ishu.fun/results?exam=aapsc</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.90</priority></url>
+  <url><loc>https://ishu.fun/results?exam=manipur-psc</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.89</priority></url>
+  <url><loc>https://ishu.fun/results?exam=nagaland-psc</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.89</priority></url>
+  <url><loc>https://ishu.fun/results?exam=mizoram-psc</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.88</priority></url>
+  <url><loc>https://ishu.fun/results?exam=meghalaya-psc</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.88</priority></url>
+  <url><loc>https://ishu.fun/results?exam=sikkim-psc</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.87</priority></url>
+  <url><loc>https://ishu.fun/results?exam=arunachal-psc</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.87</priority></url>
+  <url><loc>https://ishu.fun/results?exam=tripura-psc</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.87</priority></url>
+
+  <!-- POLICE RECRUITMENT RESULTS -->
+  <url><loc>https://ishu.fun/results?category=police</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.96</priority></url>
+  <url><loc>https://ishu.fun/results?exam=up-police</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.95</priority></url>
+  <url><loc>https://ishu.fun/results?exam=bihar-police</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.94</priority></url>
+  <url><loc>https://ishu.fun/results?exam=rajasthan-police</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.93</priority></url>
+  <url><loc>https://ishu.fun/results?exam=mp-police</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.93</priority></url>
+  <url><loc>https://ishu.fun/results?exam=haryana-police</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.92</priority></url>
+  <url><loc>https://ishu.fun/results?exam=punjab-police</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.92</priority></url>
+  <url><loc>https://ishu.fun/results?exam=delhi-police</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.92</priority></url>
+  <url><loc>https://ishu.fun/results?exam=maharashtra-police</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.91</priority></url>
+  <url><loc>https://ishu.fun/results?exam=karnataka-police</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.91</priority></url>
+  <url><loc>https://ishu.fun/results?exam=tamilnadu-police</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.91</priority></url>
+  <url><loc>https://ishu.fun/results?exam=andhra-police</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.90</priority></url>
+  <url><loc>https://ishu.fun/results?exam=telangana-police</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.90</priority></url>
+
+  <!-- UPSSSC RESULTS -->
+  <url><loc>https://ishu.fun/results?category=upsssc</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.95</priority></url>
+  <url><loc>https://ishu.fun/results?exam=upsssc-pet</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.94</priority></url>
+  <url><loc>https://ishu.fun/results?exam=upsssc-vdo</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.93</priority></url>
+  <url><loc>https://ishu.fun/results?exam=upsssc-lekhpal</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.93</priority></url>
+  <url><loc>https://ishu.fun/results?exam=upsssc-junior-assistant</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.92</priority></url>
+
+  <!-- ADMIT CARD PAGES -->
+  <url><loc>https://ishu.fun/results?tab=admit-card</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.96</priority></url>
+  <url><loc>https://ishu.fun/results?tab=admit-card&amp;exam=upsc</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.95</priority></url>
+  <url><loc>https://ishu.fun/results?tab=admit-card&amp;exam=ssc</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.95</priority></url>
+  <url><loc>https://ishu.fun/results?tab=admit-card&amp;exam=ibps</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.94</priority></url>
+  <url><loc>https://ishu.fun/results?tab=admit-card&amp;exam=rrb</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.94</priority></url>
+  <url><loc>https://ishu.fun/results?tab=admit-card&amp;exam=jee</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.94</priority></url>
+  <url><loc>https://ishu.fun/results?tab=admit-card&amp;exam=neet</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.94</priority></url>
+
+  <!-- ANSWER KEY PAGES -->
+  <url><loc>https://ishu.fun/results?tab=answer-key</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.95</priority></url>
+  <url><loc>https://ishu.fun/results?tab=answer-key&amp;exam=ssc-cgl</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.94</priority></url>
+  <url><loc>https://ishu.fun/results?tab=answer-key&amp;exam=ibps-po</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.93</priority></url>
+  <url><loc>https://ishu.fun/results?tab=answer-key&amp;exam=rrb-ntpc</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.93</priority></url>
+
+  <!-- VACANCY / NOTIFICATION PAGES -->
+  <url><loc>https://ishu.fun/results?tab=vacancy</loc><lastmod>2026-03-21</lastmod><changefreq>hourly</changefreq><priority>0.97</priority></url>
+  <url><loc>https://ishu.fun/results?tab=vacancy&amp;category=central</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.95</priority></url>
+  <url><loc>https://ishu.fun/results?tab=vacancy&amp;category=state</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.95</priority></url>
+
+  <!-- STATE-WISE RESULT PAGES -->
+  <url><loc>https://ishu.fun/results?state=uttar-pradesh</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.95</priority></url>
+  <url><loc>https://ishu.fun/results?state=bihar</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.95</priority></url>
+  <url><loc>https://ishu.fun/results?state=rajasthan</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.94</priority></url>
+  <url><loc>https://ishu.fun/results?state=madhya-pradesh</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.94</priority></url>
+  <url><loc>https://ishu.fun/results?state=maharashtra</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.93</priority></url>
+  <url><loc>https://ishu.fun/results?state=karnataka</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.92</priority></url>
+  <url><loc>https://ishu.fun/results?state=kerala</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.92</priority></url>
+  <url><loc>https://ishu.fun/results?state=tamil-nadu</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.92</priority></url>
+  <url><loc>https://ishu.fun/results?state=andhra-pradesh</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.91</priority></url>
+  <url><loc>https://ishu.fun/results?state=telangana</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.91</priority></url>
+  <url><loc>https://ishu.fun/results?state=gujarat</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.91</priority></url>
+  <url><loc>https://ishu.fun/results?state=west-bengal</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.91</priority></url>
+  <url><loc>https://ishu.fun/results?state=haryana</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.90</priority></url>
+  <url><loc>https://ishu.fun/results?state=punjab</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.90</priority></url>
+  <url><loc>https://ishu.fun/results?state=jharkhand</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.90</priority></url>
+  <url><loc>https://ishu.fun/results?state=odisha</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.89</priority></url>
+  <url><loc>https://ishu.fun/results?state=chhattisgarh</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.89</priority></url>
+  <url><loc>https://ishu.fun/results?state=assam</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.89</priority></url>
+  <url><loc>https://ishu.fun/results?state=uttarakhand</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.88</priority></url>
+  <url><loc>https://ishu.fun/results?state=himachal-pradesh</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.88</priority></url>
+  <url><loc>https://ishu.fun/results?state=delhi</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.90</priority></url>
+  <url><loc>https://ishu.fun/results?state=goa</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.87</priority></url>
+  <url><loc>https://ishu.fun/results?state=jammu-kashmir</loc><lastmod>2026-03-21</lastmod><changefreq>daily</changefreq><priority>0.87</priority></url>
+  <url><loc>https://ishu.fun/results?state=manipur</loc><lastmod>2026-03-21</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://ishu.fun/results?state=nagaland</loc><lastmod>2026-03-21</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://ishu.fun/results?state=mizoram</loc><lastmod>2026-03-21</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://ishu.fun/results?state=meghalaya</loc><lastmod>2026-03-21</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://ishu.fun/results?state=tripura</loc><lastmod>2026-03-21</lastmod><changefreq>weekly</changefreq><priority>0.84</priority></url>
+  <url><loc>https://ishu.fun/results?state=arunachal-pradesh</loc><lastmod>2026-03-21</lastmod><changefreq>weekly</changefreq><priority>0.84</priority></url>
+  <url><loc>https://ishu.fun/results?state=sikkim</loc><lastmod>2026-03-21</lastmod><changefreq>weekly</changefreq><priority>0.83</priority></url>
+
+</urlset>

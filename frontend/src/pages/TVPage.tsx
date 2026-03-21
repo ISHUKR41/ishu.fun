@@ -311,6 +311,26 @@ const CORS_PROXIES = [
   (url: string) => `https://allow-any-origin.appspot.com/${url}`,
   // 29: cors-proxy-server (new addition)
   (url: string) => `https://cors-proxy.fringe.zone/${url}`,
+  // 30: cors-proxy-play - streaming optimized proxy
+  (url: string) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+  // 31: cloudflare worker proxy for HLS
+  (url: string) => `https://worker-cors-proxy.workers.dev/?url=${encodeURIComponent(url)}`,
+  // 32: wsrv.nl image/media proxy
+  (url: string) => `https://wsrv.nl/?url=${encodeURIComponent(url)}`,
+  // 33: mediaproxy — alternative
+  (url: string) => `https://media-proxy.ishu.fun/proxy?url=${encodeURIComponent(url)}`,
+  // 34: proxied.site proxy
+  (url: string) => `https://proxied.site/${url}`,
+  // 35: cors.deno.dev proxy
+  (url: string) => `https://cors.deno.dev/${url}`,
+  // 36: allorigins alternative endpoint
+  (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}&cache=false`,
+  // 37: rss-proxy (supports HLS)
+  (url: string) => `https://rss-proxy.vercel.app/api?url=${encodeURIComponent(url)}`,
+  // 38: open CORS proxy by byjuscode
+  (url: string) => `https://corsproxy.byjus.codes/?url=${encodeURIComponent(url)}`,
+  // 39: cors proxy via public workers
+  (url: string) => `https://cors.io/?${url}`,
 ];
 
 /* ═══════════════════ STREAM RELIABILITY SCORING ═══════════════════ */
@@ -933,11 +953,12 @@ function useRobustPlayer(
   }, []);
 
   const tryAttempt = useCallback((idx: number) => {
-    // Cleanup previous
+    // ── Full cleanup of previous attempt ─────────────────────────────────────
     if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; }
     if (stallRef.current) { clearTimeout(stallRef.current); stallRef.current = null; }
-    if (timeUpdateRef.current && videoRef.current) {
-      videoRef.current.removeEventListener("timeupdate", timeUpdateRef.current);
+    // Clear old watchdog interval (stored in timeUpdateRef as interval ID)
+    if (timeUpdateRef.current) {
+      clearInterval(timeUpdateRef.current as unknown as ReturnType<typeof setInterval>);
       timeUpdateRef.current = null;
     }
 
@@ -954,43 +975,88 @@ function useRobustPlayer(
     attemptIdxRef.current = idx;
     retryRef.current = 0;
 
-    // Calculate which original URL # we're on (for UI display)
+    // UI: show which URL/server we're trying
     const attemptsPerUrl = 1 + CORS_PROXIES.length;
     const originalUrlIdx = Math.floor(idx / attemptsPerUrl);
     setUrlAttempt(originalUrlIdx + 1);
-    // Show proxy label
     const proxyNames = ["backend", "allorigins", "corsproxy.io", "corsproxy.org", "cors.lol", "cors.sh", "thingproxy", "crossorigin.me", "jsonp", "codetabs", "cors-anywhere", "yacdn.org", "bridged", "bypass.cors", "cors.tools", "corsproxy.gh", "worker.bridged", "cors.eu.org", "htmldriven", "allorigins.js", "supersimple", "nhcors", "techfree", "corsproxy.cc", "corsproxy.heroku", "nocorse", "corss.io", "zimjs", "allow-origin", "fringe"];
     setProxyActive(attempt.proxyIdx >= 0 ? (proxyNames[attempt.proxyIdx] || "proxy") : false);
 
     setState(idx === 0 ? "loading" : "switching");
     setQuality(attempt.original.quality || "");
 
-    // Determine the actual URL to load and whether to use proxy xhrSetup
     const isProxied = attempt.proxyIdx >= 0;
     const loadUrl = isProxied ? CORS_PROXIES[attempt.proxyIdx](attempt.url) : attempt.url;
-    // Timeout strategy (aggressive — switch fast so user sees next server in 5-7s):
-    //   direct  → 4000ms (if direct doesn't respond in 4s, move on fast)
-    //   backend → 6000ms (most reliable proxy, slightly more time for Indian CDNs)
-    //   public CORS proxies → 5000ms (public proxies — fail fast to next)
-    const timeout = !isProxied ? 4000 : (attempt.proxyIdx === BACKEND_PROXY_IDX ? 6000 : 5000);
 
-    // Stall detection — if video freezes for 5s, switch to next source (5-7s as requested)
-    const onTimeUpdate = () => {
-      if (stallRef.current) clearTimeout(stallRef.current);
-      stallRef.current = setTimeout(() => tryAttempt(idx + 1), 5000);
+    // ── Timeout strategy ──────────────────────────────────────────────────────
+    // How long to wait for MANIFEST to load before giving up on this server
+    const manifestTimeout = !isProxied ? 4000 : (attempt.proxyIdx === BACKEND_PROXY_IDX ? 6000 : 5000);
+    // How long to wait after manifest loads for video to START playing (currentTime > 0)
+    // This is the key fix — previously there was NO timeout after manifest parsed!
+    const playStartTimeout = 6000; // 6s to start playing after manifest — then switch
+    // How long a video freeze before switching (playing watchdog)
+    const stallTimeoutMs = 5000; // 5s freeze → switch
+
+    // ── CRITICAL FIX: Interval-based watchdog ─────────────────────────────────
+    // Replace flawed timeupdate-based stall detection with setInterval that
+    // checks if currentTime is actually advancing every 500ms.
+    // This fires even when video is BUFFERING (timeupdate never fires while buffering).
+    let lastCurrentTime = -1;
+    let frozenMs = 0;
+    let manifestLoaded = false;
+    let playStarted = false; // true once currentTime > 0
+
+    const startWatchdog = () => {
+      lastCurrentTime = video.currentTime;
+      frozenMs = 0;
+      const interval = setInterval(() => {
+        if (hlsRef.current !== hls && !video.src.includes(loadUrl)) {
+          clearInterval(interval);
+          return;
+        }
+        const ct = video.currentTime;
+        if (ct > 0 && !playStarted) {
+          playStarted = true;
+          // Video actually started playing — save to cache
+          if (channelId) saveStreamSuccess(channelId, attempt.url, attempt.proxyIdx);
+        }
+        if (ct !== lastCurrentTime) {
+          // Time is advancing — all good, reset freeze counter
+          lastCurrentTime = ct;
+          frozenMs = 0;
+        } else {
+          // Frozen — accumulate stall time
+          frozenMs += 500;
+          const threshold = playStarted ? stallTimeoutMs : playStartTimeout;
+          if (frozenMs >= threshold) {
+            clearInterval(interval);
+            if (hlsRef.current === hls) {
+              hls.destroy();
+              hlsRef.current = null;
+            }
+            if (timeUpdateRef.current !== null) {
+              timeUpdateRef.current = null;
+            }
+            tryAttempt(idx + 1);
+          }
+        }
+      }, 500);
+      timeUpdateRef.current = interval as unknown as (() => void);
     };
-    timeUpdateRef.current = onTimeUpdate;
-    video.addEventListener("timeupdate", onTimeUpdate);
 
-    // Native HLS (Safari) - only for direct, no proxy needed
+    // ── Native HLS (Safari) ───────────────────────────────────────────────────
     if (!isProxied && video.canPlayType("application/vnd.apple.mpegurl") && !attempt.original.userAgent && !attempt.original.referrer) {
       video.src = loadUrl;
-      video.addEventListener("loadeddata", () => setState("playing"), { once: true });
+      video.addEventListener("loadeddata", () => { setState("playing"); startWatchdog(); }, { once: true });
       video.addEventListener("error", () => {
-        video.removeEventListener("timeupdate", onTimeUpdate);
-        timeUpdateRef.current = null;
+        if (timeUpdateRef.current) { clearInterval(timeUpdateRef.current as unknown as ReturnType<typeof setInterval>); timeUpdateRef.current = null; }
         tryAttempt(idx + 1);
       }, { once: true });
+      const nativeTimeout = setTimeout(() => {
+        if (timeUpdateRef.current) { clearInterval(timeUpdateRef.current as unknown as ReturnType<typeof setInterval>); timeUpdateRef.current = null; }
+        tryAttempt(idx + 1);
+      }, manifestTimeout);
+      video.addEventListener("loadeddata", () => clearTimeout(nativeTimeout), { once: true });
       video.play().catch(() => {});
       return;
     }
@@ -1003,44 +1069,44 @@ function useRobustPlayer(
       maxBufferLength: STREAM_CONFIG.maxBufferLength,
       maxMaxBufferLength: STREAM_CONFIG.maxMaxBufferLength,
       startLevel: -1,
-      // Balanced retry — enough retries per source before moving on
-      fragLoadingMaxRetry: 3,
-      fragLoadingRetryDelay: 500,
-      fragLoadingMaxRetryTimeout: timeout,
-      manifestLoadingMaxRetry: 3,
-      manifestLoadingRetryDelay: 500,
-      manifestLoadingMaxRetryTimeout: timeout,
-      levelLoadingMaxRetry: 3,
-      levelLoadingRetryDelay: 500,
-      levelLoadingMaxRetryTimeout: timeout,
+      // Minimal retries — we rely on our own multi-server switching, not HLS.js retries
+      // Each retry wastes precious seconds; better to switch server immediately
+      fragLoadingMaxRetry: 1,
+      fragLoadingRetryDelay: 300,
+      fragLoadingMaxRetryTimeout: 2000,
+      manifestLoadingMaxRetry: 1,
+      manifestLoadingRetryDelay: 300,
+      manifestLoadingMaxRetryTimeout: 2000,
+      levelLoadingMaxRetry: 1,
+      levelLoadingRetryDelay: 300,
+      levelLoadingMaxRetryTimeout: 2000,
       backBufferLength: IS_MOBILE ? 10 : 15,
       capLevelToPlayerSize: true,
       progressive: true,
-      testBandwidth: true,
+      testBandwidth: false, // skip bandwidth test to start faster
       abrEwmaDefaultEstimate: 500000,
       abrBandWidthFactor: 0.8,
       abrBandWidthUpFactor: 0.5,
-      appendErrorMaxRetry: 2,
+      appendErrorMaxRetry: 1,
       enableSoftwareAES: true,
-      // Balanced load policy — enough time for HLS segments to load
-      fragLoadPolicy: { 
-        default: { 
-          maxTimeToFirstByteMs: isProxied ? 8000 : 5000,
-          maxLoadTimeMs: isProxied ? 12000 : 8000,
-          timeoutRetry: { maxNumRetry: 2, retryDelayMs: 500, maxRetryDelayMs: 2000 },
-          errorRetry: { maxNumRetry: 2, retryDelayMs: 500, maxRetryDelayMs: 2000 }
-        } 
+      // Aggressive load policy — fast fail, don't wait forever for segments
+      fragLoadPolicy: {
+        default: {
+          maxTimeToFirstByteMs: isProxied ? 4000 : 3000,
+          maxLoadTimeMs: isProxied ? 6000 : 4000,
+          timeoutRetry: { maxNumRetry: 1, retryDelayMs: 300, maxRetryDelayMs: 1000 },
+          errorRetry: { maxNumRetry: 1, retryDelayMs: 300, maxRetryDelayMs: 1000 }
+        }
       },
       startFragPrefetch: true,
       initialLiveManifestSize: 1,
     };
 
-    // For proxied streams, route ALL XHR requests through the proxy
+    // Route ALL XHR requests through the same proxy
     if (isProxied) {
       const proxyFn = CORS_PROXIES[attempt.proxyIdx];
       const proxyDomains = ['/api/stream-proxy', 'allorigins.win', 'corsproxy.io', 'corsproxy.org', 'cors.lol', 'proxy.cors.sh', 'thingproxy.freeboard.io', 'crossorigin.me', 'jsonp.afeld.me', 'codetabs.com', 'cors-anywhere.herokuapp.com', 'yacdn.org', 'cors.bridged.cc', 'bypass.cors.sh', 'cors.proxy.tools', 'corsproxy.github.io', 'worker.bridged.cc', 'cors.eu.org', 'cors-proxy.htmldriven.com', 'supersimple.io', 'nhcorsanywhere.vercel.app', 'proxy.techfree.workers.dev', 'corsproxy.cc', 'corsproxy.herokuapp.com', 'nocorse.com', 'corss.io', 'cors.zimjs.com', 'allow-any-origin.appspot.com', 'cors-proxy.fringe.zone'];
       hlsConfig.xhrSetup = (xhr: XMLHttpRequest, url: string) => {
-        // Don't double-wrap if already proxied
         if (proxyDomains.some(d => url.includes(d))) return;
         const proxiedUrl = proxyFn(url);
         xhr.open("GET", proxiedUrl, true);
@@ -1056,25 +1122,21 @@ function useRobustPlayer(
     hls.loadSource(loadUrl);
     hls.attachMedia(video);
 
-    const loadTimeout = setTimeout(() => {
-      if (hlsRef.current === hls) {
+    // Manifest-load timeout — if manifest doesn't arrive, switch
+    const manifestTimer = setTimeout(() => {
+      if (hlsRef.current === hls && !manifestLoaded) {
         hls.destroy();
         hlsRef.current = null;
-        video.removeEventListener("timeupdate", onTimeUpdate);
-        timeUpdateRef.current = null;
+        if (timeUpdateRef.current) { clearInterval(timeUpdateRef.current as unknown as ReturnType<typeof setInterval>); timeUpdateRef.current = null; }
         tryAttempt(idx + 1);
       }
-    }, timeout);
+    }, manifestTimeout);
 
     hls.on(Hls.Events.MANIFEST_PARSED, (_e: any, data: any) => {
-      clearTimeout(loadTimeout);
+      clearTimeout(manifestTimer);
+      manifestLoaded = true;
       setState("playing");
       retryRef.current = 0;
-
-      // Save working attempt to localStorage so next visit loads this channel instantly
-      if (channelId) {
-        saveStreamSuccess(channelId, attempt.url, attempt.proxyIdx);
-      }
 
       if (data.levels.length > 0) {
         const levels: QualityLevel[] = data.levels.map((lvl: any, i: number) => ({
@@ -1089,6 +1151,11 @@ function useRobustPlayer(
         const best = data.levels[data.levels.length - 1];
         setQuality(best.height ? `${best.height}p` : attempt.original.quality || "");
       }
+
+      // Start interval watchdog NOW — this detects buffering stalls
+      // (timeupdate never fires when video is stuck buffering, so we use setInterval)
+      startWatchdog();
+
       video.play().catch(() => {});
     });
 
@@ -1102,22 +1169,22 @@ function useRobustPlayer(
 
     hls.on(Hls.Events.ERROR, (_e: any, data: any) => {
       if (!data.fatal) return;
-      // Fast-fail: limited retries so we move to next source quickly
+      // One recovery attempt for media errors, then move on
       if (data.type === Hls.ErrorTypes.MEDIA_ERROR && retryRef.current < 1) {
         retryRef.current++;
         hls.recoverMediaError();
         return;
       }
-      if (data.type === Hls.ErrorTypes.NETWORK_ERROR && retryRef.current < 1) {
+      // For network errors, try one resume before giving up
+      if (data.type === Hls.ErrorTypes.NETWORK_ERROR && retryRef.current < 1 && manifestLoaded) {
         retryRef.current++;
         hls.startLoad();
         return;
       }
-      clearTimeout(loadTimeout);
+      clearTimeout(manifestTimer);
       hls.destroy();
       hlsRef.current = null;
-      video.removeEventListener("timeupdate", onTimeUpdate);
-      timeUpdateRef.current = null;
+      if (timeUpdateRef.current) { clearInterval(timeUpdateRef.current as unknown as ReturnType<typeof setInterval>); timeUpdateRef.current = null; }
       tryAttempt(idx + 1);
     });
   }, [cleanup, startSkipCountdown, videoRef]);

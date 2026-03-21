@@ -226,6 +226,7 @@ Sitemap: https://ishu.fun/sitemap-tv.xml
 Sitemap: https://ishu.fun/sitemap-cv.xml
 Sitemap: https://ishu.fun/sitemap-education.xml
 Sitemap: https://ishu.fun/sitemap-expanded.xml
+Sitemap: https://ishu.fun/sitemap-sarkari.xml
 
 # Host
 Host: https://ishu.fun
