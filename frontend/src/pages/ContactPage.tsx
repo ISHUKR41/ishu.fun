@@ -630,10 +630,10 @@ const ContactPage = () => {
                   </h3>
                   <div className="flex flex-wrap gap-2.5">
                     {[
-                      { icon: Twitter, label: "Twitter", href: "#", color: "hover:text-sky-400 hover:border-sky-400/30 hover:bg-sky-400/5 hover:ring-sky-400/10" },
-                      { icon: Youtube, label: "YouTube", href: "#", color: "hover:text-red-400 hover:border-red-400/30 hover:bg-red-400/5 hover:ring-red-400/10" },
-                      { icon: Instagram, label: "Instagram", href: "#", color: "hover:text-pink-400 hover:border-pink-400/30 hover:bg-pink-400/5 hover:ring-pink-400/10" },
-                      { icon: Linkedin, label: "LinkedIn", href: "#", color: "hover:text-blue-400 hover:border-blue-400/30 hover:bg-blue-400/5 hover:ring-blue-400/10" },
+                      { icon: Twitter, label: "Twitter / X", href: "https://x.com/ISHU_IITP", color: "hover:text-sky-400 hover:border-sky-400/30 hover:bg-sky-400/5 hover:ring-sky-400/10" },
+                      { icon: Youtube, label: "YouTube", href: "https://www.youtube.com/@ishu-fun", color: "hover:text-red-400 hover:border-red-400/30 hover:bg-red-400/5 hover:ring-red-400/10" },
+                      { icon: Instagram, label: "Instagram", href: "https://www.instagram.com/ishukr10", color: "hover:text-pink-400 hover:border-pink-400/30 hover:bg-pink-400/5 hover:ring-pink-400/10" },
+                      { icon: Linkedin, label: "LinkedIn", href: "https://www.linkedin.com/in/ishu-kumar-5a0940281/", color: "hover:text-blue-400 hover:border-blue-400/30 hover:bg-blue-400/5 hover:ring-blue-400/10" },
                       { icon: Globe, label: "Website", href: "/", color: "hover:text-primary hover:border-primary/30 hover:bg-primary/5 hover:ring-primary/10" },
                     ].map((social) => (
                       <motion.a
