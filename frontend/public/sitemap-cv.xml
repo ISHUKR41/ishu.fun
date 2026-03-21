@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- CV / Resume / Biodata Sitemap — ishu.fun | Updated: 2026-03-20 -->
+<!-- CV / Resume / Biodata Sitemap — ishu.fun | Updated: 2026-03-21 -->
 <!-- Free CV maker, Resume builder, Biodata maker for Indian students and job seekers -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml"
@@ -8,7 +8,7 @@
   <!-- CV Hub Page -->
   <url>
     <loc>https://ishu.fun/cv</loc>
-    <lastmod>2026-03-20</lastmod>
+    <lastmod>2026-03-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="en-in" href="https://ishu.fun/cv" />
@@ -27,7 +27,7 @@
   <!-- Resume Builder -->
   <url>
     <loc>https://ishu.fun/cv/resume</loc>
-    <lastmod>2026-03-20</lastmod>
+    <lastmod>2026-03-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.97</priority>
     <xhtml:link rel="alternate" hreflang="en-in" href="https://ishu.fun/cv/resume" />
@@ -43,7 +43,7 @@
   <!-- Biodata Maker -->
   <url>
     <loc>https://ishu.fun/cv/bio-data</loc>
-    <lastmod>2026-03-20</lastmod>
+    <lastmod>2026-03-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.97</priority>
     <xhtml:link rel="alternate" hreflang="en-in" href="https://ishu.fun/cv/bio-data" />

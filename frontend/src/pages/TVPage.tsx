@@ -889,31 +889,37 @@ function useRobustPlayer(
       "tangotv.in", "smartplaytv.in", "5centscdn.com", "ottlive.co.in",
       "wmncdn.net", "livebox.co.in", "legitpro.co.in", "mediaops.in",
     ];
-    // Take top 5 streams max to keep attempt list manageable
-    const topStreams = streamList.slice(0, 5);
+    // Take top 8 streams for best coverage (more sources = higher chance of success)
+    const topStreams = streamList.slice(0, 8);
     for (const s of topStreams) {
       const urlLower = s.url.toLowerCase();
       const isDirectCDN = directCDNs.some(cdn => urlLower.includes(cdn));
       if (isDirectCDN) {
-        // CDN streams: direct, then backend proxy (has caching), then allorigins
+        // CDN streams with CORS headers: direct first, then proxy fallbacks
         list.push({ url: s.url, proxyIdx: -1,  original: s }); // direct
         list.push({ url: s.url, proxyIdx: BACKEND_PROXY_IDX,  original: s }); // backend (CORS + referrer + cache)
-        list.push({ url: s.url, proxyIdx: 0,   original: s }); // allorigins
-        list.push({ url: s.url, proxyIdx: 1,   original: s }); // corsproxy.io
-        list.push({ url: s.url, proxyIdx: 2,   original: s }); // corsproxy.org
+        list.push({ url: s.url, proxyIdx: 1,   original: s }); // allorigins
+        list.push({ url: s.url, proxyIdx: 2,   original: s }); // corsproxy.io
+        list.push({ url: s.url, proxyIdx: 3,   original: s }); // corsproxy.org
+        list.push({ url: s.url, proxyIdx: 4,   original: s }); // cors.lol
+        list.push({ url: s.url, proxyIdx: 5,   original: s }); // cors.sh
       } else {
-        // Other streams: direct → backend → 3 public CORS proxies
+        // Other streams: direct → backend → 5 public CORS proxies
         list.push({ url: s.url, proxyIdx: -1,  original: s }); // direct
         list.push({ url: s.url, proxyIdx: BACKEND_PROXY_IDX,  original: s }); // backend (most reliable proxy)
-        list.push({ url: s.url, proxyIdx: 0,   original: s }); // allorigins
-        list.push({ url: s.url, proxyIdx: 1,   original: s }); // corsproxy.io
-        list.push({ url: s.url, proxyIdx: 2,   original: s }); // corsproxy.org
+        list.push({ url: s.url, proxyIdx: 1,   original: s }); // allorigins
+        list.push({ url: s.url, proxyIdx: 2,   original: s }); // corsproxy.io
+        list.push({ url: s.url, proxyIdx: 3,   original: s }); // corsproxy.org
+        list.push({ url: s.url, proxyIdx: 4,   original: s }); // cors.lol
+        list.push({ url: s.url, proxyIdx: 9,   original: s }); // codetabs
       }
     }
-    // Remaining streams (beyond top 5): direct + backend only
-    for (const s of streamList.slice(5)) {
+    // Remaining streams (beyond top 8): direct + backend + 2 public proxies
+    for (const s of streamList.slice(8)) {
       list.push({ url: s.url, proxyIdx: -1,  original: s }); // direct
       list.push({ url: s.url, proxyIdx: BACKEND_PROXY_IDX,  original: s }); // backend
+      list.push({ url: s.url, proxyIdx: 1,   original: s }); // allorigins
+      list.push({ url: s.url, proxyIdx: 2,   original: s }); // corsproxy.io
     }
 
     // Remove duplicate entries (same url+proxyIdx) while preserving order
@@ -962,16 +968,16 @@ function useRobustPlayer(
     // Determine the actual URL to load and whether to use proxy xhrSetup
     const isProxied = attempt.proxyIdx >= 0;
     const loadUrl = isProxied ? CORS_PROXIES[attempt.proxyIdx](attempt.url) : attempt.url;
-    // Timeout strategy (balanced — enough time for HLS manifest to load):
-    //   direct  → 6000ms (HLS manifests need time, especially on slow connections)
-    //   backend → 10000ms (most reliable proxy, needs more time for proxying)
-    //   public CORS proxies → 7000ms (public proxies can be slow)
-    const timeout = !isProxied ? 6000 : (attempt.proxyIdx === BACKEND_PROXY_IDX ? 10000 : 7000);
+    // Timeout strategy (aggressive — switch fast so user sees next server in 5-7s):
+    //   direct  → 4000ms (if direct doesn't respond in 4s, move on fast)
+    //   backend → 6000ms (most reliable proxy, slightly more time for Indian CDNs)
+    //   public CORS proxies → 5000ms (public proxies — fail fast to next)
+    const timeout = !isProxied ? 4000 : (attempt.proxyIdx === BACKEND_PROXY_IDX ? 6000 : 5000);
 
-    // Stall detection — if video freezes for 8s, try next source
+    // Stall detection — if video freezes for 5s, switch to next source (5-7s as requested)
     const onTimeUpdate = () => {
       if (stallRef.current) clearTimeout(stallRef.current);
-      stallRef.current = setTimeout(() => tryAttempt(idx + 1), 8000);
+      stallRef.current = setTimeout(() => tryAttempt(idx + 1), 5000);
     };
     timeUpdateRef.current = onTimeUpdate;
     video.addEventListener("timeupdate", onTimeUpdate);
@@ -1137,18 +1143,18 @@ function useRobustPlayer(
       return cleanup;
     }
 
-    // Parallel probe: test top 10 attempts simultaneously with 350ms timeout
+    // Parallel probe: test top 15 attempts simultaneously with 3s timeout
     // Jump to first server that responds — eliminates sequential wait time
     let cancelled = false;
     const probeControllers: AbortController[] = [];
     setState("loading");
 
-    const toProbe = expandedList.slice(0, Math.min(10, expandedList.length));
+    const toProbe = expandedList.slice(0, Math.min(15, expandedList.length));
     Promise.any(
       toProbe.map((attempt, i) => new Promise<number>((resolve, reject) => {
         const ctrl = new AbortController();
         probeControllers.push(ctrl);
-        const timer = setTimeout(() => { ctrl.abort(); reject(new Error("probe timeout")); }, 2000);
+        const timer = setTimeout(() => { ctrl.abort(); reject(new Error("probe timeout")); }, 3000);
         const loadUrl = attempt.proxyIdx >= 0
           ? CORS_PROXIES[attempt.proxyIdx](attempt.url)
           : attempt.url;

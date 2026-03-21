@@ -201,7 +201,7 @@ const SEOHead = ({
       <meta name="MobileOptimized" content="320" />
 
       {/* ═══ FRESHNESS & DATE SIGNALS ═══ */}
-      <meta name="DC.date" content="2026-03-20" />
+      <meta name="DC.date" content="2026-03-21" />
       <meta name="DC.language" content="en-IN" />
       <meta name="DC.type" content="Service" />
       <meta name="DC.format" content="text/html" />
@@ -209,7 +209,7 @@ const SEOHead = ({
       <meta name="DC.publisher" content={SITE_NAME} />
       <meta name="DC.description" content={description} />
       <meta property="article:published_time" content="2024-01-01T00:00:00+05:30" />
-      <meta property="article:modified_time" content="2026-03-20T00:00:00+05:30" />
+      <meta property="article:modified_time" content="2026-03-21T00:00:00+05:30" />
 
       {/* ═══ ADDITIONAL SEARCH ENGINE META ═══ */}
       <meta name="norton-safeweb-site-verification" content="ishu-norton-verification" />

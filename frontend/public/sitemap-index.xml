@@ -1,96 +1,96 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Sitemap Index for ishu.fun — Routes all search engines to all sitemaps -->
-<!-- Updated: 2026-03-20 | Domain: https://ishu.fun -->
+<!-- Updated: 2026-03-21 | Domain: https://ishu.fun -->
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
   <!-- Core pages sitemap -->
   <sitemap>
     <loc>https://ishu.fun/sitemap.xml</loc>
-    <lastmod>2026-03-20</lastmod>
+    <lastmod>2026-03-21</lastmod>
   </sitemap>
 
   <!-- Main navigation pages sitemap -->
   <sitemap>
     <loc>https://ishu.fun/sitemap-main.xml</loc>
-    <lastmod>2026-03-20</lastmod>
+    <lastmod>2026-03-21</lastmod>
   </sitemap>
 
   <!-- ISHU Personal Brand sitemap (Ishu name keyword ranking) -->
   <sitemap>
     <loc>https://ishu.fun/sitemap-ishu.xml</loc>
-    <lastmod>2026-03-20</lastmod>
+    <lastmod>2026-03-21</lastmod>
   </sitemap>
 
   <!-- Government jobs/recruitment sitemap (updated daily) -->
   <sitemap>
     <loc>https://ishu.fun/sitemap-jobs.xml</loc>
-    <lastmod>2026-03-20T06:00:00+05:30</lastmod>
+    <lastmod>2026-03-21T06:00:00+05:30</lastmod>
   </sitemap>
 
   <!-- Exam results sitemap (updated daily) -->
   <sitemap>
     <loc>https://ishu.fun/sitemap-results.xml</loc>
-    <lastmod>2026-03-20T00:00:00+05:30</lastmod>
+    <lastmod>2026-03-21T00:00:00+05:30</lastmod>
   </sitemap>
 
   <!-- All 36 Indian states results sitemap -->
   <sitemap>
     <loc>https://ishu.fun/sitemap-states.xml</loc>
-    <lastmod>2026-03-20</lastmod>
+    <lastmod>2026-03-21</lastmod>
   </sitemap>
 
   <!-- PDF & online tools sitemap -->
   <sitemap>
     <loc>https://ishu.fun/sitemap-tools.xml</loc>
-    <lastmod>2026-03-20</lastmod>
+    <lastmod>2026-03-21</lastmod>
   </sitemap>
 
   <!-- News content sitemap (updated hourly) -->
   <sitemap>
     <loc>https://ishu.fun/sitemap-news.xml</loc>
-    <lastmod>2026-03-20T12:00:00+05:30</lastmod>
+    <lastmod>2026-03-21T12:00:00+05:30</lastmod>
   </sitemap>
 
   <!-- Blog/Article sitemap -->
   <sitemap>
     <loc>https://ishu.fun/sitemap-blog.xml</loc>
-    <lastmod>2026-03-20</lastmod>
+    <lastmod>2026-03-21</lastmod>
   </sitemap>
 
   <!-- Video sitemap for YouTube, Terabox downloads etc -->
   <sitemap>
     <loc>https://ishu.fun/sitemap-video.xml</loc>
-    <lastmod>2026-03-20</lastmod>
+    <lastmod>2026-03-21</lastmod>
   </sitemap>
 
   <!-- Image sitemap -->
   <sitemap>
     <loc>https://ishu.fun/sitemap-image.xml</loc>
-    <lastmod>2026-03-20</lastmod>
+    <lastmod>2026-03-21</lastmod>
   </sitemap>
 
   <!-- Live TV channels sitemap -->
   <sitemap>
     <loc>https://ishu.fun/sitemap-tv.xml</loc>
-    <lastmod>2026-03-20T00:00:00+05:30</lastmod>
+    <lastmod>2026-03-21T00:00:00+05:30</lastmod>
   </sitemap>
 
   <!-- CV / Resume / Biodata sitemap -->
   <sitemap>
     <loc>https://ishu.fun/sitemap-cv.xml</loc>
-    <lastmod>2026-03-20</lastmod>
+    <lastmod>2026-03-21</lastmod>
   </sitemap>
 
   <!-- Educational content sitemap -->
   <sitemap>
     <loc>https://ishu.fun/sitemap-education.xml</loc>
-    <lastmod>2026-03-20</lastmod>
+    <lastmod>2026-03-21</lastmod>
   </sitemap>
 
   <!-- Expanded keywords sitemap -->
   <sitemap>
     <loc>https://ishu.fun/sitemap-expanded.xml</loc>
-    <lastmod>2026-03-20</lastmod>
+    <lastmod>2026-03-21</lastmod>
   </sitemap>
 
 </sitemapindex>
