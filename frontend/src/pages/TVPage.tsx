@@ -207,6 +207,194 @@ function saveStreamSuccess(channelId: string, url: string, proxyIdx: number) {
 }
 const Q_ORDER: Record<string, number> = { "2160p": 6, "1080p": 5, "720p": 4, "576p": 3, "480p": 2, "360p": 1, "240p": 0 };
 
+/* ═══════════════════ CHANNEL POPULARITY SCORING ═══════════════════
+   Assigns a popularity score to each channel based on:
+   1. Name recognition (hardcoded tiers for major Indian channels)
+   2. Number of available streams (more = better maintained)
+   3. CDN quality (enterprise CDNs = major channels)
+   Most popular channels appear FIRST within each category.
+═══════════════════════════════════════════════════════════════ */
+const POPULAR_CHANNELS: Record<string, number> = {
+  // === NEWS — Tier 1 (score 100) ===
+  "aaj tak": 100, "ndtv 24x7": 99, "ndtv india": 98, "republic tv": 97,
+  "india today": 96, "times now": 95, "zee news": 94, "abp news": 93,
+  "india tv": 92, "news18 india": 91, "dd news": 90, "cnn-news18": 89,
+  "republic bharat": 88, "news x": 87, "wion": 86,
+  // News Tier 2 (score 80)
+  "times now navbharat": 85, "news18 hindi": 84, "tv9 bharatvarsh": 83,
+  "abp news hindi": 82, "zee hindustan": 81, "india news": 80,
+  "ndtv profit": 79, "mirror now": 78, "news nation": 77,
+  // Regional News Tier 2 (score 70-76)
+  "abp ananda": 76, "abp majha": 75, "tv9 telugu": 74, "tv9 kannada": 73,
+  "tv9 marathi": 72, "tv9 gujarati": 71, "asianet news": 70,
+  "mathrubhumi news": 69, "manorama news": 68, "sun news": 67,
+  "thanthi tv": 66, "puthiya thalaimurai": 65, "sakshi tv": 64,
+  "news18 tamil nadu": 63, "news18 kerala": 62, "news18 kannada": 61,
+  "news18 bangla": 60, "news18 gujarati": 59, "news18 lokmat": 58,
+  "news18 odia": 57, "news18 assam north-east": 56,
+  "news18 rajasthan": 55, "news18 bihar jharkhand": 54,
+  "news18 uttar pradesh uttarakhand": 53, "news18 madhya pradesh/chhattisgarh": 52,
+  "news18 punjab/haryana/himachal": 51,
+  "zee 24 taas": 50, "zee 24 kalak": 49, "zee bharat": 48,
+  "polimer news": 47, "news7 tamil": 46, "news live": 45,
+  "republic bangla": 44, "republic kannada": 43,
+  "ptc news": 42, "hmtv": 41, "v6 news": 40,
+  "kalaignar seithigal": 39, "sathiyam tv": 38,
+  // News Tier 3 (score 30-39)
+  "first india news": 39, "news24": 38, "sudarshan news": 37,
+  "india ahead": 36, "jan tv": 35, "good news today": 34,
+  "india news haryana": 33, "india news gujarati": 32,
+  "ibc 24": 31, "news18 jklh": 30,
+
+  // === ENTERTAINMENT — Tier 1 (score 100) ===
+  "star plus": 100, "starplus": 100, "starplus hd": 99,
+  "colors": 100, "colors hd": 99, "colors tv": 100,
+  "zee tv": 98, "sony entertainment television": 97,
+  "sony entertainment television hd": 96,
+  "star vijay": 95, "star vijay hd": 94,
+  "sun tv": 93, "dd national": 92, "dd national hd": 91,
+  "sony sab": 90, "sony sab hd": 89,
+  "&tv": 88, "&tv hd": 87,
+  "colors tamil": 86, "colors tamil hd": 85,
+  // Entertainment Tier 2 (score 70-84)
+  "star maa": 84, "zee bangla": 83, "zee telugu": 82,
+  "asianet": 81, "asianet hd": 80, "star jalsha": 79,
+  "mazhavil manorama": 78, "colors kannada": 77,
+  "colors marathi": 76, "sun neo": 75, "etv telugu": 74,
+  "zee kannada": 73, "zee tamil": 72, "zee sarthak": 71,
+  "star pravah": 70, "star utsav": 69,
+  // Entertainment Tier 3 (score 50-68)
+  "dangal tv": 68, "epic tv": 67, "colors infinity": 66,
+  "mtv": 65, "mtv hd": 64, "polimer tv": 63,
+  "kalaignar tv": 62, "zee keralam": 61, "tarang tv": 60,
+  "star suvarna": 59, "shemaroo tv": 58, "enterr 10 bangla": 57,
+  "colors gujarati": 56, "dd malayalam": 55,
+  "raj tv": 54, "vasanth tv": 53, "vendhar tv": 52,
+  "vanitha tv": 51, "jaihind tv": 50,
+
+  // === MOVIES — Tier 1 (score 100) ===
+  "zee cinema": 100, "zee cinema hd": 99,
+  "star gold": 98, "star gold hd": 97,
+  "sony max": 96, "sony max 1": 96, "sony max hd": 95,
+  "movies now": 94, "movies now hd": 93,
+  "&pictures": 92, "&pictures hd": 91,
+  "&flix": 90, "&flix hd": 89,
+  "sony pix": 88, "sony pix hd": 87,
+  "sony wah": 86, "star gold 2": 85,
+  // Movies Tier 2 (score 70-84)
+  "colors cineplex": 84, "colors cineplex hd": 83,
+  "zee bollywood": 82, "romedy now": 81,
+  "mnx": 80, "mnx hd": 79, "b4u movies": 78,
+  "b4u bhojpuri": 77, "star movies select": 76,
+  "star movies select hd": 75, "zee thirai": 74,
+  "zee talkies": 73, "zee biskope": 72,
+  "star gold select": 71, "star gold select hd": 70,
+  "abzy movies": 69, "maha movie": 68,
+  "ktv": 67, "ktv hd": 66,
+
+  // === SPORTS — Tier 1 (score 100) ===
+  "star sports 1": 100, "star sports 1 hd": 99,
+  "star sports 2": 98, "star sports 2 hd": 97,
+  "star sports 1 hindi": 96, "star sports 1 hindi hd": 95,
+  "star sports 2 hindi": 94, "star sports 2 hindi hd": 93,
+  "star sports 3": 92, "dd sports": 91, "dd sports sd": 90,
+  "sony sports ten 1": 89, "sony sports ten 2": 88,
+  "sony sports ten 2 hd": 87, "sony sports ten 3": 86,
+  "star sports 1 tamil": 85, "star sports 1 tamil hd": 84,
+  "star sports 2 tamil": 83, "star sports 2 tamil hd": 82,
+  "star sports 1 kannada": 81, "star sports 1 telugu": 80,
+  "star sports 2 telugu": 79, "star sports 2 telugu hd": 78,
+
+  // === MUSIC — Tier 1 (score 100) ===
+  "9xm": 100, "mtv beats": 99, "zoom": 98,
+  "9x jalwa": 97, "b4u music": 96,
+  "sun music": 95, "sun music hd": 94,
+  "yrf music": 93, "9x tashan": 92,
+  "9x jhakaas": 91, "mastiii": 90,
+  "dhamaal": 89, "balle balle": 88,
+  "ptc music": 87, "ptc chakde": 86,
+
+  // === KIDS — Tier 1 (score 100) ===
+  "disney channel": 100, "nick jr.": 99, "nickelodeon": 98,
+  "cartoon network": 97, "pogo": 96, "sonic": 95,
+  "disney jr.": 94, "hungama tv": 93, "nick hd+": 92,
+  "chithiram": 91, "etv bal bharat": 90, "kushi tv": 89,
+
+  // === RELIGIOUS — Tier 1 (score 100) ===
+  "aastha": 100, "aastha bhajan": 99, "sanskar tv": 98,
+  "angel tv": 97, "sankara tv": 96, "svbc": 95,
+  "god tv": 94, "peace tv urdu": 93,
+  "sadhna": 92, "total bhakti": 91,
+  "hare krsna tv": 90, "hindu dharmam": 89,
+  "bhakthi tv": 88, "goodness tv": 87,
+  "ishwar bhakti tv": 86, "vedic": 85,
+  "life tv": 84, "shalom": 83,
+  "madani tv": 82, "salvation tv": 81,
+
+  // === GENERAL/DD — Tier 1 (score 100) ===
+  "dd india": 100, "dd bharati": 99, "dd kisan": 98,
+  "dd sahyadri": 97, "dd sahyadri hd": 96,
+  "dd saptagiri": 95, "dd tamil": 94, "dd tamil hd": 93,
+  "dd rajasthan": 92, "dd madhya pradesh": 91,
+  "dd uttar pradesh": 90, "dd bihar": 89,
+  "dd yadagiri": 88, "dd bangla": 87,
+  "dd assam": 86, "dd girnar": 85,
+  "dd chhattisgarh": 84, "dd odia": 83,
+  "dd kashir": 82, "dd urdu": 81,
+  "dd uttarakhand": 80, "dd nagaland": 79,
+  "dd arun prabha": 78, "dd chandana": 77,
+  "dd goa": 76, "dd haryana": 75,
+  "dd himachal pradesh": 74, "dd jharkhand": 73,
+  "dd manipur": 72, "dd meghalaya": 71,
+  "dd tripura": 70, "dd national": 69,
+  "dd mizoram": 68, "kaumudy tv": 67,
+  "jeevan tv": 66, "kairali tv": 65,
+
+  // === DOCUMENTARY ===
+  "discovery channel": 100, "national geographic": 99,
+  "animal planet": 98, "history tv18": 97,
+
+  // === LIFESTYLE ===
+  "tlc": 100, "food food": 99, "living foodz": 98,
+
+  // === BUSINESS ===
+  "cnbc tv18": 100, "et now": 99, "zee business": 98, "ndtv profit": 97,
+
+  // === EDUCATION ===
+  "dd gyan darshan": 100, "swayam prabha": 99,
+
+  // === COMEDY ===
+  "comedy central": 100, "colors comedy": 99,
+};
+
+/** Compute a popularity score for a channel (higher = more popular). */
+function channelPopularityScore(ch: Channel): number {
+  let score = 0;
+  // 1. Name recognition (0-100)
+  const nameLower = ch.name.toLowerCase().trim();
+  const knownScore = POPULAR_CHANNELS[nameLower];
+  if (knownScore !== undefined) {
+    score += knownScore * 10; // 0-1000 range
+  }
+  // 2. Stream count bonus (more streams = more popular/maintained)
+  score += Math.min(ch.streams.length, 10) * 15; // 0-150
+  // 3. CDN quality bonus (enterprise CDNs = major channels)
+  for (const s of ch.streams.slice(0, 3)) {
+    const url = s.url.toLowerCase();
+    if (url.includes("akamaized.net") || url.includes("cloudfront.net")) { score += 50; break; }
+    if (url.includes("amagi") || url.includes("dai.google") || url.includes("googlevideo")) { score += 40; break; }
+    if (url.includes("fastly") || url.includes("cdn.jwplayer")) { score += 30; break; }
+  }
+  // 4. Has logo bonus
+  if (ch.logo) score += 10;
+  // 5. Network bonus (known networks)
+  if (ch.network) {
+    const net = ch.network.toLowerCase();
+    if (net.includes("star") || net.includes("zee") || net.includes("sony") || net.includes("colors") || net.includes("sun") || net.includes("ndtv")) score += 50;
+  }
+  return score;
+}
+
 /* ═══════════════════ M3U PARSER ═══════════════════ */
 function parseM3U(text: string, defaultLang: string): { name: string; logo: string; group: string; url: string; language: string; id: string }[] {
   const lines = text.split("\n");
@@ -829,7 +1017,7 @@ function useRobustPlayer(
   const retryRef = useRef(0);
   const stallRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const skipRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const timeUpdateRef = useRef<(() => void) | null>(null);
+  const watchdogRef = useRef<ReturnType<typeof setInterval> | null>(null);
   // Track position in the expanded attempt list
   const attemptListRef = useRef<{ url: string; proxyIdx: number; original: StreamUrl }[]>([]);
   const attemptIdxRef = useRef(0);
@@ -844,20 +1032,22 @@ function useRobustPlayer(
   const [isAutoQuality, setIsAutoQuality] = useState(true);
   const [proxyActive, setProxyActive] = useState<false | string>(false);
 
+  // AbortController for native HLS event listeners — abort on cleanup/switch
+  const nativeAbortRef = useRef<AbortController | null>(null);
+
   const cleanup = useCallback(() => {
-    if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; }
+    // Abort any native HLS event listeners from previous attempt
+    if (nativeAbortRef.current) { try { nativeAbortRef.current.abort(); } catch {} nativeAbortRef.current = null; }
+    if (hlsRef.current) { try { hlsRef.current.destroy(); } catch {} hlsRef.current = null; }
     if (stallRef.current) { clearTimeout(stallRef.current); stallRef.current = null; }
     if (skipRef.current) { clearInterval(skipRef.current); skipRef.current = null; }
-    if (timeUpdateRef.current && videoRef.current) {
-      videoRef.current.removeEventListener("timeupdate", timeUpdateRef.current);
-      timeUpdateRef.current = null;
-    }
+    if (watchdogRef.current) { clearInterval(watchdogRef.current); watchdogRef.current = null; }
     setSkipIn(0);
     setHlsLevels([]);
     setCurrentLevel(-1);
     setIsAutoQuality(true);
     setProxyActive(false);
-  }, [videoRef]);
+  }, []);
 
   const startSkipCountdown = useCallback(() => {
     if (skipRef.current) return;
@@ -973,16 +1163,22 @@ function useRobustPlayer(
 
   const tryAttempt = useCallback((idx: number) => {
     // ── Full cleanup of previous attempt ─────────────────────────────────────
-    if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; }
+    // Abort previous native HLS listeners (prevents stale removeEventListener errors)
+    if (nativeAbortRef.current) { try { nativeAbortRef.current.abort(); } catch {} nativeAbortRef.current = null; }
+    if (hlsRef.current) { try { hlsRef.current.destroy(); } catch {} hlsRef.current = null; }
     if (stallRef.current) { clearTimeout(stallRef.current); stallRef.current = null; }
-    // Clear old watchdog interval (stored in timeUpdateRef as interval ID)
-    if (timeUpdateRef.current) {
-      clearInterval(timeUpdateRef.current as unknown as ReturnType<typeof setInterval>);
-      timeUpdateRef.current = null;
+    // Clear old watchdog interval
+    if (watchdogRef.current) {
+      clearInterval(watchdogRef.current);
+      watchdogRef.current = null;
+    }
+    // Reset video element to clear any pending event listeners from previous attempt
+    const video = videoRef.current;
+    if (video) {
+      try { video.removeAttribute('src'); video.load(); } catch {}
     }
 
     const attempts = attemptListRef.current;
-    const video = videoRef.current;
 
     if (!video || idx >= attempts.length) {
       setState("error");
@@ -1053,29 +1249,47 @@ function useRobustPlayer(
               hls.destroy();
               hlsRef.current = null;
             }
-            if (timeUpdateRef.current !== null) {
-              timeUpdateRef.current = null;
-            }
+            watchdogRef.current = null;
             tryAttempt(idx + 1);
           }
         }
       }, 500);
-      timeUpdateRef.current = interval as unknown as (() => void);
+      watchdogRef.current = interval;
     };
 
     // ── Native HLS (Safari) ───────────────────────────────────────────────────
     if (!isProxied && video.canPlayType("application/vnd.apple.mpegurl") && !attempt.original.userAgent && !attempt.original.referrer) {
+      // Use AbortController for clean listener management — prevents stale removeEventListener errors
+      const nativeAC = new AbortController();
+      nativeAbortRef.current = nativeAC;
+      const nativeSignal = nativeAC.signal;
+
+      let nativeLoadHandled = false;
       video.src = loadUrl;
-      video.addEventListener("loadeddata", () => { setState("playing"); startWatchdog(); }, { once: true });
+
+      video.addEventListener("loadeddata", () => {
+        if (nativeLoadHandled || nativeSignal.aborted) return;
+        nativeLoadHandled = true;
+        setState("playing");
+        startWatchdog();
+        clearTimeout(nativeTimeout);
+      }, { signal: nativeSignal });
+
       video.addEventListener("error", () => {
-        if (timeUpdateRef.current) { clearInterval(timeUpdateRef.current as unknown as ReturnType<typeof setInterval>); timeUpdateRef.current = null; }
+        if (nativeSignal.aborted) return;
+        try { nativeAC.abort(); } catch {}
+        if (watchdogRef.current) { clearInterval(watchdogRef.current); watchdogRef.current = null; }
+        clearTimeout(nativeTimeout);
         tryAttempt(idx + 1);
-      }, { once: true });
+      }, { signal: nativeSignal });
+
       const nativeTimeout = setTimeout(() => {
-        if (timeUpdateRef.current) { clearInterval(timeUpdateRef.current as unknown as ReturnType<typeof setInterval>); timeUpdateRef.current = null; }
+        if (nativeSignal.aborted) return;
+        try { nativeAC.abort(); } catch {}
+        if (watchdogRef.current) { clearInterval(watchdogRef.current); watchdogRef.current = null; }
         tryAttempt(idx + 1);
       }, manifestTimeout);
-      video.addEventListener("loadeddata", () => clearTimeout(nativeTimeout), { once: true });
+
       video.play().catch(() => {});
       return;
     }
@@ -1147,7 +1361,7 @@ function useRobustPlayer(
       if (hlsRef.current === hls && !manifestLoaded) {
         hls.destroy();
         hlsRef.current = null;
-        if (timeUpdateRef.current) { clearInterval(timeUpdateRef.current as unknown as ReturnType<typeof setInterval>); timeUpdateRef.current = null; }
+        if (watchdogRef.current) { clearInterval(watchdogRef.current); watchdogRef.current = null; }
         tryAttempt(idx + 1);
       }
     }, manifestTimeout);
@@ -1204,9 +1418,9 @@ function useRobustPlayer(
       clearTimeout(manifestTimer);
       // Mark proxy as failed for health tracking
       if (attempt.proxyIdx >= 0) markProxyFailed(attempt.proxyIdx);
-      hls.destroy();
+      try { hls.destroy(); } catch {}
       hlsRef.current = null;
-      if (timeUpdateRef.current) { clearInterval(timeUpdateRef.current as unknown as ReturnType<typeof setInterval>); timeUpdateRef.current = null; }
+      if (watchdogRef.current) { clearInterval(watchdogRef.current); watchdogRef.current = null; }
       tryAttempt(idx + 1);
     });
   }, [cleanup, startSkipCountdown, videoRef]);
@@ -1477,9 +1691,15 @@ const TVPage = () => {
       list = list.filter((c) => ids.has(c.id));
     }
     return list.slice().sort((a, b) => {
+      // Failed channels always go to the bottom
       const aF = failedIds.has(a.id) ? 1 : 0;
       const bF = failedIds.has(b.id) ? 1 : 0;
       if (aF !== bF) return aF - bF;
+      // Sort by popularity score (higher = more popular = first)
+      const aScore = channelPopularityScore(a);
+      const bScore = channelPopularityScore(b);
+      if (bScore !== aScore) return bScore - aScore;
+      // Tiebreaker: more streams first, then alphabetical
       if (b.streams.length !== a.streams.length) return b.streams.length - a.streams.length;
       return a.name.localeCompare(b.name);
     });
