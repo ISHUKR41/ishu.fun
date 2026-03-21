@@ -1,32 +1,29 @@
 /**
- * ContactPage.tsx - Contact Us Page (Professional Modern v4 - Ultra Premium)
- * 
- * FULLY professional, modern, animated, smooth contact page.
+ * ContactPage.tsx - Contact Us Page (Ultra Premium Enhanced v5)
+ *
+ * FULLY professional, modern, animated, smooth contact page with advanced effects.
  * All existing functionality preserved: form, Supabase, Formspree, SEO.
- * 
- * Features:
- * - Contact form with name, email, phone, subject, message fields
- * - Form validation and loading state
- * - Success/error toast notifications
- * - Contact info cards (email, phone, WhatsApp, address)
- * - Real Google Maps embed with dark theme
- * - Social media links
- * - FAQ section with smooth accordion
- * - Testimonials section
- * - Professional premium design with glassmorphism + aurora effects
- * - Framer Motion & GSAP animations (smooth, not over-the-top)
- * - CSS-only background effects for ZERO lag
- * - SEO: BreadcrumbSchema + ContactPage schema
+ *
+ * New Features:
+ * - Advanced 3D particle background effects
+ * - Enhanced micro-interactions on all elements
+ * - Animated counters for statistics
+ * - More detailed information sections
+ * - Professional timeline/journey section
+ * - Advanced hover effects and transitions
+ * - Better form validation feedback
+ * - Performance optimized for ultra-smooth scrolling
  */
 import Layout from "@/components/layout/Layout";
 import FadeInView from "@/components/animations/FadeInView";
-import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, useInView } from "framer-motion";
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Mail, Phone, MessageCircle, MapPin, Send, Check, Clock,
   Upload, Twitter, Youtube, Instagram, Linkedin, Globe, ArrowRight, Loader2,
   Sparkles, Users, Headphones, Shield, ChevronDown, HelpCircle, Star, Zap,
-  ExternalLink, Rocket, ChevronRight, Heart, Award, MessageSquare
+  ExternalLink, Rocket, ChevronRight, Heart, Award, MessageSquare, Building2,
+  Calendar, TrendingUp, Target, CheckCircle2, AlertCircle
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -36,6 +33,7 @@ import Tilt from "react-parallax-tilt";
 import { BreadcrumbSchema } from "@/components/seo/JsonLd";
 import SEOHead, { SEO_DATA } from "@/components/seo/SEOHead";
 import confetti from "canvas-confetti";
+import CountUp from "react-countup";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -54,12 +52,72 @@ const testimonials = [
   { name: "Amit Kumar", role: "Bank PO", text: "Best platform for government exam updates. The interface is so clean and fast compared to other sites.", rating: 5 },
 ];
 
+const journeySteps = [
+  { icon: MessageSquare, title: "Send Your Query", desc: "Fill out the form with your question or concern", color: "blue" },
+  { icon: Headphones, title: "We Review It", desc: "Our team reviews your message within 2 hours", color: "violet" },
+  { icon: CheckCircle2, title: "Get Response", desc: "Receive a detailed response via email or WhatsApp", color: "green" },
+  { icon: Heart, title: "Stay Connected", desc: "Join our community for ongoing support", color: "pink" },
+];
+
+// Floating particles background component
+const FloatingParticles = () => {
+  const particles = Array.from({ length: 30 }, (_, i) => ({
+    id: i,
+    size: Math.random() * 4 + 2,
+    x: Math.random() * 100,
+    y: Math.random() * 100,
+    duration: Math.random() * 20 + 15,
+    delay: Math.random() * 5,
+  }));
+
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-30">
+      {particles.map((particle) => (
+        <motion.div
+          key={particle.id}
+          className="absolute rounded-full bg-primary/40 blur-[1px]"
+          style={{
+            width: particle.size,
+            height: particle.size,
+            left: `${particle.x}%`,
+            top: `${particle.y}%`,
+          }}
+          animate={{
+            y: [0, -30, 0],
+            x: [0, Math.random() * 20 - 10, 0],
+            opacity: [0.2, 0.5, 0.2],
+          }}
+          transition={{
+            duration: particle.duration,
+            delay: particle.delay,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+      ))}
+    </div>
+  );
+};
+
+// Animated counter component
+const AnimatedCounter = ({ end, suffix = "", prefix = "", duration = 2 }: { end: number; suffix?: string; prefix?: string; duration?: number }) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, amount: 0.5 });
+
+  return (
+    <span ref={ref}>
+      {isInView ? <CountUp end={end} duration={duration} prefix={prefix} suffix={suffix} /> : "0"}
+    </span>
+  );
+};
+
 const ContactPage = () => {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", phone: "", subject: "General", message: "" });
   const [attachment, setAttachment] = useState<File | null>(null);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   const heroRef = useRef<HTMLElement>(null);
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -97,12 +155,37 @@ const ContactPage = () => {
           y: 0, opacity: 1, scale: 1, stagger: 0.08, duration: 0.5, ease: "power3.out",
         }
       );
+      gsap.fromTo(".journey-step",
+        { y: 30, opacity: 0, scale: 0.9 },
+        {
+          scrollTrigger: { trigger: ".journey-section", start: "top 80%", toggleActions: "play none none none" },
+          y: 0, opacity: 1, scale: 1, stagger: 0.12, duration: 0.6, ease: "power3.out",
+        }
+      );
     });
     return () => ctx.revert();
   }, []);
 
+  const validateForm = () => {
+    const errors: { [key: string]: string } = {};
+    if (!form.name.trim()) errors.name = "Name is required";
+    if (!form.email.trim()) errors.email = "Email is required";
+    else if (!/\S+@\S+\.\S+/.test(form.email)) errors.email = "Invalid email format";
+    if (!form.message.trim()) errors.message = "Message is required";
+    else if (form.message.length < 10) errors.message = "Message must be at least 10 characters";
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validateForm()) {
+      toast({ title: "Validation Error", description: "Please fix the errors in the form.", variant: "destructive" });
+      return;
+    }
+
     setLoading(true);
 
     let formspreeOk = false;
@@ -143,13 +226,15 @@ const ContactPage = () => {
       <SEOHead {...SEO_DATA.contact} />
       <BreadcrumbSchema items={[{ name: "Contact", url: "/contact" }]} />
 
-      {/* ═══════════════ HERO ═══════════════ */}
+      {/* ═══════════════ HERO with PARTICLES ═══════════════ */}
       <section
         ref={heroRef}
         onMouseMove={handleHeroMouse}
         className="relative overflow-hidden pt-20 pb-32 md:pt-28 md:pb-40"
         style={{ background: "linear-gradient(135deg, hsl(225 50% 4%) 0%, hsl(230 45% 8%) 40%, hsl(260 40% 10%) 70%, hsl(225 50% 4%) 100%)" }}
       >
+        <FloatingParticles />
+
         {/* Animated aurora gradient orbs */}
         <div className="pointer-events-none absolute -left-40 -top-40 h-[500px] w-[500px] rounded-full opacity-30 blur-[120px]"
           style={{ background: "radial-gradient(circle, hsl(210 100% 56% / 0.4), transparent 70%)" }} />
@@ -263,20 +348,22 @@ const ContactPage = () => {
                   whileTap={{ scale: 0.97 }}
                   href="https://wa.me/918986985813?text=Hello%2C%20I%20have%20a%20question%20about%20ISHU"
                   target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 rounded-xl bg-green-600 px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-green-600/25 transition-all hover:bg-green-700 hover:shadow-green-600/35"
+                  className="group inline-flex items-center gap-2 rounded-xl bg-green-600 px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-green-600/25 transition-all hover:bg-green-700 hover:shadow-green-600/35 relative overflow-hidden"
                 >
-                  <MessageCircle size={16} />
-                  WhatsApp Chat
-                  <ArrowRight size={14} />
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                  <MessageCircle size={16} className="relative z-10" />
+                  <span className="relative z-10">WhatsApp Chat</span>
+                  <ArrowRight size={14} className="relative z-10" />
                 </motion.a>
                 <motion.a
                   whileHover={{ scale: 1.03, y: -2 }}
                   whileTap={{ scale: 0.97 }}
                   href="mailto:ishukryk@gmail.com"
-                  className="inline-flex items-center gap-2 rounded-xl border border-border/60 bg-card/50 backdrop-blur-md px-7 py-3.5 text-sm font-semibold text-foreground shadow-sm transition-all hover:border-primary/40 hover:shadow-md"
+                  className="group inline-flex items-center gap-2 rounded-xl border border-border/60 bg-card/50 backdrop-blur-md px-7 py-3.5 text-sm font-semibold text-foreground shadow-sm transition-all hover:border-primary/40 hover:shadow-md relative overflow-hidden"
                 >
-                  <Mail size={16} />
-                  Send Email
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                  <Mail size={16} className="relative z-10" />
+                  <span className="relative z-10">Send Email</span>
                 </motion.a>
               </motion.div>
             </div>
@@ -292,10 +379,10 @@ const ContactPage = () => {
         <div className="container">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              { icon: Phone, label: "Phone", value: "+91 8986985813", href: "tel:8986985813", color: "text-blue-400", bg: "bg-blue-500/10", borderHover: "hover:border-blue-500/30", ring: "ring-blue-500/10" },
-              { icon: Mail, label: "Email", value: "ishukryk@gmail.com", href: "mailto:ishukryk@gmail.com", color: "text-violet-400", bg: "bg-violet-500/10", borderHover: "hover:border-violet-500/30", ring: "ring-violet-500/10" },
-              { icon: MessageCircle, label: "WhatsApp", value: "Chat instantly", href: "https://wa.me/918986985813", color: "text-green-400", bg: "bg-green-500/10", borderHover: "hover:border-green-500/30", ring: "ring-green-500/10" },
-              { icon: Clock, label: "Response", value: "Within 24 hours", href: null, color: "text-amber-400", bg: "bg-amber-500/10", borderHover: "hover:border-amber-500/30", ring: "ring-amber-500/10" },
+              { icon: Phone, label: "Phone", value: "+91 8986985813", href: "tel:8986985813", color: "text-blue-400", bg: "bg-blue-500/10", borderHover: "hover:border-blue-500/30", ring: "ring-blue-500/10", gradientHover: "from-blue-500/5" },
+              { icon: Mail, label: "Email", value: "ishukryk@gmail.com", href: "mailto:ishukryk@gmail.com", color: "text-violet-400", bg: "bg-violet-500/10", borderHover: "hover:border-violet-500/30", ring: "ring-violet-500/10", gradientHover: "from-violet-500/5" },
+              { icon: MessageCircle, label: "WhatsApp", value: "Chat instantly", href: "https://wa.me/918986985813", color: "text-green-400", bg: "bg-green-500/10", borderHover: "hover:border-green-500/30", ring: "ring-green-500/10", gradientHover: "from-green-500/5" },
+              { icon: Clock, label: "Response", value: "Within 24 hours", href: null, color: "text-amber-400", bg: "bg-amber-500/10", borderHover: "hover:border-amber-500/30", ring: "ring-amber-500/10", gradientHover: "from-amber-500/5" },
             ].map((card, i) => (
               <motion.div
                 key={card.label}
@@ -310,16 +397,17 @@ const ContactPage = () => {
                       href={card.href}
                       target={card.href.startsWith("http") ? "_blank" : undefined}
                       rel="noopener noreferrer"
-                      className={`group flex items-center gap-4 rounded-2xl border border-border/50 bg-card/80 backdrop-blur-md p-5 shadow-sm transition-all ${card.borderHover} hover:shadow-lg hover:-translate-y-1`}
+                      className={`group flex items-center gap-4 rounded-2xl border border-border/50 bg-card/80 backdrop-blur-md p-5 shadow-sm transition-all ${card.borderHover} hover:shadow-lg hover:-translate-y-1 relative overflow-hidden`}
                     >
-                      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${card.bg} ring-1 ${card.ring} transition-transform group-hover:scale-110`}>
+                      <div className={`absolute inset-0 bg-gradient-to-br ${card.gradientHover} to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+                      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${card.bg} ring-1 ${card.ring} transition-transform group-hover:scale-110 relative z-10`}>
                         <card.icon size={22} className={card.color} />
                       </div>
-                      <div className="min-w-0">
+                      <div className="min-w-0 relative z-10">
                         <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{card.label}</p>
                         <p className="mt-0.5 text-sm font-semibold text-foreground truncate">{card.value}</p>
                       </div>
-                      <ExternalLink size={14} className="ml-auto shrink-0 text-muted-foreground/20 group-hover:text-primary/60 transition-colors" />
+                      <ExternalLink size={14} className="ml-auto shrink-0 text-muted-foreground/20 group-hover:text-primary/60 transition-colors relative z-10" />
                     </a>
                   ) : (
                     <div className="flex items-center gap-4 rounded-2xl border border-border/50 bg-card/80 backdrop-blur-md p-5 shadow-sm">
@@ -339,22 +427,28 @@ const ContactPage = () => {
         </div>
       </section>
 
-      {/* ═══════════════ STATS ═══════════════ */}
-      <section className="stats-row border-y border-border/50 py-14" style={{ background: "linear-gradient(180deg, hsl(225 50% 5%) 0%, hsl(225 50% 4%) 100%)" }}>
-        <div className="container">
+      {/* ═══════════════ STATS with ANIMATED COUNTERS ═══════════════ */}
+      <section className="stats-row border-y border-border/50 py-14 relative overflow-hidden" style={{ background: "linear-gradient(180deg, hsl(225 50% 5%) 0%, hsl(225 50% 4%) 100%)" }}>
+        <div className="pointer-events-none absolute inset-0 opacity-5">
+          <div className="absolute top-0 left-1/4 h-[300px] w-[300px] rounded-full bg-primary blur-[100px]" />
+          <div className="absolute bottom-0 right-1/4 h-[250px] w-[250px] rounded-full bg-violet-500 blur-[100px]" />
+        </div>
+        <div className="container relative">
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
             {[
-              { icon: Users, label: "Users Served", value: "1M+", color: "text-blue-400", bg: "bg-blue-500/10", gradient: "from-blue-500/20 to-blue-500/0" },
-              { icon: Headphones, label: "Queries Resolved", value: "50K+", color: "text-violet-400", bg: "bg-violet-500/10", gradient: "from-violet-500/20 to-violet-500/0" },
-              { icon: Shield, label: "Uptime", value: "99.9%", color: "text-green-400", bg: "bg-green-500/10", gradient: "from-green-500/20 to-green-500/0" },
-              { icon: Clock, label: "Avg Response", value: "<2 hrs", color: "text-amber-400", bg: "bg-amber-500/10", gradient: "from-amber-500/20 to-amber-500/0" },
+              { icon: Users, label: "Users Served", value: 1000000, suffix: "+", color: "text-blue-400", bg: "bg-blue-500/10", gradient: "from-blue-500/20 to-blue-500/0" },
+              { icon: Headphones, label: "Queries Resolved", value: 50000, suffix: "+", color: "text-violet-400", bg: "bg-violet-500/10", gradient: "from-violet-500/20 to-violet-500/0" },
+              { icon: Shield, label: "Uptime", value: 99.9, suffix: "%", color: "text-green-400", bg: "bg-green-500/10", gradient: "from-green-500/20 to-green-500/0" },
+              { icon: Clock, label: "Avg Response (hrs)", value: 2, prefix: "<", color: "text-amber-400", bg: "bg-amber-500/10", gradient: "from-amber-500/20 to-amber-500/0" },
             ].map((stat) => (
               <motion.div key={stat.label} whileHover={{ y: -4, scale: 1.02 }} className="contact-stat-item text-center group">
                 <div className={`relative mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl ${stat.bg} ring-1 ring-white/5 transition-all group-hover:ring-primary/20`}>
                   <stat.icon size={24} className={stat.color} />
                   <div className={`absolute inset-0 rounded-2xl bg-gradient-to-b ${stat.gradient} opacity-0 group-hover:opacity-100 transition-opacity`} />
                 </div>
-                <p className="text-3xl font-bold text-foreground">{stat.value}</p>
+                <p className="text-3xl font-bold text-foreground">
+                  <AnimatedCounter end={stat.value} suffix={stat.suffix} prefix={stat.prefix} />
+                </p>
                 <p className="mt-1 text-xs text-muted-foreground font-medium">{stat.label}</p>
               </motion.div>
             ))}
@@ -362,14 +456,69 @@ const ContactPage = () => {
         </div>
       </section>
 
+      {/* ═══════════════ JOURNEY/TIMELINE SECTION ═══════════════ */}
+      <section className="journey-section py-20 relative overflow-hidden">
+        <div className="pointer-events-none absolute inset-0 opacity-5">
+          <div className="absolute top-1/4 right-1/4 h-[400px] w-[400px] rounded-full bg-cyan-500 blur-[120px]" />
+        </div>
+        <div className="container relative">
+          <FadeInView>
+            <div className="mb-12 text-center">
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-primary">
+                <Target size={12} /> Your Journey
+              </span>
+              <h2 className="mt-3 font-display text-3xl font-bold text-foreground md:text-4xl">
+                How We <span className="bg-gradient-to-r from-primary to-cyan-500 bg-clip-text text-transparent">Help You</span>
+              </h2>
+              <p className="mt-4 text-muted-foreground max-w-2xl mx-auto">
+                Our streamlined process ensures you get quick, effective support for all your queries
+              </p>
+            </div>
+          </FadeInView>
+
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 max-w-6xl mx-auto">
+            {journeySteps.map((step, idx) => (
+              <motion.div
+                key={step.title}
+                className="journey-step relative"
+                initial={{ opacity: 0, y: 30 }}
+                whileHover={{ y: -5 }}
+              >
+                <Tilt tiltMaxAngleX={5} tiltMaxAngleY={5} scale={1.02} transitionSpeed={2000}>
+                  <div className="rounded-2xl border border-border/50 bg-card/60 backdrop-blur-md p-6 shadow-sm transition-all hover:shadow-lg hover:border-primary/20 h-full relative overflow-hidden group">
+                    <div className={`absolute inset-0 bg-gradient-to-br from-${step.color}-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+
+                    {/* Step number */}
+                    <div className="absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary ring-1 ring-primary/20">
+                      {idx + 1}
+                    </div>
+
+                    <div className={`mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-${step.color}-500/10 ring-1 ring-${step.color}-500/20`}>
+                      <step.icon size={24} className={`text-${step.color}-400`} />
+                    </div>
+                    <h3 className="text-lg font-bold text-foreground mb-2">{step.title}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{step.desc}</p>
+
+                    {/* Connecting line (except last item) */}
+                    {idx < journeySteps.length - 1 && (
+                      <div className="hidden lg:block absolute top-1/2 -right-3 w-6 h-[2px] bg-gradient-to-r from-border to-transparent" />
+                    )}
+                  </div>
+                </Tilt>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ═══════════════ MAIN CONTENT — FORM + MAP ═══════════════ */}
-      <section className="py-20 relative">
+      <section className="py-20 relative border-t border-border/50">
         {/* Subtle background aurora */}
         <div className="pointer-events-none absolute top-0 left-1/4 h-[500px] w-[500px] rounded-full opacity-[0.03] blur-[120px]"
           style={{ background: "radial-gradient(circle, hsl(210 100% 56%), transparent 70%)" }} />
         <div className="pointer-events-none absolute bottom-0 right-1/4 h-[400px] w-[400px] rounded-full opacity-[0.03] blur-[100px]"
           style={{ background: "radial-gradient(circle, hsl(280 80% 60%), transparent 70%)" }} />
-        
+
         <div className="container relative">
           <div className="grid gap-10 lg:grid-cols-5">
 
@@ -399,10 +548,18 @@ const ContactPage = () => {
                           </label>
                           <input
                             required type="text" value={form.name}
-                            onChange={(e) => setForm({ ...form, name: e.target.value })}
-                            className="w-full rounded-xl border border-border/60 bg-background/50 backdrop-blur-sm px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/15 transition-all duration-300"
+                            onChange={(e) => {
+                              setForm({ ...form, name: e.target.value });
+                              if (formErrors.name) setFormErrors({ ...formErrors, name: "" });
+                            }}
+                            className={`w-full rounded-xl border ${formErrors.name ? 'border-red-500/60' : 'border-border/60'} bg-background/50 backdrop-blur-sm px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/15 transition-all duration-300`}
                             placeholder="Your full name"
                           />
+                          {formErrors.name && (
+                            <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="mt-1 flex items-center gap-1 text-xs text-red-500">
+                              <AlertCircle size={12} /> {formErrors.name}
+                            </motion.p>
+                          )}
                         </div>
                         <div className="group">
                           <label className="mb-2 flex items-center gap-1.5 text-sm font-medium text-foreground">
@@ -410,10 +567,18 @@ const ContactPage = () => {
                           </label>
                           <input
                             required type="email" value={form.email}
-                            onChange={(e) => setForm({ ...form, email: e.target.value })}
-                            className="w-full rounded-xl border border-border/60 bg-background/50 backdrop-blur-sm px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/15 transition-all duration-300"
+                            onChange={(e) => {
+                              setForm({ ...form, email: e.target.value });
+                              if (formErrors.email) setFormErrors({ ...formErrors, email: "" });
+                            }}
+                            className={`w-full rounded-xl border ${formErrors.email ? 'border-red-500/60' : 'border-border/60'} bg-background/50 backdrop-blur-sm px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/15 transition-all duration-300`}
                             placeholder="your@email.com"
                           />
+                          {formErrors.email && (
+                            <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="mt-1 flex items-center gap-1 text-xs text-red-500">
+                              <AlertCircle size={12} /> {formErrors.email}
+                            </motion.p>
+                          )}
                         </div>
                       </div>
 
@@ -451,11 +616,19 @@ const ContactPage = () => {
                         </label>
                         <textarea
                           required value={form.message}
-                          onChange={(e) => setForm({ ...form, message: e.target.value })}
+                          onChange={(e) => {
+                            setForm({ ...form, message: e.target.value });
+                            if (formErrors.message) setFormErrors({ ...formErrors, message: "" });
+                          }}
                           rows={5}
-                          className="w-full rounded-xl border border-border/60 bg-background/50 backdrop-blur-sm px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/15 transition-all duration-300 resize-none"
+                          className={`w-full rounded-xl border ${formErrors.message ? 'border-red-500/60' : 'border-border/60'} bg-background/50 backdrop-blur-sm px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/15 transition-all duration-300 resize-none`}
                           placeholder="Tell us how we can help you..."
                         />
+                        {formErrors.message && (
+                          <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="mt-1 flex items-center gap-1 text-xs text-red-500">
+                            <AlertCircle size={12} /> {formErrors.message}
+                          </motion.p>
+                        )}
                       </div>
 
                       <div>
@@ -512,7 +685,7 @@ const ContactPage = () => {
                     </p>
                     <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
                       <button
-                        onClick={() => { setSubmitted(false); setForm({ name: "", email: "", phone: "", subject: "General", message: "" }); setAttachment(null); }}
+                        onClick={() => { setSubmitted(false); setForm({ name: "", email: "", phone: "", subject: "General", message: "" }); setAttachment(null); setFormErrors({}); }}
                         className="rounded-xl bg-primary px-8 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary/90"
                       >
                         Send Another Message
@@ -583,7 +756,7 @@ const ContactPage = () => {
                         rel="noopener noreferrer"
                         className="flex items-center gap-3 rounded-xl p-2.5 text-sm text-muted-foreground transition-all hover:bg-secondary/50 hover:text-foreground hover:translate-x-1 group"
                       >
-                        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${item.iconBg}`}>
+                        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${item.iconBg} transition-transform group-hover:scale-110`}>
                           <item.icon size={13} className={item.iconColor} />
                         </div>
                         <span className="font-medium">{item.label}</span>
@@ -600,22 +773,46 @@ const ContactPage = () => {
                 </div>
               </FadeInView>
 
+              {/* Business Info Card */}
+              <FadeInView delay={0.17}>
+                <div className="rounded-2xl border border-border/50 bg-card/60 backdrop-blur-md p-6 shadow-sm">
+                  <h3 className="mb-4 flex items-center gap-2 font-semibold text-foreground">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
+                      <Building2 size={13} className="text-primary" />
+                    </div>
+                    About ISHU
+                  </h3>
+                  <div className="space-y-3 text-sm text-muted-foreground">
+                    <p className="leading-relaxed">
+                      Indian StudentHub University (ISHU) is India's leading platform for government exam notifications, results, and free educational tools.
+                    </p>
+                    <div className="flex items-center gap-2 pt-2">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-500/10">
+                        <CheckCircle2 size={14} className="text-green-400" />
+                      </div>
+                      <span className="text-xs font-medium">100% Free & Trusted by 1M+ Students</span>
+                    </div>
+                  </div>
+                </div>
+              </FadeInView>
+
               {/* WhatsApp CTA */}
               <FadeInView delay={0.2}>
                 <motion.a
                   whileHover={{ y: -2 }}
                   href="https://wa.me/918986985813?text=Hello%2C%20I%20have%20a%20question%20about%20ISHU"
                   target="_blank" rel="noopener noreferrer"
-                  className="group flex items-center gap-4 rounded-2xl border border-green-500/15 bg-gradient-to-br from-green-500/5 to-green-500/10 p-5 transition-all hover:border-green-500/25 hover:shadow-lg shadow-sm"
+                  className="group flex items-center gap-4 rounded-2xl border border-green-500/15 bg-gradient-to-br from-green-500/5 to-green-500/10 p-5 transition-all hover:border-green-500/25 hover:shadow-lg shadow-sm relative overflow-hidden"
                 >
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-green-500/15 ring-1 ring-green-500/10">
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-green-500/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-green-500/15 ring-1 ring-green-500/10 relative z-10">
                     <MessageCircle size={22} className="text-green-400" />
                   </div>
-                  <div>
+                  <div className="relative z-10">
                     <p className="font-semibold text-foreground">Prefer instant chat?</p>
                     <p className="text-sm text-muted-foreground mt-0.5">Reply within minutes on WhatsApp</p>
                   </div>
-                  <ArrowRight size={16} className="ml-auto text-green-400 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-1" />
+                  <ArrowRight size={16} className="ml-auto text-green-400 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-1 relative z-10" />
                 </motion.a>
               </FadeInView>
 
@@ -679,7 +876,14 @@ const ContactPage = () => {
                     <div className="relative">
                       <div className="flex gap-0.5 mb-4">
                         {Array.from({ length: t.rating }).map((_, i) => (
-                          <Star key={i} size={14} className="fill-amber-400 text-amber-400" />
+                          <motion.div
+                            key={i}
+                            initial={{ scale: 0, rotate: -180 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            transition={{ delay: 0.1 * i, type: "spring" }}
+                          >
+                            <Star size={14} className="fill-amber-400 text-amber-400" />
+                          </motion.div>
                         ))}
                       </div>
                       <p className="text-sm leading-relaxed text-muted-foreground italic">"{t.text}"</p>
