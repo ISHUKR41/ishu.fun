@@ -5439,3 +5439,37 @@ html {
   scrollbar-width: thin;
   scrollbar-color: hsl(0 0% 20%) hsl(0 0% 5%);
 }
+
+/* ── 22. PREFERS-REDUCED-MOTION (accessibility + perf) ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── 23. MOBILE BACKDROP-BLUR PERFORMANCE ── */
+/* Reduce backdrop-blur intensity on mobile to prevent GPU overload */
+@media (max-width: 768px) {
+  .backdrop-blur-md,
+  .backdrop-blur-lg,
+  .backdrop-blur-xl,
+  .backdrop-blur-2xl,
+  .backdrop-blur-3xl,
+  [class*="backdrop-blur"] {
+    --tw-backdrop-blur: blur(4px) !important;
+  }
+
+  /* Reduce glass effect intensity on mobile */
+  .glass, .glass-ultra, .glass-strong {
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+  }
+
+  /* Disable parallax on mobile for smoother scroll */
+  .fixed[style*="backgroundImage"] {
+    position: absolute !important;
+  }
+}

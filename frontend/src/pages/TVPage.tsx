@@ -441,8 +441,8 @@ const BACKEND_PROXY_IDX = 0;
    Dead proxies are skipped entirely for faster channel switching.
    Resets every 30 minutes or on page refresh.
 ═══════════════════════════════════════════════════════════════ */
-const PROXY_HEALTH_KEY = "ishu_tv_proxy_health_v4";
-const PROXY_HEALTH_TTL = 20 * 60 * 1000; // 20 minutes — balanced recovery so proxies get retried
+const PROXY_HEALTH_KEY = "ishu_tv_proxy_health_v5";
+const PROXY_HEALTH_TTL = 10 * 60 * 1000; // 10 minutes — faster recovery so dead proxies get retried sooner
 
 function readProxyHealth(): Record<number, { fails: number; lastFail: number }> {
   try {
@@ -479,7 +479,7 @@ function isProxyDead(proxyIdx: number): boolean {
   const health = readProxyHealth();
   const entry = health[proxyIdx];
   if (!entry) return false;
-  return entry.fails >= 5; // After 5 failures, consider dead — don't mark dead too quickly
+  return entry.fails >= 3; // After 3 failures, consider dead — fail fast, switch to working proxies
 }
 
 // Proxy fallbacks in PRIORITY order (index 0 = highest priority)
@@ -1201,13 +1201,13 @@ function useRobustPlayer(
     const isProxied = attempt.proxyIdx >= 0;
     const loadUrl = isProxied ? CORS_PROXIES[attempt.proxyIdx](attempt.url) : attempt.url;
 
-    // ── Timeout strategy v10 — OPTIMIZED 5-7s SWITCH ──────────────
-    // v10: Optimized as requested — 5-7 seconds timeout for better user experience
-    const manifestTimeout = !isProxied ? 5000 : (attempt.proxyIdx === BACKEND_PROXY_IDX ? 7000 : 6000);
+    // ── Timeout strategy v11 — AGGRESSIVE 4-6s SWITCH ──────────────
+    // v11: Faster switching — 4-6 seconds so users don't wait on dead servers
+    const manifestTimeout = !isProxied ? 4000 : (attempt.proxyIdx === BACKEND_PROXY_IDX ? 6000 : 5000);
     // How long to wait after manifest loads for video to START playing (currentTime > 0)
-    const playStartTimeout = 7000; // 7s to start playing after manifest — then switch
+    const playStartTimeout = 5000; // 5s to start playing after manifest — then switch
     // How long a video freeze before switching (playing watchdog)
-    const stallTimeoutMs = 6000; // 6s freeze → switch (reliable stall detection)
+    const stallTimeoutMs = 5000; // 5s freeze → switch (faster stall detection)
 
     // ── CRITICAL FIX: Interval-based watchdog ─────────────────────────────────
     // Replace flawed timeupdate-based stall detection with setInterval that
@@ -1446,54 +1446,74 @@ function useRobustPlayer(
       return cleanup;
     }
 
-    // v9: Parallel probe — test top 15 attempts with 4s timeout (CORS mode only)
-    // Only probe proxied URLs since direct no-cors gives opaque (always "ok") responses
+    // v11: Hybrid probe — test BOTH direct and proxied URLs simultaneously
+    // Direct URLs are tested with HEAD (no-cors) — if server supports it, great
+    // Proxied URLs are tested with cors fetch — first to respond wins
     let cancelled = false;
     const probeControllers: AbortController[] = [];
     setState("loading");
 
-    const toProbe = expandedList.slice(0, Math.min(15, expandedList.length));
-    // Only probe proxied attempts (direct URLs with no-cors always return opaque=ok which is misleading)
-    const probeableAttempts = toProbe.filter(a => a.proxyIdx >= 0);
+    const toProbe = expandedList.slice(0, Math.min(20, expandedList.length));
     
-    if (probeableAttempts.length > 0) {
-      Promise.any(
-        probeableAttempts.map((attempt) => new Promise<number>((resolve, reject) => {
-          const originalIdx = toProbe.indexOf(attempt);
-          const ctrl = new AbortController();
-          probeControllers.push(ctrl);
-          const timer = setTimeout(() => { ctrl.abort(); reject(new Error("probe timeout")); }, 4000);
-          const loadUrl = CORS_PROXIES[attempt.proxyIdx](attempt.url);
-          fetch(loadUrl, {
-            signal: ctrl.signal,
-            mode: 'cors',
-            cache: 'no-store',
-          }).then(r => {
-            clearTimeout(timer);
-            if (r.ok) {
-              markProxySuccess(attempt.proxyIdx);
-              resolve(originalIdx);
-            } else {
-              markProxyFailed(attempt.proxyIdx);
-              reject(new Error(`HTTP ${r.status}`));
-            }
-          }).catch(e => {
-            clearTimeout(timer);
-            if (attempt.proxyIdx >= 0) markProxyFailed(attempt.proxyIdx);
-            reject(e);
-          });
-        }))
-      ).then(winnerIdx => {
+    // Build probe promises for ALL attempts (direct + proxied)
+    const probePromises = toProbe.map((attempt, originalIdx) => new Promise<number>((resolve, reject) => {
+      const ctrl = new AbortController();
+      probeControllers.push(ctrl);
+      const timer = setTimeout(() => { ctrl.abort(); reject(new Error("probe timeout")); }, 5000);
+
+      if (attempt.proxyIdx >= 0) {
+        // Proxied attempt — use cors mode fetch
+        const loadUrl = CORS_PROXIES[attempt.proxyIdx](attempt.url);
+        fetch(loadUrl, {
+          signal: ctrl.signal,
+          mode: 'cors',
+          cache: 'no-store',
+        }).then(r => {
+          clearTimeout(timer);
+          if (r.ok) {
+            markProxySuccess(attempt.proxyIdx);
+            resolve(originalIdx);
+          } else {
+            markProxyFailed(attempt.proxyIdx);
+            reject(new Error(`HTTP ${r.status}`));
+          }
+        }).catch(e => {
+          clearTimeout(timer);
+          markProxyFailed(attempt.proxyIdx);
+          reject(e);
+        });
+      } else {
+        // Direct attempt — use no-cors HEAD to check if server is reachable
+        fetch(attempt.url, {
+          signal: ctrl.signal,
+          mode: 'no-cors',
+          method: 'HEAD',
+          cache: 'no-store',
+        }).then(() => {
+          clearTimeout(timer);
+          // no-cors always returns opaque, but if it doesn't throw, server is reachable
+          resolve(originalIdx);
+        }).catch(e => {
+          clearTimeout(timer);
+          reject(e);
+        });
+      }
+    }));
+
+    if (probePromises.length > 0) {
+      Promise.any(probePromises).then(winnerIdx => {
         if (!cancelled) {
+          // Cancel all other probes
+          probeControllers.forEach(c => { try { c.abort(); } catch {} });
           attemptIdxRef.current = winnerIdx;
           tryAttempt(winnerIdx);
         }
       }).catch(() => {
-        // No probe succeeded — fall back to sequential attempt starting from direct
+        // No probe succeeded — fall back to sequential attempt starting from first
         if (!cancelled) tryAttempt(0);
       });
     } else {
-      // No proxied attempts to probe — start sequential from first attempt (direct)
+      // No attempts to probe — start sequential from first attempt (direct)
       tryAttempt(0);
     }
 

@@ -207,7 +207,7 @@ const SEOHead = ({
             "@type": "Country",
             "name": "India"
           },
-          "knowsAbout": ["Sarkari Result", "Government Exams", "PDF Tools", "Live TV", "Resume Builder", "Video Downloader"]
+          "knowsAbout": ["Sarkari Result", "Sarkari Naukri", "Government Exams", "ISHU", "ishu.fun", "PDF Tools", "Live TV", "Live Indian TV Channels", "Resume Builder", "CV Maker", "Biodata Maker", "Video Downloader", "YouTube Downloader", "Terabox Downloader", "Education India", "Exam Results", "Admit Card", "Answer Key", "Government Jobs India", "UPSC", "SSC CGL", "Banking Jobs", "Railway Recruitment", "NTA JEE NEET", "Free Online Tools", "Student Hub", "Indian Education", "Competitive Exam Preparation", "Current Affairs", "Daily News India", "Hindi News", "English News", "इशु", "सरकारी रिजल्ट", "सरकारी नौकरी", "Government Vacancy 2026", "Scholarship India", "Free Resume", "Free CV", "Marriage Biodata", "Free PDF Converter", "Merge PDF", "Compress PDF", "Split PDF", "PDF to Word", "Live Streaming", "IPTV India", "DD National", "Star Plus", "Zee TV", "Colors TV", "News18", "NDTV"]
         })}
       </script>
 
@@ -254,7 +254,7 @@ const SEOHead = ({
       <meta name="MobileOptimized" content="320" />
 
       {/* ═══ FRESHNESS & DATE SIGNALS ═══ */}
-      <meta name="DC.date" content="2026-03-21" />
+      <meta name="DC.date" content="2026-03-22" />
       <meta name="DC.language" content="en-IN" />
       <meta name="DC.type" content="Service" />
       <meta name="DC.format" content="text/html" />
@@ -262,7 +262,7 @@ const SEOHead = ({
       <meta name="DC.publisher" content={SITE_NAME} />
       <meta name="DC.description" content={description} />
       <meta property="article:published_time" content="2024-01-01T00:00:00+05:30" />
-      <meta property="article:modified_time" content="2026-03-21T08:00:00+05:30" />
+      <meta property="article:modified_time" content="2026-03-22T09:00:00+05:30" />
 
       {/* ═══ ADDITIONAL SEARCH ENGINE META ═══ */}
       <meta name="norton-safeweb-site-verification" content="ishu-norton-verification" />
