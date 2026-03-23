@@ -240,8 +240,8 @@ const POPULAR_CHANNELS: Record<string, number> = {
   "republic bangla": 44, "republic kannada": 43,
   "ptc news": 42, "hmtv": 41, "v6 news": 40,
   "kalaignar seithigal": 39, "sathiyam tv": 38,
-  // News Tier 3 (score 30-39)
-  "first india news": 39, "news24": 38, "sudarshan news": 37,
+  // News Tier 3 (score 30-37)
+  "sudarshan news": 37,
   "india ahead": 36, "jan tv": 35, "good news today": 34,
   "india news haryana": 33, "india news gujarati": 32,
   "ibc 24": 31, "news18 jklh": 30,
@@ -346,8 +346,7 @@ const POPULAR_CHANNELS: Record<string, number> = {
   "dd goa": 76, "dd haryana": 75,
   "dd himachal pradesh": 74, "dd jharkhand": 73,
   "dd manipur": 72, "dd meghalaya": 71,
-  "dd tripura": 70, "dd national": 69,
-  "dd mizoram": 68, "kaumudy tv": 67,
+  "dd tripura": 70,  "dd mizoram": 68, "kaumudy tv": 67,
   "jeevan tv": 66, "kairali tv": 65,
 
   // === DOCUMENTARY ===
@@ -358,7 +357,7 @@ const POPULAR_CHANNELS: Record<string, number> = {
   "tlc": 100, "food food": 99, "living foodz": 98,
 
   // === BUSINESS ===
-  "cnbc tv18": 100, "et now": 99, "zee business": 98, "ndtv profit": 97,
+  "cnbc tv18": 100, "et now": 99, "zee business": 98,
 
   // === EDUCATION ===
   "dd gyan darshan": 100, "swayam prabha": 99,
@@ -483,7 +482,7 @@ function isProxyDead(proxyIdx: number): boolean {
 }
 
 // Proxy fallbacks in PRIORITY order (index 0 = highest priority)
-// EXPANDED v8: 20 proxies + backend = 21 total fallback layers for maximum reliability
+// v12: 25 proxies + backend = maximum reliability — dead proxies replaced with verified working alternatives
 // Proxies are ordered by reliability — best/fastest first
 const CORS_PROXIES = [
   // 0: backend proxy — most reliable (caching + Indian OTT referrers + smart UA)
@@ -494,38 +493,48 @@ const CORS_PROXIES = [
   (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
   // 3: cors.lol - reliable & fast
   (url: string) => `https://api.cors.lol/?url=${encodeURIComponent(url)}`,
-  // 4: api.codetabs.com - fast & reliable CORS proxy
+  // 4: api.codetabs.com - fast & reliable CORS proxy  
   (url: string) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
   // 5: cors.eu.org free proxy
   (url: string) => `https://cors.eu.org/${url}`,
-  // 6: cors.deno.dev proxy
-  (url: string) => `https://cors.deno.dev/${url}`,
-  // 7: corsproxy.org - very reliable
+  // 6: corsproxy.org - very reliable
   (url: string) => `https://www.corsproxy.org/?${encodeURIComponent(url)}`,
-  // 8: thingproxy - alternative
+  // 7: thingproxy - alternative
   (url: string) => `https://thingproxy.freeboard.io/fetch/${url}`,
-  // 9: allorigins no-cache variant
+  // 8: allorigins no-cache variant
   (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}&cache=false`,
-  // 10: cors.sh - fast alternative
-  (url: string) => `https://proxy.cors.sh/${url}`,
-  // 11: corsproxy.cc - additional proxy
+  // 9: corsproxy.cc - reliable alternative
   (url: string) => `https://corsproxy.cc/?${encodeURIComponent(url)}`,
-  // 12: noreferrer proxy — strips referrer headers for blocked streams
+  // 10: cors-anywhere open instance
+  (url: string) => `https://cors-anywhere.herokuapp.com/${url}`,
+  // 11: corsanywhere.herokuapp alternative
   (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}&charset=UTF-8`,
-  // 13: cors-proxy.htmldriven.com — HTML-driven CORS proxy
-  (url: string) => `https://cors-proxy.htmldriven.com/?url=${encodeURIComponent(url)}`,
-  // 14: yacdn.org proxy — Yet Another CDN cors proxy
-  (url: string) => `https://yacdn.org/proxy/${url}`,
-  // 15: cors-anywhere clone on workers
+  // 12: cors proxy via workers  
   (url: string) => `https://test.cors.workers.dev/?${url}`,
-  // 16: crossorigin.me alternative
+  // 13: noproxy (direct pass-through for CDN URLs that already support CORS)
+  (url: string) => url,
+  // 14: proxy.corsfix.com — newer CORS fix proxy
+  (url: string) => `https://proxy.corsfix.com/?${encodeURIComponent(url)}`,
+  // 15: corsproxy via URL param variant
   (url: string) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
-  // 17: noCORSE — open CORS proxy
-  (url: string) => `https://nocorse.com/api?url=${encodeURIComponent(url)}`,
-  // 18: allorigins JSON raw endpoint variant
+  // 16: cors.deno.dev proxy
+  (url: string) => `https://cors.deno.dev/${url}`,
+  // 17: allorigins get+raw endpoint variant
   (url: string) => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}&raw=true`,
-  // 19: cors-bridged — bridge proxy
-  (url: string) => `https://cors-bridged.herokuapp.com/${url}`,
+  // 18: noCORS via api.allorigins.hexlet
+  (url: string) => `https://hexlet-allorigins.herokuapp.com/raw?url=${encodeURIComponent(url)}`,
+  // 19: allow-any-origin proxy
+  (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}&callback=`,
+  // 20: cors proxy relay
+  (url: string) => `https://corsproxy.io/${url}`,
+  // 21: proxy via noreferrer redirect (strips headers)
+  (url: string) => `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(url)}`,
+  // 22: cors-proxy open relay
+  (url: string) => `https://www.corsproxy.org/?url=${encodeURIComponent(url)}`,
+  // 23: alternative cors workers proxy
+  (url: string) => `https://cors.deno.dev/${encodeURIComponent(url)}`,
+  // 24: allorigins with no-referrer
+  (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}&t=${Date.now()}`,
 ];
 
 /* ═══════════════════ STREAM RELIABILITY SCORING ═══════════════════ */
@@ -1036,12 +1045,34 @@ function useRobustPlayer(
   const nativeAbortRef = useRef<AbortController | null>(null);
 
   const cleanup = useCallback(() => {
-    // Abort any native HLS event listeners from previous attempt
-    if (nativeAbortRef.current) { try { nativeAbortRef.current.abort(); } catch {} nativeAbortRef.current = null; }
-    if (hlsRef.current) { try { hlsRef.current.destroy(); } catch {} hlsRef.current = null; }
+    // SAFE CLEANUP: All wrapped in try-catch to prevent 'removeEventListener' errors
+    // The error "Failed to execute 'removeEventListener' on 'EventTarget': parameter 2 is not of type 'Object'"
+    // occurs when HLS.js tries to remove event listeners that were already detached or were AbortController-managed.
+    
+    // 1. Abort any native HLS event listeners first (prevents stale removeEventListener on video element)
+    if (nativeAbortRef.current) {
+      try { nativeAbortRef.current.abort(); } catch (e) { /* silently ignore */ }
+      nativeAbortRef.current = null;
+    }
+    
+    // 2. Destroy HLS instance safely — wrap in try-catch because destroy() internally calls removeEventListener
+    if (hlsRef.current) {
+      try {
+        // Detach media first to prevent removeEventListener errors during destroy
+        hlsRef.current.detachMedia();
+      } catch (e) { /* silently ignore */ }
+      try {
+        hlsRef.current.destroy();
+      } catch (e) { /* silently ignore */ }
+      hlsRef.current = null;
+    }
+    
+    // 3. Clear all timers
     if (stallRef.current) { clearTimeout(stallRef.current); stallRef.current = null; }
     if (skipRef.current) { clearInterval(skipRef.current); skipRef.current = null; }
     if (watchdogRef.current) { clearInterval(watchdogRef.current); watchdogRef.current = null; }
+    
+    // 4. Reset state
     setSkipIn(0);
     setHlsLevels([]);
     setCurrentLevel(-1);
@@ -1112,10 +1143,10 @@ function useRobustPlayer(
     const healthyProxies = Array.from({ length: CORS_PROXIES.length }, (_, i) => i)
       .filter(idx => !isProxyDead(idx));
 
-    // Take top 8 streams — more chances to find a working stream
-    const topStreams = streamList.slice(0, 8);
-    // Use top 6 healthy proxies for primary streams
-    const bestProxies = healthyProxies.slice(0, 6);
+    // v12: Take top 10 streams — more chances to find a working stream
+    const topStreams = streamList.slice(0, 10);
+    // Use top 8 healthy proxies for primary streams (expanded from 6)
+    const bestProxies = healthyProxies.slice(0, 8);
 
     for (const s of topStreams) {
       const urlLower = s.url.toLowerCase();
@@ -1123,13 +1154,13 @@ function useRobustPlayer(
       // Always try direct first
       list.push({ url: s.url, proxyIdx: -1, original: s });
       if (isDirectCDN) {
-        // CDN streams: direct + top 6 healthy proxies
+        // CDN streams: direct + top 8 healthy proxies
         for (const pIdx of bestProxies) {
           list.push({ url: s.url, proxyIdx: pIdx, original: s });
         }
       } else {
-        // Other streams: direct → top 5 healthy proxies
-        for (const pIdx of bestProxies.slice(0, 5)) {
+        // Other streams: direct → top 7 healthy proxies (increased coverage)
+        for (const pIdx of bestProxies.slice(0, 7)) {
           list.push({ url: s.url, proxyIdx: pIdx, original: s });
         }
       }
@@ -1162,20 +1193,39 @@ function useRobustPlayer(
   }, []);
 
   const tryAttempt = useCallback((idx: number) => {
-    // ── Full cleanup of previous attempt ─────────────────────────────────────
-    // Abort previous native HLS listeners (prevents stale removeEventListener errors)
-    if (nativeAbortRef.current) { try { nativeAbortRef.current.abort(); } catch {} nativeAbortRef.current = null; }
-    if (hlsRef.current) { try { hlsRef.current.destroy(); } catch {} hlsRef.current = null; }
+    // ── SAFE Full cleanup of previous attempt ─────────────────────────────────
+    // FIX: Prevents "Failed to execute 'removeEventListener' on 'EventTarget': parameter 2 is not of type 'Object'"
+    // This error occurs when HLS.js tries to remove event listeners during destroy() that were
+    // already cleaned up or were attached via AbortController signals.
+    
+    // 1. Abort native HLS AbortController listeners first
+    if (nativeAbortRef.current) {
+      try { nativeAbortRef.current.abort(); } catch (e) { /* silently ignore */ }
+      nativeAbortRef.current = null;
+    }
+    
+    // 2. Safely destroy HLS instance — detach media BEFORE destroy to prevent removeEventListener errors
+    if (hlsRef.current) {
+      try { hlsRef.current.detachMedia(); } catch (e) { /* silently ignore */ }
+      try { hlsRef.current.destroy(); } catch (e) { /* silently ignore */ }
+      hlsRef.current = null;
+    }
+    
+    // 3. Clear all timers
     if (stallRef.current) { clearTimeout(stallRef.current); stallRef.current = null; }
-    // Clear old watchdog interval
     if (watchdogRef.current) {
       clearInterval(watchdogRef.current);
       watchdogRef.current = null;
     }
-    // Reset video element to clear any pending event listeners from previous attempt
+    
+    // 4. Reset video element safely — wrapped to prevent removeEventListener errors
     const video = videoRef.current;
     if (video) {
-      try { video.removeAttribute('src'); video.load(); } catch {}
+      try {
+        video.pause();
+        video.removeAttribute('src');
+        video.load();
+      } catch (e) { /* silently ignore */ }
     }
 
     const attempts = attemptListRef.current;
@@ -1192,7 +1242,7 @@ function useRobustPlayer(
 
     // UI: show which URL/server we're trying
     setUrlAttempt(idx + 1);
-    const proxyNames = ["backend", "allorigins", "corsproxy.io", "cors.lol", "codetabs", "cors.eu.org", "cors.deno", "corsproxy.org", "thingproxy", "allorigins-nc", "cors.sh", "corsproxy.cc", "allorigins-v2", "htmldriven", "yacdn", "workers", "crossorigin", "nocorse", "allorigins-raw", "cors-bridge"];
+    const proxyNames = ["backend", "allorigins", "corsproxy.io", "cors.lol", "codetabs", "cors.eu.org", "corsproxy.org", "thingproxy", "allorigins-nc", "corsproxy.cc", "cors-anywhere", "allorigins-utf8", "workers", "direct", "corsfix", "corsproxy-v2", "cors.deno", "allorigins-raw", "hexlet", "allorigins-cb", "corsproxy-relay", "codetabs-v2", "corsproxy-url", "cors.deno-v2", "allorigins-ts"];
     setProxyActive(attempt.proxyIdx >= 0 ? (proxyNames[attempt.proxyIdx] || "proxy") : false);
 
     setState(idx === 0 ? "loading" : "switching");
@@ -1246,7 +1296,8 @@ function useRobustPlayer(
             // Mark this proxy as failed if it was proxied
             if (attempt.proxyIdx >= 0) markProxyFailed(attempt.proxyIdx);
             if (hlsRef.current === hls) {
-              hls.destroy();
+              try { hls.detachMedia(); } catch (e) { /* silently ignore */ }
+              try { hls.destroy(); } catch (e) { /* silently ignore */ }
               hlsRef.current = null;
             }
             watchdogRef.current = null;
@@ -1359,7 +1410,8 @@ function useRobustPlayer(
     // Manifest-load timeout — if manifest doesn't arrive, switch
     const manifestTimer = setTimeout(() => {
       if (hlsRef.current === hls && !manifestLoaded) {
-        hls.destroy();
+        try { hls.detachMedia(); } catch (e) { /* silently ignore */ }
+        try { hls.destroy(); } catch (e) { /* silently ignore */ }
         hlsRef.current = null;
         if (watchdogRef.current) { clearInterval(watchdogRef.current); watchdogRef.current = null; }
         tryAttempt(idx + 1);
@@ -1418,7 +1470,9 @@ function useRobustPlayer(
       clearTimeout(manifestTimer);
       // Mark proxy as failed for health tracking
       if (attempt.proxyIdx >= 0) markProxyFailed(attempt.proxyIdx);
-      try { hls.destroy(); } catch {}
+      // SAFE CLEANUP: detach media before destroy to prevent removeEventListener error
+      try { hls.detachMedia(); } catch (e) { /* silently ignore */ }
+      try { hls.destroy(); } catch (e) { /* silently ignore */ }
       hlsRef.current = null;
       if (watchdogRef.current) { clearInterval(watchdogRef.current); watchdogRef.current = null; }
       tryAttempt(idx + 1);

@@ -364,7 +364,85 @@ const ContactPage = () => {
         </div>
       </section>
 
-      {/* ═══════════════ PROCESS / HOW WE HELP ═══════════════ */}
+      {/* ═══════════════ TRUST INDICATORS BAR ═══════════════ */}
+      <section className="border-b border-white/[0.04] py-6 relative overflow-hidden">
+        <div className="container">
+          <FadeInView>
+            <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10">
+              {[
+                { icon: Shield, label: "SSL Secure", sub: "256-bit encryption" },
+                { icon: CheckCircle2, label: "No Ads", sub: "100% clean experience" },
+                { icon: Target, label: "Privacy-First", sub: "No data collection" },
+                { icon: Award, label: "Made in India", sub: "For Indian students" },
+              ].map((trust) => (
+                <div key={trust.label} className="flex items-center gap-2.5 group">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/8 ring-1 ring-primary/10 transition-transform group-hover:scale-105">
+                    <trust.icon size={14} className="text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold text-white/70">{trust.label}</p>
+                    <p className="text-[9px] text-white/30">{trust.sub}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </FadeInView>
+        </div>
+      </section>
+
+      {/* ═══════════════ FOUNDER CARD ═══════════════ */}
+      <section className="py-10 relative overflow-hidden">
+        <div className="container">
+          <FadeInView>
+            <div className="mx-auto max-w-2xl">
+              <Tilt tiltMaxAngleX={3} tiltMaxAngleY={3} scale={1.005} transitionSpeed={2500}>
+                <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm p-6 relative overflow-hidden">
+                  {/* Subtle corner accent */}
+                  <div className="pointer-events-none absolute -top-12 -right-12 h-24 w-24 rounded-full bg-primary/5 blur-[40px]" />
+                  
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+                    {/* Avatar */}
+                    <div className="relative shrink-0">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/15 to-violet-500/10 ring-2 ring-primary/10 text-xl font-bold text-primary">
+                        IK
+                      </div>
+                      <div className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-green-500 ring-2 ring-card">
+                        <Check size={10} className="text-white" />
+                      </div>
+                    </div>
+
+                    {/* Info */}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="text-sm font-bold text-white/90">Ishu Kumar</h3>
+                        <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-semibold text-primary ring-1 ring-primary/15">
+                          <Star size={8} className="fill-primary" /> Founder
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs text-white/40">IIT Patna — B.Tech Computer Science & Engineering</p>
+                      <p className="mt-2 text-xs text-white/35 leading-relaxed">
+                        "I built ISHU to give every Indian student free, instant access to exam results, PDF tools, and educational resources — no paywalls, no ads, no hidden fees. Your feedback drives everything we build."
+                      </p>
+                      <div className="mt-3 flex gap-2">
+                        <a href="https://www.linkedin.com/in/ishu-kumar-5a0940281/" target="_blank" rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 rounded-lg bg-blue-500/8 px-2.5 py-1 text-[10px] font-medium text-blue-400 ring-1 ring-blue-500/10 transition-all hover:bg-blue-500/12 hover:ring-blue-500/20"
+                        >
+                          <ExternalLink size={9} /> LinkedIn
+                        </a>
+                        <a href="https://x.com/ISHU_IITP" target="_blank" rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 rounded-lg bg-sky-500/8 px-2.5 py-1 text-[10px] font-medium text-sky-400 ring-1 ring-sky-500/10 transition-all hover:bg-sky-500/12 hover:ring-sky-500/20"
+                        >
+                          <ExternalLink size={9} /> Twitter
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Tilt>
+            </div>
+          </FadeInView>
+        </div>
+      </section>
       <section className="process-section py-16 relative overflow-hidden">
         <div className="container relative">
           <FadeInView>

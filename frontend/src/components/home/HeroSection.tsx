@@ -1,22 +1,23 @@
 /**
- * HeroSection.tsx - Main Landing Page Hero Banner
+ * HeroSection.tsx — Redesigned Home Page Hero
  * 
- * The first thing users see on the homepage. Features:
- * - Parallax background image that moves on scroll
- * - tsParticles: Interactive floating particles with connecting lines
- * - 3D scene: Lazy-loaded Three.js hero animation (HeroScene3D)
- * - TypeAnimation: Rotating exam names (UPSC, SSC, Banking, etc.)
- * - TextReveal: Words animate in letter by letter
- * - GSAP: Scroll-triggered animations for stats bar and feature chips
- * - Magnetic CTA buttons that respond to mouse proximity
- * - Tilt card for the stats bar (reacts to mouse angle)
- * 
- * Brand: ISHU — Indian StudentHub University
+ * Modern hero inspired by Apple/Vercel/Stripe landing pages.
+ * Features:
+ *  - Parallax background image 
+ *  - TypeAnimation rotating exam names
+ *  - TextReveal word-by-word animation
+ *  - tsParticles (desktop only, lazy-loaded)
+ *  - 3D scene (lazy-loaded with error fallback)
+ *  - GSAP-animated stats bar and feature chips
+ *  - Tilt card for stats bar
+ *  - Magnetic CTA buttons
+ *  - CSS-only aurora orbs (zero JS overhead)
+ *  - Smooth scroll indicator
  */
 
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowRight, Sparkles, ChevronDown, Shield, Zap, Globe, Award, Users, FileText, Newspaper } from "lucide-react";
+import { ArrowRight, Sparkles, ChevronDown, Shield, Zap, Globe, Award, Users, FileText, Newspaper, BookOpen, Tv } from "lucide-react";
 import MagneticButton from "../animations/MagneticButton";
 import TextReveal from "../animations/TextReveal";
 import heroBg from "@/assets/hero-bg.jpg";
@@ -27,22 +28,21 @@ import gsap from "gsap";
 import { TypeAnimation } from "react-type-animation";
 import Tilt from "react-parallax-tilt";
 
-// Lazy load 3D scene with error fallback to prevent blank screen on import failure
 const HeroScene3D = lazy(() => import("../3d/HeroScene3D").catch(() => ({ default: () => null })));
 
 const quickFeatures = [
-{ icon: Shield, label: "100% Free", desc: "No hidden charges ever" },
-{ icon: Zap, label: "Real-time", desc: "Instant result updates" },
-{ icon: Globe, label: "Pan-India", desc: "All 36 states covered" },
-{ icon: Award, label: "Verified", desc: "Official sources only" }];
-
+  { icon: Shield, label: "100% Free", desc: "No hidden charges ever" },
+  { icon: Zap, label: "Real-time", desc: "Instant result updates" },
+  { icon: Globe, label: "Pan-India", desc: "All 36 states covered" },
+  { icon: Award, label: "Verified", desc: "Official sources only" },
+];
 
 const liveStats = [
-{ icon: Users, value: "1M+", label: "Active Students" },
-{ icon: FileText, value: "100+", label: "PDF Tools" },
-{ icon: Globe, value: "36", label: "States & UTs" },
-{ icon: Newspaper, value: "1K+", label: "Daily News" }];
-
+  { icon: Users, value: "1M+", label: "Active Students" },
+  { icon: FileText, value: "100+", label: "PDF Tools" },
+  { icon: Globe, value: "36", label: "States & UTs" },
+  { icon: Newspaper, value: "1K+", label: "Daily News" },
+];
 
 const IS_MOBILE_DEVICE = typeof window !== "undefined" &&
   (navigator.maxTouchPoints > 0 || window.matchMedia("(max-width: 768px)").matches);
@@ -62,9 +62,9 @@ const HeroSection = () => {
   });
 
   const bgY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
-  const textY = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
+  const textY = useTransform(scrollYProgress, [0, 1], ["0%", "45%"]);
   const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
-  const scale = useTransform(scrollYProgress, [0, 1], [1, 0.9]);
+  const scale = useTransform(scrollYProgress, [0, 1], [1, 0.92]);
 
   useEffect(() => {
     if (IS_MOBILE_DEVICE || prefersReducedMotion) return;
@@ -79,14 +79,14 @@ const HeroSection = () => {
       if (statsBarRef.current) {
         gsap.fromTo(statsBarRef.current, { y: 20, opacity: 0.4 }, { y: 0, opacity: 1, duration: 0.7, delay: 0.4, ease: "power4.out", clearProps: "all" });
         gsap.fromTo(statsBarRef.current.querySelectorAll(".stat-item"),
-        { scale: 0.85, opacity: 0.4 },
-        { scale: 1, opacity: 1, duration: 0.5, stagger: 0.08, delay: 0.5, ease: "back.out(1.7)", clearProps: "all" }
+          { scale: 0.85, opacity: 0.4 },
+          { scale: 1, opacity: 1, duration: 0.5, stagger: 0.08, delay: 0.5, ease: "back.out(1.7)", clearProps: "all" }
         );
       }
       if (featuresRef.current) {
         gsap.fromTo(featuresRef.current.querySelectorAll(".feature-chip"),
-        { y: 10, opacity: 0.3, scale: 0.95 },
-        { y: 0, opacity: 1, scale: 1, duration: 0.4, stagger: 0.06, delay: 0.3, ease: "power3.out", clearProps: "all" }
+          { y: 10, opacity: 0.3, scale: 0.95 },
+          { y: 0, opacity: 1, scale: 1, duration: 0.4, stagger: 0.06, delay: 0.3, ease: "power3.out", clearProps: "all" }
         );
       }
     }, containerRef);
@@ -117,36 +117,43 @@ const HeroSection = () => {
   return (
     <section ref={containerRef} className="relative flex min-h-[100vh] items-center overflow-hidden bg-gradient-hero">
       {/* Parallax background */}
-      <motion.img src={heroBg} alt="" className="pointer-events-none absolute inset-0 h-[120%] w-full object-cover opacity-25" loading="eager" style={{ y: bgY }} />
+      <motion.img src={heroBg} alt="" className="pointer-events-none absolute inset-0 h-[120%] w-full object-cover opacity-20" loading="eager" style={{ y: bgY }} />
 
       {/* Enhanced overlays */}
       <div className="pointer-events-none absolute inset-0 mesh-gradient-advanced" />
-      <div className="pointer-events-none absolute inset-0 holo-effect opacity-60" />
+      <div className="pointer-events-none absolute inset-0 holo-effect opacity-50" />
       <div className="pointer-events-none absolute inset-0 grain" />
-      <div className="pointer-events-none absolute inset-0 scanlines opacity-30" />
 
       {/* tsParticles */}
       {particlesReady && !prefersReducedMotion &&
-      <Particles id="hero-particles" className="pointer-events-none absolute inset-0 z-[1]" particlesLoaded={particlesLoaded} options={particlesOptions} />
+        <Particles id="hero-particles" className="pointer-events-none absolute inset-0 z-[1]" particlesLoaded={particlesLoaded} options={particlesOptions} />
       }
 
       <Suspense fallback={null}><HeroScene3D /></Suspense>
 
-      {/* Aurora gradient orbs — CSS-only animations for 0 JS jank, no willChange flicker */}
-      <div className="pointer-events-none absolute left-1/4 top-1/4 h-[600px] w-[600px] rounded-full bg-primary/[0.10] blur-[80px] css-orb" />
-      <div className="pointer-events-none absolute bottom-1/4 right-1/4 h-[500px] w-[500px] rounded-full bg-[hsl(260,100%,66%,0.08)] blur-[70px] css-orb" style={{ animationDelay: "-4s", animationDuration: "14s" }} />
-      <div className="pointer-events-none absolute right-1/3 top-1/3 h-[400px] w-[400px] rounded-full bg-[hsl(170,100%,50%,0.05)] blur-[60px] css-orb" style={{ animationDelay: "-8s", animationDuration: "16s" }} />
+      {/* Aurora gradient orbs — CSS-only animations */}
+      <div className="pointer-events-none absolute left-1/4 top-1/4 h-[600px] w-[600px] rounded-full bg-primary/[0.08] blur-[80px] css-orb" />
+      <div className="pointer-events-none absolute bottom-1/4 right-1/4 h-[500px] w-[500px] rounded-full bg-[hsl(260,100%,66%,0.06)] blur-[70px] css-orb" style={{ animationDelay: "-4s", animationDuration: "14s" }} />
+      <div className="pointer-events-none absolute right-1/3 top-1/3 h-[400px] w-[400px] rounded-full bg-[hsl(170,100%,50%,0.04)] blur-[60px] css-orb" style={{ animationDelay: "-8s", animationDuration: "16s" }} />
 
       <motion.div className="container relative z-10" style={{ y: textY, opacity, scale }}>
         <div className="mx-auto max-w-4xl text-center">
+
           {/* Badge */}
-          
-
-
-
-
-
-          
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-5 py-2.5 text-sm backdrop-blur-sm"
+          >
+            <Sparkles size={14} className="text-primary" />
+            <span className="font-semibold text-white/70">ISHU — Indian StudentHub University</span>
+            <motion.span
+              animate={{ scale: [1, 1.3, 1] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+              className="h-2 w-2 rounded-full bg-emerald-400"
+            />
+          </motion.div>
 
           {/* Headline */}
           <h1 ref={headlineRef} className="font-display text-4xl font-bold leading-tight tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl">
@@ -155,8 +162,8 @@ const HeroSection = () => {
             <span className="text-shimmer">
               <TypeAnimation
                 sequence={['UPSC', 2000, 'SSC CGL', 2000, 'Banking', 2000, 'Railways', 2000, 'JEE / NEET', 2000, 'Government', 2000, 'Defence', 2000, 'State PSC', 2000]}
-                wrapper="span" speed={40} repeat={Infinity} cursor={true} style={{ display: 'inline-block' }} />
-              
+                wrapper="span" speed={40} repeat={Infinity} cursor={true} style={{ display: 'inline-block' }}
+              />
             </span>
             <br />
             <TextReveal text="Exam Success" delay={0.8} />
@@ -164,14 +171,14 @@ const HeroSection = () => {
 
           {/* Subtitle */}
           <motion.p initial={{ opacity: 0.3, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }}
-          className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-muted-foreground md:text-xl">
-            Results, Vacancies, 100+ PDF Tools, Live News & More — Everything you need for UPSC, SSC, Banking, Railways, NTA & State exams.
+            className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-muted-foreground md:text-xl">
+            Results, Vacancies, 100+ PDF Tools, Live News & More — Everything you need for UPSC, SSC, Banking, Railways, NTA & State exams. All free, all in one place.
           </motion.p>
 
           {/* Quick Feature Chips */}
           <div ref={featuresRef} className="mt-6 flex flex-wrap justify-center gap-3">
             {quickFeatures.map((f) =>
-            <div key={f.label} className="feature-chip flex items-center gap-2 rounded-full border border-border glass px-4 py-2 text-xs">
+              <div key={f.label} className="feature-chip flex items-center gap-2 rounded-full border border-border glass px-4 py-2 text-xs">
                 <f.icon size={12} className="text-primary" />
                 <span className="font-semibold text-foreground">{f.label}</span>
                 <span className="text-muted-foreground hidden sm:inline">— {f.desc}</span>
@@ -181,10 +188,10 @@ const HeroSection = () => {
 
           {/* CTA Buttons */}
           <motion.div initial={{ opacity: 0.3, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.45 }}
-          className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+            className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <MagneticButton>
               <Link to="/results"
-              className="group relative flex items-center gap-2 overflow-hidden rounded-xl bg-primary px-8 py-4 font-display text-sm font-semibold text-primary-foreground transition-all hover:shadow-glow">
+                className="group relative flex items-center gap-2 overflow-hidden rounded-xl bg-primary px-8 py-4 font-display text-sm font-semibold text-primary-foreground transition-all hover:shadow-glow">
                 <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700" />
                 <span className="relative">Explore Results</span>
                 <ArrowRight size={16} className="relative transition-transform group-hover:translate-x-1" />
@@ -192,7 +199,7 @@ const HeroSection = () => {
             </MagneticButton>
             <MagneticButton>
               <Link to="/tools"
-              className="group flex items-center gap-2 rounded-xl border border-border glass px-8 py-4 font-display text-sm font-semibold text-foreground transition-all hover:border-primary/30 hover:shadow-glow">
+                className="group flex items-center gap-2 rounded-xl border border-border glass px-8 py-4 font-display text-sm font-semibold text-foreground transition-all hover:border-primary/30 hover:shadow-glow">
                 Try PDF Tools — Free
               </Link>
             </MagneticButton>
@@ -203,7 +210,7 @@ const HeroSection = () => {
             <Tilt tiltMaxAngleX={prefersReducedMotion ? 0 : 5} tiltMaxAngleY={prefersReducedMotion ? 0 : 5} glareEnable={!prefersReducedMotion} glareMaxOpacity={0.06} glareBorderRadius="1rem" scale={prefersReducedMotion ? 1 : 1.01}>
               <div className="grid grid-cols-2 sm:flex sm:flex-row sm:items-center sm:justify-center gap-4 sm:gap-6 rounded-2xl glass-strong px-4 sm:px-8 py-5 animate-breathe border border-border">
                 {liveStats.map((stat, i) =>
-                <div key={stat.label} className={`stat-item flex items-center gap-3 ${i > 0 ? "sm:border-l sm:border-border sm:pl-6" : ""}`}>
+                  <div key={stat.label} className={`stat-item flex items-center gap-3 ${i > 0 ? "sm:border-l sm:border-border sm:pl-6" : ""}`}>
                     <stat.icon size={16} className="text-primary hidden sm:block shrink-0" />
                     <div>
                       <p className="font-display text-base sm:text-lg font-bold text-foreground md:text-xl">{stat.value}</p>
@@ -217,10 +224,10 @@ const HeroSection = () => {
 
           {/* Trusted by badge */}
           <motion.div initial={{ opacity: 0.2 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
-          className="mt-8 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+            className="mt-8 flex items-center justify-center gap-2 text-xs text-muted-foreground">
             <div className="flex -space-x-2">
               {[...Array(5)].map((_, i) =>
-              <div key={i} className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-background bg-primary/20 text-[8px] font-bold text-primary">
+                <div key={i} className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-background bg-primary/20 text-[8px] font-bold text-primary">
                   {String.fromCharCode(65 + i)}
                 </div>
               )}
@@ -239,8 +246,8 @@ const HeroSection = () => {
       </motion.div>
 
       <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent z-[5]" />
-    </section>);
-
+    </section>
+  );
 };
 
 export default HeroSection;

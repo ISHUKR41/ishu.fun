@@ -479,6 +479,226 @@ html.lenis-stopped {
   contain: layout style;
 }
 
+/* ═══ MOBILE PERFORMANCE MODE ═══ */
+/* FIX: Disable heavy animations/effects on mobile & tablet to prevent lag */
+@media (max-width: 1024px) {
+  /* Reduce GPU compositing layers on mobile */
+  .gpu-accelerated {
+    will-change: auto !important;
+  }
+  
+  /* Disable backdrop-filter on mobile — extremely expensive */
+  .glass, .glass-strong {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: hsl(0 0% 6% / 0.95) !important;
+  }
+  
+  /* Simplify transitions on mobile */
+  .smooth-transition {
+    transition-duration: 100ms !important;
+  }
+  
+  /* Reduce animation complexity on smaller screens */
+  @keyframes float { from, to { transform: none; } }
+  @keyframes pulse-subtle { from, to { transform: none; opacity: 1; } }
+}
+
+/* Extra aggressive performance for small phones */
+@media (max-width: 480px) {
+  /* Kill non-essential animations */
+  .animate-bounce,
+  .animate-ping,  
+  .animate-spin {
+    animation: none !important;
+  }
+  
+  /* Reduce box-shadows on mobile (expensive paint operations) */
+  * {
+    box-shadow: none !important;
+  }
+  
+  /* But keep essential shadows */
+  .shadow-essential {
+    box-shadow: 0 2px 8px hsl(0 0% 0% / 0.3) !important;
+  }
+}
+
+/* ═══ STICKY ELEMENT FIX ═══ */
+/* FIX: Prevent sticky elements from following scroll improperly */
+.sticky, [class*="sticky"] {
+  position: sticky;
+  z-index: 40;
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Search bars should NOT be sticky by default on results page */
+/* Override: sticky search bar should stop being sticky after scroll */
+.search-section-stick {
+  position: sticky;
+  top: 4rem; /* below header */
+  z-index: 30;
+  transform: translateZ(0);
+}
+
+/* ═══ ENHANCED TYPOGRAPHY ═══ */
+/* Professional font rendering for all text */
+body {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+  font-variant-ligatures: common-ligatures;
+  letter-spacing: -0.011em;
+  line-height: 1.6;
+}
+
+/* Heading typography improvements */
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  font-weight: 700;
+  text-rendering: optimizeLegibility;
+}
+
+/* Paragraph improvements */
+p {
+  line-height: 1.7;
+  letter-spacing: -0.005em;
+}
+
+/* Small text improvements */
+small, .text-sm, .text-xs {
+  letter-spacing: 0.01em;
+}
+
+/* ═══ ULTRA-SMOOTH SCROLL ENHANCEMENTS ═══ */
+/* Ensure scroll containers use passive touch handling */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent scroll chaining between nested scrollable areas */
+.scroll-contained {
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+}
+
+/* ═══ COMPREHENSIVE RESPONSIVE BREAKPOINTS ═══ */
+/* Galaxy Fold and very small devices (280px - 320px) */
+@media (max-width: 320px) {
+  body {
+    font-size: 14px;
+  }
+  
+  .container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+  
+  h1 { font-size: clamp(1.5rem, 8vw, 2rem) !important; }
+  h2 { font-size: clamp(1.25rem, 6vw, 1.75rem) !important; }
+  h3 { font-size: clamp(1.125rem, 5vw, 1.5rem) !important; }
+}
+
+/* Small phones (321px - 375px) */
+@media (min-width: 321px) and (max-width: 375px) {
+  body {
+    font-size: 15px;
+  }
+}
+
+/* Standard phones (376px - 480px) */
+@media (min-width: 376px) and (max-width: 480px) {
+  body {
+    font-size: 15px;
+  }
+}
+
+/* Large phones / phablets (481px - 640px) */
+@media (min-width: 481px) and (max-width: 640px) {
+  body {
+    font-size: 16px;
+  }
+}
+
+/* Tablets portrait (641px - 768px) */
+@media (min-width: 641px) and (max-width: 768px) {
+  body {
+    font-size: 16px;
+  }
+  
+  .container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+/* Tablets landscape (769px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  body {
+    font-size: 16px;
+  }
+}
+
+/* TV / Large screens (1921px+) */
+@media (min-width: 1921px) {
+  body {
+    font-size: 18px;
+  }
+  
+  .container {
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+}
+
+/* 4K screens (2560px+) */
+@media (min-width: 2560px) {
+  body {
+    font-size: 20px;
+  }
+  
+  .container {
+    max-width: 2000px;
+  }
+}
+
+/* ═══ BACKDROP-FILTER PERFORMANCE ═══ */
+/* Use hardware-accelerated compositing for glass effects */
+.glass {
+  transform: translateZ(0);
+  isolation: isolate;
+}
+
+/* ═══ SCROLLBAR STYLING (Modern, thin, smooth) ═══ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(0 0% 30%);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(0 0% 50%);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(0 0% 30%) transparent;
+}
+
 /* Offscreen content — skip paint until visible */
 .offscreen-optimize {
   /* content-visibility: auto; — disabled, causes sections to render late */
