@@ -29,11 +29,12 @@ interface ToolIconProps {
   iconName: string;
   size?: number;
   className?: string;
+  color?: string;
 }
 
-const ToolIcon = ({ iconName, size = 20, className = "" }: ToolIconProps) => {
+const ToolIcon = ({ iconName, size = 20, className = "", color }: ToolIconProps) => {
   const Icon = iconMap[iconName] || FileText;
-  return <Icon size={size} className={className} />;
+  return <Icon size={size} className={className} color={color} />;
 };
 
 export default ToolIcon;
