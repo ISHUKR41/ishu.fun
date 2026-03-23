@@ -139,6 +139,28 @@ Only apply GPU hints to specific elements that ARE actively being animated:
 - Stream success cache: 4h TTL per channel URL (avoids re-probing known-good sources)
 - HLS timeouts: 900ms direct, 1500ms backend, 1000ms proxy, 1500ms stall detection
 
+## 2026 Home Page & Tools Page Redesign (Apple/Tesla/Vercel Style)
+
+### Home Page Design System
+- **HeroSection** (`frontend/src/components/home/HeroSection.tsx`): Completely rewritten with Apple/Tesla aesthetic. 96px bold headline with TypeAnimation cycling exam names (UPSC, SSC CGL, Banking etc.) in gradient text. CSS-only aurora orbs (zero JS performance hit). Parallax scroll via Framer Motion. Stats bar, social proof row.
+- **MarqueeSection** (`frontend/src/components/home/MarqueeSection.tsx`): New section between hero and stats. Two-row infinite Framer Motion marquee (GPU-accelerated `x` transform) with exam names and PDF tools.
+- **ProductShowcase** (`frontend/src/components/home/ProductShowcase.tsx`): New 3-pillar section (PDF Tools / Results / Live TV) with feature lists, animated counters, and a stats row.
+- **FeaturesSection** (`frontend/src/components/home/FeaturesSection.tsx`): Rewritten with CSS-only backgrounds (removed JS orbs), dark cards with color-coded borders and hover glows.
+- **WhyChooseUs** (`frontend/src/components/home/WhyChooseUs.tsx`): Rewritten with comparison table (ISHU vs iLovePDF vs Jagran Josh vs SarkariResult), CSS-only backgrounds, trust stats.
+
+### Tools Page Improvements
+- `frontend/src/pages/ToolsPage.tsx`: Headline enlarged to `clamp(2.5rem, 8vw, 5.5rem)`. Search bar widened to `max-w-2xl`. Trust chips show full description. Popular search tags added below search input.
+
+### CSS Additions (`frontend/src/index.css`)
+- New hero utilities: `.hero-gradient-text`, `.pulse-dot`, `.section-badge`, `.dark-card`, `.top-accent-hover`
+- Marquee CSS animations: `.marquee-track--ltr`, `.marquee-track--rtl`  
+- Text gradient utilities: `.text-gradient-blue`, `.text-gradient-violet`, `.text-gradient-brand`
+- Comparison table helpers, shimmer loading, glow button, section heading, card lift, grid pattern
+
+### SEO Updates
+- `SEOHead.tsx`: Updated DC.date and article:modified_time to 2026-03-23
+- `Index.tsx`: All sections maintained with proper lazy loading order. `ProductShowcase` added before `PlatformOverview`.
+
 ## SEO Implementation
 - `frontend/index.html`: WebSite + Organization + WebApplication + BreadcrumbList + SiteNavigationElement structured data
 - 11 hreflang tags: `en-in`, `hi-in`, `ta-in`, `te-in`, `bn-in`, `mr-in`, `gu-in`, `kn-in`, `ml-in`, `pa-in`, `ur-in` + `x-default`

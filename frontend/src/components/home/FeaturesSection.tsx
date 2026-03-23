@@ -1,16 +1,9 @@
 /**
- * FeaturesSection.tsx - Platform Features Showcase
- * 
- * Displays the 6 main platform features in a responsive grid:
- * 1. Government Results - Exam results for UPSC, SSC, Banking, etc.
- * 2. 100+ PDF Tools - Browser-based document processing
- * 3. Live News Feed - 1000+ daily articles in 22 languages
- * 4. Expert Blog - Preparation guides and topper strategies
- * 5. WhatsApp Alerts - Instant notifications for vacancies
- * 6. All 36 States - Pan-India coverage for state-level exams
- * 
- * Each card has: icon, title, description, highlight bullets, hover effects,
- * tilt animation, gradient overlays, and links to the relevant page.
+ * FeaturesSection.tsx — Platform Features Showcase
+ *
+ * 6 core features displayed in a responsive grid.
+ * CSS-only background effects for performance (no JS orbs).
+ * GSAP scroll entrance only on heading (minimal JS).
  */
 
 import { motion } from "framer-motion";
@@ -27,47 +20,152 @@ gsap.registerPlugin(ScrollTrigger);
 const features = [
   {
     icon: FileText, title: "Government Results",
-    description: "Central & State-level exam results, admit cards, answer keys for UPSC, SSC, Banking, Railways, NTA & more.",
-    highlights: ["Real-time updates", "All 36 states", "Official sources"],
-    gradient: "from-blue-500/20 to-cyan-500/20", iconColor: "text-blue-400", iconBg: "bg-blue-500/10",
-    glowColor: "group-hover:shadow-[0_0_40px_hsl(210,100%,56%,0.1)]", link: "/results",
+    description: "Central & State exam results, admit cards, answer keys for UPSC, SSC, Banking, Railways, NTA & all state exams.",
+    highlights: ["Real-time updates", "All 36 states", "Official sources only"],
+    color: "#3b82f6",
+    bg: "rgba(59,130,246,0.08)",
+    border: "rgba(59,130,246,0.12)",
+    glow: "rgba(59,130,246,0.15)",
+    link: "/results",
   },
   {
     icon: Wrench, title: "100+ PDF Tools",
-    description: "Merge, split, compress, convert — complete PDF toolkit. Free, fast, and works right in your browser.",
-    highlights: ["No uploads needed", "Browser-based", "100% free"],
-    gradient: "from-emerald-500/20 to-teal-500/20", iconColor: "text-emerald-400", iconBg: "bg-emerald-500/10",
-    glowColor: "group-hover:shadow-[0_0_40px_hsl(142,76%,46%,0.1)]", link: "/tools",
+    description: "Merge, split, compress, convert — the most complete free PDF toolkit in India. Works entirely in your browser.",
+    highlights: ["No uploads needed", "100% browser-based", "Completely free"],
+    color: "#10b981",
+    bg: "rgba(16,185,129,0.08)",
+    border: "rgba(16,185,129,0.12)",
+    glow: "rgba(16,185,129,0.15)",
+    link: "/tools",
   },
   {
     icon: Newspaper, title: "Live News Feed",
-    description: "1000+ news articles daily across 30 categories. Multi-language support with auto-translation.",
-    highlights: ["30+ categories", "22 languages", "Real-time feed"],
-    gradient: "from-orange-500/20 to-amber-500/20", iconColor: "text-orange-400", iconBg: "bg-orange-500/10",
-    glowColor: "group-hover:shadow-[0_0_40px_hsl(38,92%,50%,0.1)]", link: "/news",
+    description: "1000+ news articles daily across government jobs, education, politics and more. Multi-language with auto-translation.",
+    highlights: ["30+ categories", "22+ languages", "Real-time updates"],
+    color: "#f59e0b",
+    bg: "rgba(245,158,11,0.08)",
+    border: "rgba(245,158,11,0.12)",
+    glow: "rgba(245,158,11,0.15)",
+    link: "/news",
   },
   {
     icon: BookOpen, title: "Expert Blog",
-    description: "In-depth exam guides, preparation tips, syllabus analysis & success stories from toppers.",
-    highlights: ["Topper strategies", "Study plans", "Free guides"],
-    gradient: "from-purple-500/20 to-pink-500/20", iconColor: "text-purple-400", iconBg: "bg-purple-500/10",
-    glowColor: "group-hover:shadow-[0_0_40px_hsl(260,100%,66%,0.1)]", link: "/blog",
+    description: "In-depth exam guides, preparation tips, syllabus analysis and success stories from UPSC, SSC & banking toppers.",
+    highlights: ["Topper strategies", "Free study plans", "Verified guides"],
+    color: "#8b5cf6",
+    bg: "rgba(139,92,246,0.08)",
+    border: "rgba(139,92,246,0.12)",
+    glow: "rgba(139,92,246,0.15)",
+    link: "/blog",
   },
   {
     icon: Bell, title: "WhatsApp Alerts",
-    description: "Get instant notifications on WhatsApp for new vacancies, results & admit cards. Never miss a deadline.",
-    highlights: ["Instant delivery", "Customizable", "Free forever"],
-    gradient: "from-green-500/20 to-emerald-500/20", iconColor: "text-green-400", iconBg: "bg-green-500/10",
-    glowColor: "group-hover:shadow-[0_0_40px_hsl(142,76%,46%,0.1)]", link: "/contact",
+    description: "Get instant WhatsApp notifications for new vacancies, results and admit cards. Never miss a deadline again.",
+    highlights: ["Instant delivery", "Fully customizable", "Free forever"],
+    color: "#22c55e",
+    bg: "rgba(34,197,94,0.08)",
+    border: "rgba(34,197,94,0.12)",
+    glow: "rgba(34,197,94,0.15)",
+    link: "/contact",
   },
   {
     icon: Shield, title: "All 36 States & UTs",
-    description: "Complete coverage of all Indian states and union territories with state-specific exam updates.",
-    highlights: ["State-wise pages", "Local exams", "UT coverage"],
-    gradient: "from-rose-500/20 to-red-500/20", iconColor: "text-rose-400", iconBg: "bg-rose-500/10",
-    glowColor: "group-hover:shadow-[0_0_40px_hsl(0,84%,60%,0.1)]", link: "/results",
+    description: "Complete coverage of every Indian state and union territory — state PSC, police, teacher and district-level exams.",
+    highlights: ["State-wise pages", "Local exam alerts", "UT coverage"],
+    color: "#f43f5e",
+    bg: "rgba(244,63,94,0.08)",
+    border: "rgba(244,63,94,0.12)",
+    glow: "rgba(244,63,94,0.15)",
+    link: "/results",
   },
 ];
+
+const FeatureCard = ({
+  feature,
+  index,
+}: {
+  feature: (typeof features)[number];
+  index: number;
+}) => (
+  <FadeInView delay={index * 0.07}>
+    <Tilt
+      tiltMaxAngleX={6}
+      tiltMaxAngleY={6}
+      glareEnable
+      glareMaxOpacity={0.05}
+      glareColor={feature.color}
+      glarePosition="all"
+      glareBorderRadius="1rem"
+      scale={1.02}
+      transitionSpeed={400}
+    >
+      <motion.div
+        whileTap={{ scale: 0.98 }}
+        className="group relative flex h-full flex-col overflow-hidden rounded-2xl border p-7 transition-all duration-400"
+        style={{
+          borderColor: feature.border,
+          background: "rgba(8,8,16,0.85)",
+          backdropFilter: "blur(8px)",
+        }}
+        onMouseEnter={(e) => {
+          (e.currentTarget as HTMLElement).style.boxShadow = `0 0 40px ${feature.glow}`;
+          (e.currentTarget as HTMLElement).style.borderColor = feature.color + "30";
+        }}
+        onMouseLeave={(e) => {
+          (e.currentTarget as HTMLElement).style.boxShadow = "";
+          (e.currentTarget as HTMLElement).style.borderColor = feature.border;
+        }}
+      >
+        {/* Top accent line */}
+        <div
+          className="absolute inset-x-0 top-0 h-px opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+          style={{ background: `linear-gradient(90deg, transparent, ${feature.color}80, transparent)` }}
+        />
+
+        {/* Hover gradient fill */}
+        <div
+          className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-400 group-hover:opacity-100"
+          style={{ background: `radial-gradient(ellipse 80% 60% at 20% 20%, ${feature.bg}, transparent)` }}
+        />
+
+        <div className="relative flex flex-col gap-4">
+          {/* Icon */}
+          <div
+            className="flex h-12 w-12 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-110"
+            style={{ background: feature.bg }}
+          >
+            <feature.icon size={24} style={{ color: feature.color }} />
+          </div>
+
+          {/* Title & description */}
+          <div>
+            <h3 className="font-display text-lg font-bold text-white/90">{feature.title}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-white/50">{feature.description}</p>
+          </div>
+
+          {/* Highlights */}
+          <ul className="flex flex-col gap-1.5">
+            {feature.highlights.map((h) => (
+              <li key={h} className="flex items-center gap-2 text-xs text-white/45">
+                <Check size={11} style={{ color: feature.color }} className="shrink-0" />
+                {h}
+              </li>
+            ))}
+          </ul>
+
+          {/* CTA */}
+          <Link
+            to={feature.link}
+            className="mt-auto flex items-center gap-1.5 text-xs font-semibold opacity-0 transition-all duration-200 group-hover:opacity-100 group-hover:gap-2"
+            style={{ color: feature.color }}
+          >
+            Explore <ArrowRight size={12} />
+          </Link>
+        </div>
+      </motion.div>
+    </Tilt>
+  </FadeInView>
+);
 
 const FeaturesSection = () => {
   const sectionRef = useRef<HTMLElement>(null);
@@ -75,94 +173,89 @@ const FeaturesSection = () => {
   useEffect(() => {
     if (!sectionRef.current) return;
     const ctx = gsap.context(() => {
-      gsap.fromTo(".feature-heading",
-        { y: 60, opacity: 0 },
-        { scrollTrigger: { trigger: ".feature-heading", start: "top 85%", toggleActions: "play none none none" },
-          y: 0, opacity: 1, duration: 1, ease: "power4.out", clearProps: "all" }
+      gsap.fromTo(
+        ".features-heading",
+        { y: 50, opacity: 0 },
+        {
+          scrollTrigger: { trigger: ".features-heading", start: "top 85%", toggleActions: "play none none none" },
+          y: 0, opacity: 1, duration: 0.9, ease: "power4.out", clearProps: "all",
+        }
       );
     }, sectionRef);
     return () => ctx.revert();
   }, []);
 
   return (
-    <section ref={sectionRef} className="relative py-32 overflow-hidden bg-gradient-to-b from-background via-card/50 to-background">
-      {/* Multiple layered backgrounds */}
-      <div className="pointer-events-none absolute inset-0 mesh-gradient-advanced" />
-      <div className="pointer-events-none absolute inset-0 bg-grid opacity-20" />
-      <div className="pointer-events-none absolute inset-0 holo-effect" />
-      
-      {/* Grain texture */}
-      <div className="pointer-events-none absolute inset-0 grain" />
-      
-      {/* Animated orbs */}
-      <motion.div 
-        animate={{ opacity: [0.4, 0.7, 0.4], x: [0, 30, 0] }} 
-        transition={{ repeat: Infinity, duration: 8, ease: "easeInOut" }}
-        className="pointer-events-none absolute left-[8%] top-[15%] h-[400px] w-[400px] rounded-full bg-primary/10 blur-[150px] morph-blob" 
+    <section
+      ref={sectionRef}
+      className="relative overflow-hidden py-28 md:py-36"
+    >
+      {/* CSS-only background — no JS motion */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-background via-card/40 to-background" />
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage: `radial-gradient(ellipse 55% 40% at 20% 30%, rgba(99,102,241,0.05) 0%, transparent 60%),
+                            radial-gradient(ellipse 45% 35% at 80% 70%, rgba(139,92,246,0.04) 0%, transparent 60%)`,
+        }}
       />
-      <motion.div 
-        animate={{ opacity: [0.3, 0.6, 0.3], x: [0, -30, 0] }} 
-        transition={{ repeat: Infinity, duration: 10, ease: "easeInOut" }}
-        className="pointer-events-none absolute right-[8%] bottom-[15%] h-[350px] w-[350px] rounded-full bg-[hsl(260,100%,66%,0.08)] blur-[130px] morph-blob" 
-      />
-      <motion.div 
-        animate={{ opacity: [0.2, 0.4, 0.2], scale: [1, 1.05, 1] }} 
-        transition={{ repeat: Infinity, duration: 12, ease: "easeInOut" }}
-        className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full bg-accent/5 blur-[180px]" 
-      />
-      
+      <div className="pointer-events-none absolute inset-0 bg-grid opacity-[0.12]" />
+
       <div className="container relative z-10">
-        <FadeInView>
-          <div className="feature-heading mx-auto max-w-2xl text-center">
-            <span className="font-display text-sm font-semibold uppercase tracking-widest text-primary">
-              Everything You Need
+        {/* Heading */}
+        <div className="features-heading mx-auto max-w-2xl text-center">
+          <motion.span
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.04] px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-white/50"
+          >
+            Everything You Need
+          </motion.span>
+          <motion.h2
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.08 }}
+            className="mt-5 font-display text-3xl font-black tracking-tight text-white md:text-4xl lg:text-5xl"
+            style={{ letterSpacing: "-0.025em" }}
+          >
+            One Platform.{" "}
+            <span
+              style={{
+                background: "linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+            >
+              Infinite Possibilities.
             </span>
-            <h2 className="mt-4 font-display text-3xl font-bold text-foreground md:text-4xl lg:text-5xl">
-              One Platform,{" "}
-              <span className="text-shimmer">Infinite Possibilities</span>
-            </h2>
-            <p className="mt-4 text-lg text-muted-foreground">
-              From exam results to PDF tools — we've got every student covered.
-            </p>
-            <div className="mx-auto mt-4 gradient-line w-24" />
-          </div>
-        </FadeInView>
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.55, delay: 0.14 }}
+            className="mt-5 text-lg leading-relaxed text-white/45"
+          >
+            From exam results to PDF tools — we have got every Indian student covered.
+          </motion.p>
+          <motion.div
+            initial={{ scaleX: 0 }}
+            whileInView={{ scaleX: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, delay: 0.2 }}
+            className="mx-auto mt-5 h-px w-24 origin-left"
+            style={{ background: "linear-gradient(90deg, transparent, #6366f1, transparent)" }}
+          />
+        </div>
 
-        <div className="mt-16 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {/* Cards grid */}
+        <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {features.map((feature, i) => (
-            <FadeInView key={feature.title} delay={i * 0.08}>
-              <Tilt tiltMaxAngleX={8} tiltMaxAngleY={8} glareEnable glareMaxOpacity={0.06} glareColor="hsl(210 100% 56%)" glarePosition="all" glareBorderRadius="1rem" scale={1.02} transitionSpeed={400}>
-                <motion.div whileTap={{ scale: 0.98 }}
-                  className={`group spotlight-card relative overflow-hidden rounded-2xl border border-border glass-strong p-8 transition-all duration-500 hover:border-primary/20 ${feature.glowColor} h-full`}>
-                  <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 transition-opacity duration-500 group-hover:opacity-100`} />
-                  <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-primary/5 blur-2xl opacity-0 transition-opacity group-hover:opacity-100" />
-
-                  <div className="relative">
-                    <motion.div whileHover={{ scale: 1.1, rotate: 5 }}
-                      className={`mb-5 inline-flex rounded-xl ${feature.iconBg} p-3.5 ${feature.iconColor} transition-all duration-300`}>
-                      <feature.icon size={26} />
-                    </motion.div>
-                    <h3 className="font-display text-xl font-semibold text-foreground">{feature.title}</h3>
-                    <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{feature.description}</p>
-
-                    {/* Feature highlights */}
-                    <div className="mt-4 space-y-1.5">
-                      {feature.highlights.map((h) => (
-                        <div key={h} className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <Check size={10} className="text-success shrink-0" />
-                          <span>{h}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    <Link to={feature.link}
-                      className="mt-5 inline-flex items-center gap-1 text-xs font-medium text-primary opacity-0 transition-all group-hover:opacity-100 hover:gap-2">
-                      Explore <ArrowRight size={12} />
-                    </Link>
-                  </div>
-                </motion.div>
-              </Tilt>
-            </FadeInView>
+            <FeatureCard key={feature.title} feature={feature} index={i} />
           ))}
         </div>
       </div>

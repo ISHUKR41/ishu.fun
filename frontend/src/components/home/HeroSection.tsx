@@ -1,34 +1,26 @@
 /**
- * HeroSection.tsx — Redesigned Home Page Hero
- * 
- * Modern hero inspired by Apple/Vercel/Stripe landing pages.
- * Features:
- *  - Parallax background image 
- *  - TypeAnimation rotating exam names
- *  - TextReveal word-by-word animation
- *  - tsParticles (desktop only, lazy-loaded)
- *  - 3D scene (lazy-loaded with error fallback)
- *  - GSAP-animated stats bar and feature chips
- *  - Tilt card for stats bar
+ * HeroSection.tsx — Redesigned Hero (Apple / Tesla / Vercel / Framer Style)
+ *
+ * Ultra-modern landing hero:
+ *  - Massive, impactful headline with gradient text
+ *  - TypeAnimation cycling through exam names
+ *  - CSS-only aurora orbs (zero JS overhead, no lag)
+ *  - Smooth parallax on scroll (Framer Motion)
  *  - Magnetic CTA buttons
- *  - CSS-only aurora orbs (zero JS overhead)
- *  - Smooth scroll indicator
+ *  - Live stats bar with animated counters
+ *  - Responsive across all devices
  */
 
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowRight, Sparkles, ChevronDown, Shield, Zap, Globe, Award, Users, FileText, Newspaper, BookOpen, Tv } from "lucide-react";
+import {
+  ArrowRight, Sparkles, ChevronDown, Shield, Zap, Globe, Award,
+  Users, FileText, Newspaper, Star, CheckCircle
+} from "lucide-react";
 import MagneticButton from "../animations/MagneticButton";
-import TextReveal from "../animations/TextReveal";
-import heroBg from "@/assets/hero-bg.jpg";
-import { useRef, lazy, Suspense, useEffect, useCallback, useState, useMemo } from "react";
-import Particles, { initParticlesEngine } from "@tsparticles/react";
-import { loadSlim } from "@tsparticles/slim";
+import { useRef, useEffect, useCallback, useState, useMemo } from "react";
 import gsap from "gsap";
 import { TypeAnimation } from "react-type-animation";
-import Tilt from "react-parallax-tilt";
-
-const HeroScene3D = lazy(() => import("../3d/HeroScene3D").catch(() => ({ default: () => null })));
 
 const quickFeatures = [
   { icon: Shield, label: "100% Free", desc: "No hidden charges ever" },
@@ -44,208 +36,285 @@ const liveStats = [
   { icon: Newspaper, value: "1K+", label: "Daily News" },
 ];
 
-const IS_MOBILE_DEVICE = typeof window !== "undefined" &&
-  (navigator.maxTouchPoints > 0 || window.matchMedia("(max-width: 768px)").matches);
-
 const HeroSection = () => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const headlineRef = useRef<HTMLHeadingElement>(null);
   const statsBarRef = useRef<HTMLDivElement>(null);
-  const featuresRef = useRef<HTMLDivElement>(null);
-  const [particlesReady, setParticlesReady] = useState(false);
-  const prefersReducedMotion = useMemo(() =>
-    typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches, []);
+  const chipsRef = useRef<HTMLDivElement>(null);
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end start"]
   });
 
-  const bgY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
-  const textY = useTransform(scrollYProgress, [0, 1], ["0%", "45%"]);
-  const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
-  const scale = useTransform(scrollYProgress, [0, 1], [1, 0.92]);
+  const textY = useTransform(scrollYProgress, [0, 1], ["0%", "35%"]);
+  const opacity = useTransform(scrollYProgress, [0, 0.75], [1, 0]);
+  const scale = useTransform(scrollYProgress, [0, 1], [1, 0.95]);
 
   useEffect(() => {
-    if (IS_MOBILE_DEVICE || prefersReducedMotion) return;
-    initParticlesEngine(async (engine) => {
-      await loadSlim(engine);
-    }).then(() => setParticlesReady(true));
-  }, [prefersReducedMotion]);
-
-  useEffect(() => {
-    if (!headlineRef.current) return;
+    if (!containerRef.current) return;
     const ctx = gsap.context(() => {
       if (statsBarRef.current) {
-        gsap.fromTo(statsBarRef.current, { y: 20, opacity: 0.4 }, { y: 0, opacity: 1, duration: 0.7, delay: 0.4, ease: "power4.out", clearProps: "all" });
-        gsap.fromTo(statsBarRef.current.querySelectorAll(".stat-item"),
-          { scale: 0.85, opacity: 0.4 },
-          { scale: 1, opacity: 1, duration: 0.5, stagger: 0.08, delay: 0.5, ease: "back.out(1.7)", clearProps: "all" }
+        gsap.fromTo(
+          statsBarRef.current,
+          { y: 24, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.8, delay: 0.5, ease: "power4.out", clearProps: "all" }
+        );
+        gsap.fromTo(
+          statsBarRef.current.querySelectorAll(".stat-item"),
+          { scale: 0.8, opacity: 0 },
+          { scale: 1, opacity: 1, duration: 0.5, stagger: 0.08, delay: 0.65, ease: "back.out(1.7)", clearProps: "all" }
         );
       }
-      if (featuresRef.current) {
-        gsap.fromTo(featuresRef.current.querySelectorAll(".feature-chip"),
-          { y: 10, opacity: 0.3, scale: 0.95 },
-          { y: 0, opacity: 1, scale: 1, duration: 0.4, stagger: 0.06, delay: 0.3, ease: "power3.out", clearProps: "all" }
+      if (chipsRef.current) {
+        gsap.fromTo(
+          chipsRef.current.querySelectorAll(".feature-chip"),
+          { y: 12, opacity: 0, scale: 0.9 },
+          { y: 0, opacity: 1, scale: 1, duration: 0.45, stagger: 0.07, delay: 0.35, ease: "power3.out", clearProps: "all" }
         );
       }
     }, containerRef);
     return () => ctx.revert();
   }, []);
 
-  const particlesLoaded = useCallback(async () => {}, []);
-
-  const particlesOptions = useMemo(() => ({
-    fullScreen: false,
-    fpsLimit: 60,
-    particles: {
-      number: { value: 30, density: { enable: true } },
-      color: { value: ["#3b82f6", "#8b5cf6", "#06b6d4"] },
-      shape: { type: "circle" },
-      opacity: { value: { min: 0.1, max: 0.4 }, animation: { enable: true, speed: 0.8, sync: false } },
-      size: { value: { min: 1, max: 3 }, animation: { enable: true, speed: 2, sync: false } },
-      move: { enable: true, speed: 0.6, direction: "none" as const, outModes: { default: "out" as const } },
-      links: { enable: true, distance: 150, color: "#3b82f6", opacity: 0.08, width: 1 }
-    },
-    interactivity: {
-      events: { onHover: { enable: true, mode: "grab" as const }, onClick: { enable: true, mode: "push" as const } },
-      modes: { grab: { distance: 200, links: { opacity: 0.2 } }, push: { quantity: 3 } }
-    },
-    detectRetina: true
-  }), []);
-
   return (
-    <section ref={containerRef} className="relative flex min-h-[100vh] items-center overflow-hidden bg-gradient-hero">
-      {/* Parallax background */}
-      <motion.img src={heroBg} alt="" className="pointer-events-none absolute inset-0 h-[120%] w-full object-cover opacity-20" loading="eager" style={{ y: bgY }} />
+    <section
+      ref={containerRef}
+      className="hero-section relative flex min-h-[100svh] items-center overflow-hidden"
+      style={{
+        background: "linear-gradient(170deg, #020208 0%, #06080f 40%, #020208 100%)",
+      }}
+    >
+      {/* ── Grid pattern ── */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage: `linear-gradient(rgba(59,130,246,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.03) 1px, transparent 1px)`,
+          backgroundSize: "60px 60px",
+        }}
+      />
 
-      {/* Enhanced overlays */}
-      <div className="pointer-events-none absolute inset-0 mesh-gradient-advanced" />
-      <div className="pointer-events-none absolute inset-0 holo-effect opacity-50" />
-      <div className="pointer-events-none absolute inset-0 grain" />
+      {/* ── Subtle vignette ── */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background: "radial-gradient(ellipse 80% 60% at 50% -10%, rgba(59,130,246,0.12) 0%, transparent 60%)",
+        }}
+      />
 
-      {/* tsParticles */}
-      {particlesReady && !prefersReducedMotion &&
-        <Particles id="hero-particles" className="pointer-events-none absolute inset-0 z-[1]" particlesLoaded={particlesLoaded} options={particlesOptions} />
-      }
+      {/* ── CSS aurora orbs (zero JS) ── */}
+      <div className="pointer-events-none absolute left-[15%] top-[20%] h-[700px] w-[700px] rounded-full bg-blue-500/[0.055] blur-[100px] css-orb" />
+      <div className="pointer-events-none absolute bottom-[15%] right-[10%] h-[600px] w-[600px] rounded-full bg-violet-500/[0.045] blur-[90px] css-orb" style={{ animationDelay: "-5s", animationDuration: "15s" }} />
+      <div className="pointer-events-none absolute right-[30%] top-[40%] h-[400px] w-[400px] rounded-full bg-cyan-500/[0.03] blur-[80px] css-orb" style={{ animationDelay: "-9s", animationDuration: "18s" }} />
 
-      <Suspense fallback={null}><HeroScene3D /></Suspense>
+      {/* ── Bottom gradient fade ── */}
+      <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-[5] h-48 bg-gradient-to-t from-background via-background/60 to-transparent" />
 
-      {/* Aurora gradient orbs — CSS-only animations */}
-      <div className="pointer-events-none absolute left-1/4 top-1/4 h-[600px] w-[600px] rounded-full bg-primary/[0.08] blur-[80px] css-orb" />
-      <div className="pointer-events-none absolute bottom-1/4 right-1/4 h-[500px] w-[500px] rounded-full bg-[hsl(260,100%,66%,0.06)] blur-[70px] css-orb" style={{ animationDelay: "-4s", animationDuration: "14s" }} />
-      <div className="pointer-events-none absolute right-1/3 top-1/3 h-[400px] w-[400px] rounded-full bg-[hsl(170,100%,50%,0.04)] blur-[60px] css-orb" style={{ animationDelay: "-8s", animationDuration: "16s" }} />
+      {/* ── Main content ── */}
+      <motion.div
+        className="container relative z-10 px-4 pt-24 pb-16 md:pt-28 md:pb-20"
+        style={{ y: textY, opacity, scale }}
+      >
+        <div className="mx-auto max-w-5xl text-center">
 
-      <motion.div className="container relative z-10" style={{ y: textY, opacity, scale }}>
-        <div className="mx-auto max-w-4xl text-center">
-
-          {/* Badge */}
+          {/* ── Badge ── */}
           <motion.div
-            initial={{ opacity: 0, y: 15 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-5 py-2.5 text-sm backdrop-blur-sm"
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            className="mb-8 inline-flex items-center gap-2.5 rounded-full border border-white/[0.09] bg-white/[0.04] px-5 py-2.5 text-sm backdrop-blur-md"
           >
-            <Sparkles size={14} className="text-primary" />
-            <span className="font-semibold text-white/70">ISHU — Indian StudentHub University</span>
+            <Sparkles size={13} className="text-blue-400" />
+            <span className="font-medium text-white/65">ISHU — Indian StudentHub University</span>
             <motion.span
-              animate={{ scale: [1, 1.3, 1] }}
-              transition={{ repeat: Infinity, duration: 2 }}
+              animate={{ scale: [1, 1.35, 1], opacity: [1, 0.6, 1] }}
+              transition={{ repeat: Infinity, duration: 2.2, ease: "easeInOut" }}
               className="h-2 w-2 rounded-full bg-emerald-400"
             />
           </motion.div>
 
-          {/* Headline */}
-          <h1 ref={headlineRef} className="font-display text-4xl font-bold leading-tight tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl">
-            <TextReveal text="Your Gateway to" delay={0.2} />
-            <br />
-            <span className="text-shimmer">
-              <TypeAnimation
-                sequence={['UPSC', 2000, 'SSC CGL', 2000, 'Banking', 2000, 'Railways', 2000, 'JEE / NEET', 2000, 'Government', 2000, 'Defence', 2000, 'State PSC', 2000]}
-                wrapper="span" speed={40} repeat={Infinity} cursor={true} style={{ display: 'inline-block' }}
-              />
-            </span>
-            <br />
-            <TextReveal text="Exam Success" delay={0.8} />
-          </h1>
+          {/* ── Main Headline ── */}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.75, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <h1 className="font-display text-5xl font-black leading-[1.04] tracking-[-0.03em] text-white sm:text-6xl md:text-7xl lg:text-8xl xl:text-[96px]">
+              <span className="block text-white/90">Your Gateway</span>
+              <span className="block mt-1 md:mt-2">
+                <span
+                  className="inline-block"
+                  style={{
+                    background: "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #06b6d4 100%)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    backgroundClip: "text",
+                  }}
+                >
+                  <TypeAnimation
+                    sequence={[
+                      'UPSC', 2200,
+                      'SSC CGL', 2000,
+                      'Banking', 2000,
+                      'Railways', 2000,
+                      'JEE / NEET', 2000,
+                      'Government', 2000,
+                      'Defence', 2000,
+                      'State PSC', 2000,
+                    ]}
+                    wrapper="span"
+                    speed={42}
+                    repeat={Infinity}
+                    cursor={true}
+                    style={{ display: "inline-block" }}
+                  />
+                </span>
+              </span>
+              <span className="block mt-1 md:mt-2 text-white/90">Exam Success</span>
+            </h1>
+          </motion.div>
 
-          {/* Subtitle */}
-          <motion.p initial={{ opacity: 0.3, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }}
-            className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-muted-foreground md:text-xl">
-            Results, Vacancies, 100+ PDF Tools, Live News & More — Everything you need for UPSC, SSC, Banking, Railways, NTA & State exams. All free, all in one place.
+          {/* ── Subtitle ── */}
+          <motion.p
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.25, ease: "easeOut" }}
+            className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-white/50 md:text-xl"
+          >
+            Results, Vacancies, 100+ PDF Tools, Live News & More —{" "}
+            <span className="text-white/70">Everything you need for UPSC, SSC, Banking, Railways & State exams.</span>{" "}
+            All free, all in one place.
           </motion.p>
 
-          {/* Quick Feature Chips */}
-          <div ref={featuresRef} className="mt-6 flex flex-wrap justify-center gap-3">
-            {quickFeatures.map((f) =>
-              <div key={f.label} className="feature-chip flex items-center gap-2 rounded-full border border-border glass px-4 py-2 text-xs">
-                <f.icon size={12} className="text-primary" />
-                <span className="font-semibold text-foreground">{f.label}</span>
-                <span className="text-muted-foreground hidden sm:inline">— {f.desc}</span>
+          {/* ── Feature chips ── */}
+          <div ref={chipsRef} className="mt-7 flex flex-wrap justify-center gap-2.5">
+            {quickFeatures.map((f) => (
+              <div
+                key={f.label}
+                className="feature-chip flex items-center gap-2 rounded-full border border-white/[0.09] bg-white/[0.04] px-4 py-2 text-xs backdrop-blur-sm transition-all hover:border-white/20 hover:bg-white/[0.07]"
+              >
+                <f.icon size={11} className="text-blue-400 shrink-0" />
+                <span className="font-semibold text-white/80">{f.label}</span>
+                <span className="hidden text-white/40 sm:inline">— {f.desc}</span>
               </div>
-            )}
+            ))}
           </div>
 
-          {/* CTA Buttons */}
-          <motion.div initial={{ opacity: 0.3, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.45 }}
-            className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+          {/* ── CTA Buttons ── */}
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.65, delay: 0.4, ease: "easeOut" }}
+            className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row"
+          >
             <MagneticButton>
-              <Link to="/results"
-                className="group relative flex items-center gap-2 overflow-hidden rounded-xl bg-primary px-8 py-4 font-display text-sm font-semibold text-primary-foreground transition-all hover:shadow-glow">
+              <Link
+                to="/results"
+                className="group relative flex items-center gap-2.5 overflow-hidden rounded-xl px-8 py-4 text-sm font-semibold text-white transition-all duration-300"
+                style={{
+                  background: "linear-gradient(135deg, #3b82f6, #6366f1)",
+                  boxShadow: "0 0 0 0 rgba(99,102,241,0)",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 32px rgba(99,102,241,0.4), 0 0 0 1px rgba(99,102,241,0.3)";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.boxShadow = "0 0 0 0 rgba(99,102,241,0)";
+                }}
+              >
                 <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700" />
                 <span className="relative">Explore Results</span>
-                <ArrowRight size={16} className="relative transition-transform group-hover:translate-x-1" />
+                <ArrowRight size={15} className="relative transition-transform duration-300 group-hover:translate-x-1" />
               </Link>
             </MagneticButton>
+
             <MagneticButton>
-              <Link to="/tools"
-                className="group flex items-center gap-2 rounded-xl border border-border glass px-8 py-4 font-display text-sm font-semibold text-foreground transition-all hover:border-primary/30 hover:shadow-glow">
+              <Link
+                to="/tools"
+                className="group flex items-center gap-2.5 rounded-xl border border-white/[0.1] bg-white/[0.04] px-8 py-4 text-sm font-semibold text-white/85 backdrop-blur-sm transition-all duration-300 hover:border-white/20 hover:bg-white/[0.08] hover:text-white"
+              >
                 Try PDF Tools — Free
+                <ArrowRight size={15} className="transition-transform duration-300 group-hover:translate-x-1 opacity-60 group-hover:opacity-100" />
               </Link>
             </MagneticButton>
           </motion.div>
 
-          {/* Stats bar with Tilt */}
-          <div ref={statsBarRef} className="mt-16 w-full max-w-2xl mx-auto">
-            <Tilt tiltMaxAngleX={prefersReducedMotion ? 0 : 5} tiltMaxAngleY={prefersReducedMotion ? 0 : 5} glareEnable={!prefersReducedMotion} glareMaxOpacity={0.06} glareBorderRadius="1rem" scale={prefersReducedMotion ? 1 : 1.01}>
-              <div className="grid grid-cols-2 sm:flex sm:flex-row sm:items-center sm:justify-center gap-4 sm:gap-6 rounded-2xl glass-strong px-4 sm:px-8 py-5 animate-breathe border border-border">
-                {liveStats.map((stat, i) =>
-                  <div key={stat.label} className={`stat-item flex items-center gap-3 ${i > 0 ? "sm:border-l sm:border-border sm:pl-6" : ""}`}>
-                    <stat.icon size={16} className="text-primary hidden sm:block shrink-0" />
-                    <div>
-                      <p className="font-display text-base sm:text-lg font-bold text-foreground md:text-xl">{stat.value}</p>
-                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground leading-tight">{stat.label}</p>
-                    </div>
+          {/* ── Stats bar ── */}
+          <div ref={statsBarRef} className="mt-16 w-full">
+            <div
+              className="mx-auto grid max-w-2xl grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/[0.08] sm:flex sm:max-w-none sm:items-center sm:justify-center"
+              style={{
+                background: "rgba(255,255,255,0.03)",
+                backdropFilter: "blur(12px)",
+              }}
+            >
+              {liveStats.map((stat, i) => (
+                <div
+                  key={stat.label}
+                  className={`stat-item flex items-center justify-center gap-3 px-6 py-5 sm:justify-start ${
+                    i > 0 ? "sm:border-l sm:border-white/[0.06]" : ""
+                  } border-white/[0.06] ${i >= 2 ? "border-t sm:border-t-0" : ""}`}
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10">
+                    <stat.icon size={16} className="text-blue-400" />
                   </div>
-                )}
-              </div>
-            </Tilt>
+                  <div className="text-left">
+                    <p className="font-display text-lg font-bold text-white md:text-xl">{stat.value}</p>
+                    <p className="text-[10px] uppercase tracking-wider text-white/40">{stat.label}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Trusted by badge */}
-          <motion.div initial={{ opacity: 0.2 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
-            className="mt-8 flex items-center justify-center gap-2 text-xs text-muted-foreground">
-            <div className="flex -space-x-2">
-              {[...Array(5)].map((_, i) =>
-                <div key={i} className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-background bg-primary/20 text-[8px] font-bold text-primary">
-                  {String.fromCharCode(65 + i)}
-                </div>
-              )}
+          {/* ── Social proof ── */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.8, duration: 0.6 }}
+            className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-white/30"
+          >
+            <div className="flex items-center gap-1.5">
+              <div className="flex -space-x-1.5">
+                {["A", "B", "C", "D", "E"].map((l) => (
+                  <div key={l} className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-[#06080f] bg-gradient-to-br from-blue-500/30 to-violet-500/30 text-[8px] font-bold text-white/70">
+                    {l}
+                  </div>
+                ))}
+              </div>
+              <span>Trusted by <strong className="text-white/60">1M+</strong> students</span>
             </div>
-            <span>Trusted by <strong className="text-foreground">1M+</strong> students across India</span>
+            <span className="hidden sm:block">·</span>
+            <div className="flex items-center gap-1.5">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} size={11} className="fill-amber-400 text-amber-400" />
+              ))}
+              <span>4.9/5 rated</span>
+            </div>
+            <span className="hidden sm:block">·</span>
+            <div className="flex items-center gap-1.5">
+              <CheckCircle size={11} className="text-emerald-400" />
+              <span>100% Free forever</span>
+            </div>
           </motion.div>
 
-          {/* Scroll indicator */}
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }} className="mt-10 flex justify-center">
-            <motion.div animate={{ y: [0, 12, 0] }} transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }} className="flex flex-col items-center gap-2">
-              <span className="text-[10px] uppercase tracking-widest text-muted-foreground/60">Scroll</span>
-              <ChevronDown size={16} className="text-primary/60" />
+          {/* ── Scroll indicator ── */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.1 }}
+            className="mt-12 flex justify-center"
+          >
+            <motion.div
+              animate={{ y: [0, 10, 0] }}
+              transition={{ repeat: Infinity, duration: 2.8, ease: "easeInOut" }}
+              className="flex flex-col items-center gap-2"
+            >
+              <span className="text-[9px] uppercase tracking-[0.2em] text-white/20">Scroll</span>
+              <ChevronDown size={14} className="text-white/25" />
             </motion.div>
           </motion.div>
         </div>
       </motion.div>
-
-      <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent z-[5]" />
     </section>
   );
 };

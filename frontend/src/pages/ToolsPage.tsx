@@ -394,53 +394,67 @@ const ToolsPage = () => {
               </motion.div>
 
               {/* Headline */}
-              <h1 className="font-display text-4xl font-extrabold tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl">
+              <h1
+                className="font-display font-black leading-[1.05] tracking-tight text-white"
+                style={{
+                  fontSize: "clamp(2.5rem, 8vw, 5.5rem)",
+                  letterSpacing: "-0.03em",
+                }}
+              >
                 Free{" "}
                 <span
-                  className="bg-clip-text text-transparent"
-                  style={{ backgroundImage: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 45%, #06b6d4 100%)" }}
+                  style={{
+                    background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    backgroundClip: "text",
+                  }}
                 >
-                  PDF & Document
+                  PDF &amp; Document
                 </span>
                 <br />
                 <span className="text-white">Tools Online</span>
               </h1>
 
-              <p className="mx-auto mt-6 max-w-2xl text-base text-white/55 md:text-lg leading-relaxed">
+              <p className="mx-auto mt-6 max-w-2xl text-base text-white/50 md:text-lg leading-relaxed">
                 Merge, split, compress, convert, watermark, sign, protect and edit — everything PDF, completely free.
-                No sign-up required. Process files instantly and securely in your browser.
+                No sign-up. Process files instantly and securely in your browser.
               </p>
 
               {/* Feature chips */}
-              <div className="mt-8 flex flex-wrap justify-center gap-3">
+              <div className="mt-7 flex flex-wrap justify-center gap-2.5">
                 {TRUST_BADGES.map((chip) => (
                   <motion.div
                     key={chip.label}
-                    whileHover={{ scale: 1.06, y: -2 }}
-                    className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-medium text-white/60 backdrop-blur-sm"
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    className="flex items-center gap-2 rounded-full border border-white/[0.09] bg-white/[0.04] px-4 py-2 text-xs font-medium text-white/60 backdrop-blur-sm"
                   >
-                    <chip.icon size={12} className="text-primary" />
-                    {chip.label}
+                    <chip.icon size={11} className="text-primary" />
+                    <span className="font-semibold text-white/75">{chip.label}</span>
+                    <span className="hidden text-white/40 sm:inline">— {chip.desc}</span>
                   </motion.div>
                 ))}
               </div>
 
-              <div className="mx-auto mt-6 h-px w-24 bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
+              <div className="mx-auto mt-6 h-px w-24 bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
             </div>
           </FadeInView>
 
           {/* Search bar */}
           <FadeInView delay={0.1}>
-            <div className="mx-auto mt-10 max-w-xl">
-              <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4 backdrop-blur-sm transition-all focus-within:border-primary/40 focus-within:shadow-[0_0_30px_rgba(99,102,241,0.12)]">
-                <Search size={18} className="shrink-0 text-white/30" />
+            <div className="mx-auto mt-10 max-w-2xl">
+              <div
+                className="flex items-center gap-3 rounded-2xl border border-white/[0.09] bg-white/[0.03] px-6 py-4 backdrop-blur-md transition-all focus-within:border-primary/50 focus-within:shadow-[0_0_40px_rgba(99,102,241,0.15)]"
+                style={{ boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)" }}
+              >
+                <Search size={20} className="shrink-0 text-white/25" />
                 <input
                   id="tools-search"
                   type="text"
-                  placeholder="Search 100+ tools — merge, compress, convert, split…"
+                  placeholder="Search 100+ tools — merge PDF, compress, Word to PDF, OCR…"
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
-                  className="w-full bg-transparent text-sm text-white placeholder:text-white/30 focus:outline-none"
+                  className="w-full bg-transparent text-base text-white placeholder:text-white/25 focus:outline-none"
                   aria-label="Search PDF tools"
                 />
                 <AnimatePresence>
@@ -458,6 +472,21 @@ const ToolsPage = () => {
                   )}
                 </AnimatePresence>
               </div>
+              {/* Popular searches */}
+              {!searchInput && (
+                <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                  <span className="text-[11px] text-white/25">Popular:</span>
+                  {["Merge PDF", "Compress PDF", "PDF to Word", "Word to PDF", "PDF to JPG", "Sign PDF"].map((tag) => (
+                    <button
+                      key={tag}
+                      onClick={() => setSearchInput(tag)}
+                      className="rounded-full border border-white/[0.07] bg-white/[0.03] px-3 py-1 text-[11px] text-white/40 transition-all hover:border-primary/30 hover:text-white/70"
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </FadeInView>
 
