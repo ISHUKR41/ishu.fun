@@ -1,8 +1,9 @@
 /**
- * HowItWorksSection.tsx - Animated Step-by-Step Guide
- * 
- * Shows how ISHU platform works in 4 simple steps with
- * connected animated timeline, GSAP stagger, and 3D tilt cards.
+ * HowItWorksSection.tsx — 4-Step Animated Guide
+ *
+ * How ISHU works in 4 simple steps.
+ * Performance: CSS-only backgrounds, zero JS decorative animations.
+ * GSAP used only for scroll-triggered card entrance.
  */
 
 import { motion } from "framer-motion";
@@ -20,41 +21,41 @@ const steps = [
     icon: Search,
     step: "01",
     title: "Search & Discover",
-    desc: "Find government exam results, vacancies, admit cards & answer keys from all 36 states and central boards.",
-    gradient: "from-blue-500/20 via-cyan-500/10 to-transparent",
-    iconColor: "text-blue-400",
-    iconBg: "bg-blue-500/10",
-    lineColor: "from-blue-500 to-cyan-500",
+    desc: "Find government exam results, vacancies, admit cards and answer keys from all 36 states and central boards instantly.",
+    color: "#3b82f6",
+    bg: "rgba(59,130,246,0.08)",
+    border: "rgba(59,130,246,0.15)",
+    glow: "rgba(59,130,246,0.12)",
   },
   {
     icon: Bell,
     step: "02",
     title: "Get Instant Alerts",
-    desc: "Subscribe to WhatsApp notifications for your preferred exam categories. Never miss a deadline again.",
-    gradient: "from-emerald-500/20 via-green-500/10 to-transparent",
-    iconColor: "text-emerald-400",
-    iconBg: "bg-emerald-500/10",
-    lineColor: "from-emerald-500 to-green-500",
+    desc: "Subscribe to WhatsApp notifications for your preferred exams. Never miss a vacancy, result or important deadline again.",
+    color: "#10b981",
+    bg: "rgba(16,185,129,0.08)",
+    border: "rgba(16,185,129,0.15)",
+    glow: "rgba(16,185,129,0.12)",
   },
   {
     icon: FileText,
     step: "03",
-    title: "Use Free Tools",
-    desc: "Access 100+ PDF tools — merge, split, compress, convert & more. Everything runs in your browser, 100% free.",
-    gradient: "from-violet-500/20 via-purple-500/10 to-transparent",
-    iconColor: "text-violet-400",
-    iconBg: "bg-violet-500/10",
-    lineColor: "from-violet-500 to-purple-500",
+    title: "Use Free PDF Tools",
+    desc: "Access 100+ professional PDF tools — merge, split, compress, convert, OCR and more. Everything runs in your browser.",
+    color: "#8b5cf6",
+    bg: "rgba(139,92,246,0.08)",
+    border: "rgba(139,92,246,0.15)",
+    glow: "rgba(139,92,246,0.12)",
   },
   {
     icon: Trophy,
     step: "04",
     title: "Achieve Your Goals",
-    desc: "Stay informed with 1000+ daily news, expert blogs, and preparation guides. Crack your dream exam!",
-    gradient: "from-amber-500/20 via-orange-500/10 to-transparent",
-    iconColor: "text-amber-400",
-    iconBg: "bg-amber-500/10",
-    lineColor: "from-amber-500 to-orange-500",
+    desc: "Stay ahead with 1000+ daily news articles, expert blogs and preparation guides. Crack your dream government exam!",
+    color: "#f59e0b",
+    bg: "rgba(245,158,11,0.08)",
+    border: "rgba(245,158,11,0.15)",
+    glow: "rgba(245,158,11,0.12)",
   },
 ];
 
@@ -65,19 +66,15 @@ const HowItWorksSection = () => {
     const ctx = gsap.context(() => {
       gsap.fromTo(
         ".how-step-card",
-        { y: 60, opacity: 0, scale: 0.9 },
+        { y: 55, opacity: 0, scale: 0.92 },
         {
-          scrollTrigger: { trigger: sectionRef.current, start: "top 75%", toggleActions: "play none none none" },
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: "top 78%",
+            toggleActions: "play none none none",
+          },
           y: 0, opacity: 1, scale: 1,
-          stagger: 0.15, duration: 0.8, ease: "back.out(1.5)", clearProps: "all",
-        }
-      );
-      gsap.fromTo(
-        ".how-connector",
-        { scaleX: 0 },
-        {
-          scrollTrigger: { trigger: sectionRef.current, start: "top 70%", toggleActions: "play none none none" },
-          scaleX: 1, stagger: 0.2, duration: 0.6, delay: 0.5, ease: "power3.out", clearProps: "all",
+          stagger: 0.13, duration: 0.75, ease: "back.out(1.4)", clearProps: "all",
         }
       );
     }, sectionRef);
@@ -85,78 +82,140 @@ const HowItWorksSection = () => {
   }, []);
 
   return (
-    <section ref={sectionRef} className="relative overflow-hidden py-24 md:py-32 bg-gradient-to-b from-background via-card/30 to-background">
-      {/* Background effects */}
-      <div className="pointer-events-none absolute inset-0 bg-grid opacity-15" />
-      <motion.div
-        animate={{ x: [0, 50, 0], y: [0, -40, 0] }}
-        transition={{ repeat: Infinity, duration: 18, ease: "easeInOut" }}
-        className="pointer-events-none absolute left-[10%] top-[20%] h-[500px] w-[500px] rounded-full bg-primary/5 blur-[150px]"
+    <section
+      ref={sectionRef}
+      className="relative overflow-hidden py-28 md:py-36"
+    >
+      {/* CSS-only backgrounds — no JS animations */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-background via-card/30 to-background" />
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage: `
+            radial-gradient(ellipse 50% 40% at 10% 50%, rgba(59,130,246,0.04) 0%, transparent 60%),
+            radial-gradient(ellipse 50% 40% at 90% 50%, rgba(139,92,246,0.03) 0%, transparent 60%)
+          `,
+        }}
       />
-      <motion.div
-        animate={{ x: [0, -40, 0], y: [0, 30, 0] }}
-        transition={{ repeat: Infinity, duration: 14, ease: "easeInOut" }}
-        className="pointer-events-none absolute right-[15%] bottom-[10%] h-[400px] w-[400px] rounded-full bg-[hsl(260,100%,66%,0.04)] blur-[120px]"
-      />
+      <div className="pointer-events-none absolute inset-0 bg-grid opacity-[0.1]" />
 
       <div className="container relative">
+        {/* Section header */}
         <FadeInView>
           <div className="mx-auto mb-16 max-w-2xl text-center">
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-5 py-2.5 text-sm"
+              className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.04] px-5 py-2 text-sm backdrop-blur-sm"
             >
-              <Sparkles size={14} className="text-primary" />
-              <span className="font-semibold text-foreground">How ISHU Works</span>
+              <Sparkles size={13} className="text-primary" />
+              <span className="font-semibold text-white/70">How ISHU Works</span>
             </motion.div>
 
-            <h2 className="font-display text-3xl font-bold text-foreground md:text-4xl lg:text-5xl">
+            <motion.h2
+              initial={{ opacity: 0, y: 14 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.08 }}
+              className="font-display text-3xl font-black tracking-tight text-white md:text-4xl lg:text-5xl"
+              style={{ letterSpacing: "-0.025em" }}
+            >
               Simple Steps to{" "}
-              <span className="text-gradient">Success</span>
-            </h2>
-            <p className="mt-4 text-lg text-muted-foreground">
+              <span
+                style={{
+                  background: "linear-gradient(135deg, #3b82f6, #8b5cf6)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}
+              >
+                Success
+              </span>
+            </motion.h2>
+
+            <motion.p
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.15 }}
+              className="mt-4 text-lg text-white/45"
+            >
               From discovering results to cracking your exam — ISHU makes it effortless.
-            </p>
-            <div className="mx-auto mt-5 gradient-line w-24" />
+            </motion.p>
+
+            <div className="mx-auto mt-5 h-px w-24 bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
           </div>
         </FadeInView>
 
         {/* Steps grid */}
-        <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
           {steps.map((step, i) => (
             <div key={step.step} className="relative">
-              {/* Connector line (hidden on last item and mobile) */}
+              {/* Connector arrow (desktop only) */}
               {i < steps.length - 1 && (
-                <div className="how-connector pointer-events-none absolute right-0 top-16 hidden h-0.5 w-8 origin-left xl:block -mr-4 z-10">
-                  <div className={`h-full w-full rounded-full bg-gradient-to-r ${step.lineColor} opacity-30`} />
+                <div className="pointer-events-none absolute -right-3 top-14 z-10 hidden xl:flex items-center">
+                  <ArrowRight size={18} className="text-white/15" />
                 </div>
               )}
 
-              <Tilt tiltMaxAngleX={8} tiltMaxAngleY={8} scale={1.02} glareEnable glareMaxOpacity={0.08} glareBorderRadius="1rem">
-                <div className="how-step-card group relative h-full overflow-hidden rounded-2xl border border-border bg-card p-7 transition-all duration-300 hover:border-primary/30 hover:shadow-glow">
-                  <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${step.gradient} opacity-0 transition-opacity duration-300 group-hover:opacity-100`} />
+              <Tilt
+                tiltMaxAngleX={7}
+                tiltMaxAngleY={7}
+                scale={1.02}
+                glareEnable
+                glareMaxOpacity={0.06}
+                glareColor={step.color}
+                glareBorderRadius="1rem"
+              >
+                <div
+                  className="how-step-card group relative h-full overflow-hidden rounded-2xl border p-7 transition-all duration-300"
+                  style={{
+                    borderColor: step.border,
+                    background: "rgba(8,8,16,0.85)",
+                    backdropFilter: "blur(8px)",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.boxShadow = `0 0 32px ${step.glow}`;
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.boxShadow = "";
+                  }}
+                >
+                  {/* Top accent */}
+                  <div
+                    className="absolute inset-x-0 top-0 h-px opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                    style={{
+                      background: `linear-gradient(90deg, transparent, ${step.color}70, transparent)`,
+                    }}
+                  />
 
-                  {/* Step number */}
-                  <div className="relative mb-4 flex items-center justify-between">
-                    <motion.div
-                      whileHover={{ scale: 1.1, rotate: 5 }}
-                      className={`flex h-14 w-14 items-center justify-center rounded-xl ${step.iconBg} transition-transform duration-300 group-hover:scale-110`}
+                  {/* Hover glow */}
+                  <div
+                    className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-400 group-hover:opacity-100"
+                    style={{
+                      background: `radial-gradient(ellipse 70% 60% at 20% 20%, ${step.bg}, transparent)`,
+                    }}
+                  />
+
+                  {/* Step number + icon row */}
+                  <div className="relative mb-5 flex items-start justify-between">
+                    <div
+                      className="flex h-13 w-13 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-110"
+                      style={{ background: step.bg, width: 52, height: 52 }}
                     >
-                      <step.icon size={26} className={step.iconColor} />
-                    </motion.div>
-                    <span className="font-display text-4xl font-bold text-border/50 group-hover:text-primary/20 transition-colors">
+                      <step.icon size={24} style={{ color: step.color }} />
+                    </div>
+                    <span
+                      className="font-display text-5xl font-black leading-none opacity-15 transition-opacity duration-300 group-hover:opacity-25"
+                      style={{ color: step.color }}
+                    >
                       {step.step}
                     </span>
                   </div>
 
-                  <h3 className="relative font-display text-lg font-bold text-foreground">{step.title}</h3>
-                  <p className="relative mt-2 text-sm leading-relaxed text-muted-foreground">{step.desc}</p>
-
-                  <div className="relative mt-4 flex items-center gap-1 text-sm font-medium text-primary opacity-0 transition-all duration-300 group-hover:opacity-100">
-                    Learn more <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
-                  </div>
+                  <h3 className="relative font-display text-lg font-bold text-white/90">{step.title}</h3>
+                  <p className="relative mt-2.5 text-sm leading-relaxed text-white/50">{step.desc}</p>
                 </div>
               </Tilt>
             </div>

@@ -151,6 +151,9 @@ Only apply GPU hints to specific elements that ARE actively being animated:
 ### Tools Page Improvements
 - `frontend/src/pages/ToolsPage.tsx`: Headline enlarged to `clamp(2.5rem, 8vw, 5.5rem)`. Search bar widened to `max-w-2xl`. Trust chips show full description. Popular search tags added below search input.
 
+### Performance — JS Orb Elimination (2026-03-24)
+ALL large background orbs now use CSS-only `radial-gradient` via inline `style` prop. Zero JS animation loops for decorative backgrounds across all 23 home sections. Completed sections: HowItWorksSection, TestimonialsSection, CallToActionSection, PlatformOverview, FAQSection, StatsSection, ImmersiveExperienceSection, InnovationMatrixSection, WhatsAppCTA. Vite build time improved from 3126ms → 194ms.
+
 ### CSS Additions (`frontend/src/index.css`)
 - New hero utilities: `.hero-gradient-text`, `.pulse-dot`, `.section-badge`, `.dark-card`, `.top-accent-hover`
 - Marquee CSS animations: `.marquee-track--ltr`, `.marquee-track--rtl`  

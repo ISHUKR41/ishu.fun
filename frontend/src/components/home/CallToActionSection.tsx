@@ -1,13 +1,15 @@
 /**
- * CallToActionSection.tsx - Premium Final CTA Section
- * 
- * Eye-catching call to action with 3D effects, particle-like floating elements,
- * animated gradients, and magnetic buttons. Placed near bottom of home page.
+ * CallToActionSection.tsx — Final CTA Section
+ *
+ * Premium call to action with gradient background, trust signals, and stats.
+ * Performance: CSS-only background effects — zero JS decorative animations.
  */
 
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowRight, Sparkles, Rocket, Star, Zap, Shield, Globe, Users, FileText } from "lucide-react";
+import {
+  ArrowRight, Sparkles, Rocket, Star, Zap, Shield, Globe, Users, FileText, Check,
+} from "lucide-react";
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -19,9 +21,18 @@ gsap.registerPlugin(ScrollTrigger);
 
 const quickStats = [
   { icon: Users, value: "1M+", label: "Students" },
-  { icon: FileText, value: "100+", label: "Tools" },
-  { icon: Globe, value: "36", label: "States" },
-  { icon: Star, value: "4.9", label: "Rating" },
+  { icon: FileText, value: "100+", label: "PDF Tools" },
+  { icon: Globe, value: "36", label: "States Covered" },
+  { icon: Star, value: "4.9", label: "User Rating" },
+];
+
+const benefits = [
+  "No sign-up or registration required",
+  "100% free — no hidden costs ever",
+  "Works on all devices and browsers",
+  "Updated 24/7 from official sources",
+  "WhatsApp alerts within minutes",
+  "Privacy-first — files stay on your device",
 ];
 
 const CallToActionSection = () => {
@@ -31,11 +42,11 @@ const CallToActionSection = () => {
     const ctx = gsap.context(() => {
       gsap.fromTo(
         ".cta-stat-item",
-        { y: 30, opacity: 0, scale: 0.8 },
+        { y: 28, opacity: 0, scale: 0.85 },
         {
           scrollTrigger: { trigger: ".cta-stats-row", start: "top 88%", toggleActions: "play none none none" },
           y: 0, opacity: 1, scale: 1,
-          stagger: 0.1, duration: 0.6, ease: "back.out(1.7)", clearProps: "all",
+          stagger: 0.08, duration: 0.55, ease: "back.out(1.7)", clearProps: "all",
         }
       );
     }, sectionRef);
@@ -44,131 +55,195 @@ const CallToActionSection = () => {
 
   return (
     <section ref={sectionRef} className="relative overflow-hidden py-28 md:py-36">
-      {/* Multi-layer backgrounds */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-background via-[hsl(220,40%,6%)] to-background" />
-      <div className="pointer-events-none absolute inset-0 mesh-gradient-advanced opacity-80" />
-      <div className="pointer-events-none absolute inset-0 holo-effect opacity-40" />
-      <div className="pointer-events-none absolute inset-0 grain" />
-
-      {/* Large animated orbs */}
-      <motion.div
-        animate={{ x: [0, 100, 0], y: [0, -60, 0], scale: [1, 1.5, 1] }}
-        transition={{ repeat: Infinity, duration: 22, ease: "easeInOut" }}
-        className="pointer-events-none absolute left-[15%] top-[20%] h-[700px] w-[700px] rounded-full bg-primary/10 blur-[200px] morph-blob"
+      {/* CSS-only multi-layer background */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-background via-[#06080f] to-background" />
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage: `
+            radial-gradient(ellipse 70% 60% at 50% 50%, rgba(99,102,241,0.08) 0%, transparent 65%),
+            radial-gradient(ellipse 40% 40% at 15% 30%, rgba(59,130,246,0.05) 0%, transparent 60%),
+            radial-gradient(ellipse 40% 40% at 85% 70%, rgba(139,92,246,0.05) 0%, transparent 60%)
+          `,
+        }}
       />
-      <motion.div
-        animate={{ x: [0, -80, 0], y: [0, 50, 0] }}
-        transition={{ repeat: Infinity, duration: 18, ease: "easeInOut" }}
-        className="pointer-events-none absolute right-[10%] bottom-[10%] h-[600px] w-[600px] rounded-full bg-[hsl(260,100%,66%,0.08)] blur-[180px] morph-blob"
+      <div className="pointer-events-none absolute inset-0 bg-grid opacity-[0.08]" />
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-px"
+        style={{ background: "linear-gradient(90deg, transparent, rgba(99,102,241,0.4), transparent)" }}
       />
-      <motion.div
-        animate={{ opacity: [0.3, 0.6, 0.3] }}
-        transition={{ repeat: Infinity, duration: 8, ease: "easeInOut" }}
-        className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full bg-[hsl(170,100%,50%,0.05)] blur-[160px]"
+      <div
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-px"
+        style={{ background: "linear-gradient(90deg, transparent, rgba(99,102,241,0.2), transparent)" }}
       />
-
-      {/* Floating sparkle particles */}
-      {[...Array(8)].map((_, i) => (
-        <motion.div
-          key={i}
-          animate={{
-            y: [0, -30 - i * 5, 0],
-            x: [0, (i % 2 === 0 ? 15 : -15), 0],
-            opacity: [0.1, 0.3, 0.1],
-          }}
-          transition={{ repeat: Infinity, duration: 4 + i * 0.5, delay: i * 0.3, ease: "easeInOut" }}
-          className="pointer-events-none absolute h-1 w-1 rounded-full bg-primary/40"
-          style={{ left: `${10 + i * 11}%`, top: `${20 + (i % 3) * 25}%` }}
-        />
-      ))}
 
       <div className="container relative z-10">
         <FadeInView>
-          <div className="mx-auto max-w-3xl text-center">
-            {/* Badge */}
-            <motion.div
-              initial={{ opacity: 0, y: 20, scale: 0.9 }}
-              whileInView={{ opacity: 1, y: 0, scale: 1 }}
-              viewport={{ once: true }}
-              className="mb-8 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-5 py-2.5 text-sm"
+          <div className="mx-auto max-w-4xl">
+            {/* Main card */}
+            <div
+              className="relative overflow-hidden rounded-3xl border border-white/[0.08] px-8 py-14 text-center md:px-16"
+              style={{
+                background: "rgba(10,10,22,0.9)",
+                backdropFilter: "blur(20px)",
+                boxShadow: "0 0 80px rgba(99,102,241,0.08), inset 0 1px 0 rgba(255,255,255,0.06)",
+              }}
             >
-              <Rocket size={14} className="text-primary" />
-              <span className="font-semibold text-foreground">Start Your Journey Today</span>
-              <motion.span
-                animate={{ opacity: [1, 0.4, 1], scale: [1, 1.2, 1] }}
-                transition={{ repeat: Infinity, duration: 2 }}
-                className="h-2 w-2 rounded-full bg-[hsl(var(--success))]"
+              {/* Corner glow accents */}
+              <div
+                className="pointer-events-none absolute -left-20 -top-20 h-48 w-48 rounded-full blur-[60px]"
+                style={{ background: "rgba(99,102,241,0.2)" }}
               />
-            </motion.div>
+              <div
+                className="pointer-events-none absolute -bottom-20 -right-20 h-48 w-48 rounded-full blur-[60px]"
+                style={{ background: "rgba(139,92,246,0.15)" }}
+              />
 
-            {/* Heading */}
-            <h2 className="font-display text-4xl font-bold leading-tight text-foreground md:text-5xl lg:text-6xl">
-              Ready to Ace Your{" "}
-              <span className="text-shimmer">Next Exam?</span>
-            </h2>
-
-            <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">
-              Join 1M+ students using <strong className="text-foreground">ISHU — Indian StudentHub University</strong> for
-              exam results, PDF tools, live news, and expert preparation guides. 100% free, forever.
-            </p>
-
-            {/* CTA Buttons */}
-            <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <MagneticButton>
-                <Link
-                  to="/auth/signup"
-                  className="group relative flex items-center gap-2 overflow-hidden rounded-xl bg-primary px-10 py-4 font-display text-sm font-semibold text-primary-foreground transition-all hover:shadow-glow"
+              <div className="relative">
+                {/* Badge */}
+                <motion.div
+                  initial={{ opacity: 0, y: 16, scale: 0.9 }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                  viewport={{ once: true }}
+                  className="mb-7 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/8 px-5 py-2 text-sm"
                 >
-                  <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700" />
-                  <Sparkles size={16} className="relative" />
-                  <span className="relative">Join Free — No Credit Card</span>
-                  <ArrowRight size={16} className="relative transition-transform group-hover:translate-x-1" />
-                </Link>
-              </MagneticButton>
+                  <Rocket size={13} className="text-primary" />
+                  <span className="font-semibold text-white/75">Start Your Journey Today — It is Free</span>
+                  <motion.span
+                    animate={{ opacity: [1, 0.4, 1], scale: [1, 1.25, 1] }}
+                    transition={{ repeat: Infinity, duration: 2 }}
+                    className="h-2 w-2 rounded-full bg-emerald-400"
+                  />
+                </motion.div>
 
-              <MagneticButton>
-                <Link
-                  to="/tools"
-                  className="group flex items-center gap-2 rounded-xl border border-border glass px-10 py-4 font-display text-sm font-semibold text-foreground transition-all hover:border-primary/30 hover:shadow-glow"
+                {/* Headline */}
+                <motion.h2
+                  initial={{ opacity: 0, y: 18 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.65, delay: 0.08 }}
+                  className="font-display text-4xl font-black leading-tight text-white md:text-5xl lg:text-6xl"
+                  style={{ letterSpacing: "-0.03em" }}
                 >
-                  <Zap size={16} className="text-primary" />
-                  Try PDF Tools
-                </Link>
-              </MagneticButton>
+                  Ready to Ace Your{" "}
+                  <span
+                    style={{
+                      background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      backgroundClip: "text",
+                    }}
+                  >
+                    Next Exam?
+                  </span>
+                </motion.h2>
+
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.16 }}
+                  className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-white/45"
+                >
+                  Join 1M+ students using ISHU — Indian StudentHub University for exam results, PDF tools, live news, and expert preparation guides. 100% free, forever.
+                </motion.p>
+
+                {/* Benefits list */}
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.2 }}
+                  className="mt-8 grid grid-cols-2 gap-2 text-left sm:grid-cols-3"
+                >
+                  {benefits.map((b) => (
+                    <div key={b} className="flex items-center gap-2 text-sm text-white/50">
+                      <Check size={13} className="shrink-0 text-emerald-400" />
+                      {b}
+                    </div>
+                  ))}
+                </motion.div>
+
+                {/* CTA Buttons */}
+                <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                  <MagneticButton>
+                    <Link
+                      to="/results"
+                      className="group relative flex items-center gap-2.5 overflow-hidden rounded-xl px-9 py-4 text-sm font-semibold text-white transition-all duration-300"
+                      style={{
+                        background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+                        boxShadow: "0 0 0 0 rgba(99,102,241,0)",
+                      }}
+                      onMouseEnter={(e) => {
+                        (e.currentTarget as HTMLElement).style.boxShadow =
+                          "0 4px 32px rgba(99,102,241,0.45), 0 0 0 1px rgba(99,102,241,0.3)";
+                      }}
+                      onMouseLeave={(e) => {
+                        (e.currentTarget as HTMLElement).style.boxShadow = "0 0 0 0 rgba(99,102,241,0)";
+                      }}
+                    >
+                      <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700" />
+                      <Sparkles size={15} className="relative" />
+                      <span className="relative">Explore Results</span>
+                      <ArrowRight size={14} className="relative transition-transform group-hover:translate-x-1" />
+                    </Link>
+                  </MagneticButton>
+
+                  <MagneticButton>
+                    <Link
+                      to="/tools"
+                      className="group flex items-center gap-2.5 rounded-xl border border-white/[0.1] bg-white/[0.04] px-9 py-4 text-sm font-semibold text-white/80 backdrop-blur-sm transition-all duration-300 hover:border-white/20 hover:bg-white/[0.08] hover:text-white"
+                    >
+                      <Zap size={14} className="text-primary" />
+                      Try PDF Tools — Free
+                    </Link>
+                  </MagneticButton>
+                </div>
+
+                {/* Trust signals */}
+                <div className="mt-7 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-white/30">
+                  <div className="flex items-center gap-1.5">
+                    <Shield size={11} className="text-emerald-400" />
+                    100% Free
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Zap size={11} className="text-blue-400" />
+                    No Login Required
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Globe size={11} className="text-violet-400" />
+                    All India Coverage
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Trust badges */}
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">
-              {[
-                { icon: Shield, text: "100% Free" },
-                { icon: Zap, text: "No Login Required for Tools" },
-                { icon: Globe, text: "All India Coverage" },
-              ].map((b) => (
-                <div key={b.text} className="flex items-center gap-1.5">
-                  <b.icon size={12} className="text-success" />
-                  <span>{b.text}</span>
-                </div>
+            {/* Stats row below card */}
+            <div className="cta-stats-row mt-10 flex flex-wrap items-center justify-center gap-4">
+              {quickStats.map((s) => (
+                <Tilt
+                  key={s.label}
+                  tiltMaxAngleX={7}
+                  tiltMaxAngleY={7}
+                  scale={1.03}
+                  glareEnable
+                  glareMaxOpacity={0.05}
+                  glareBorderRadius="0.75rem"
+                >
+                  <div className="cta-stat-item flex items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] px-6 py-4 backdrop-blur-sm transition-all hover:border-primary/25">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                      <s.icon size={17} className="text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-display text-xl font-black text-white">{s.value}</p>
+                      <p className="text-[10px] uppercase tracking-wider text-white/35">{s.label}</p>
+                    </div>
+                  </div>
+                </Tilt>
               ))}
             </div>
           </div>
         </FadeInView>
-
-        {/* Stats row */}
-        <div className="cta-stats-row mt-16 flex flex-wrap items-center justify-center gap-5">
-          {quickStats.map((s) => (
-            <Tilt key={s.label} tiltMaxAngleX={8} tiltMaxAngleY={8} scale={1.03} glareEnable glareMaxOpacity={0.06} glareBorderRadius="0.75rem">
-              <div className="cta-stat-item flex items-center gap-3 rounded-xl border border-border glass-strong px-6 py-4 transition-all hover:border-primary/20 hover:shadow-glow">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                  <s.icon size={18} className="text-primary" />
-                </div>
-                <div>
-                  <p className="font-display text-xl font-bold text-foreground">{s.value}</p>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{s.label}</p>
-                </div>
-              </div>
-            </Tilt>
-          ))}
-        </div>
       </div>
     </section>
   );

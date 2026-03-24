@@ -58,16 +58,15 @@ const WhatsAppCTA = () => {
       <div className="pointer-events-none absolute inset-0 mesh-gradient-advanced opacity-50" />
       <div className="pointer-events-none absolute inset-0 grain" />
       
-      {/* Animated orbs */}
-      <motion.div 
-        animate={{ opacity: [0.3, 0.5, 0.3], x: [0, 30, 0] }} 
-        transition={{ repeat: Infinity, duration: 12, ease: "easeInOut" }}
-        className="pointer-events-none absolute left-[15%] top-[20%] h-[400px] w-[400px] rounded-full bg-[hsl(142,76%,46%,0.08)] blur-[150px] morph-blob" 
-      />
-      <motion.div 
-        animate={{ opacity: [0.2, 0.4, 0.2], y: [0, -25, 0] }} 
-        transition={{ repeat: Infinity, duration: 10, ease: "easeInOut" }}
-        className="pointer-events-none absolute right-[10%] bottom-[15%] h-[350px] w-[350px] rounded-full bg-primary/8 blur-[130px]" 
+      {/* CSS-only background orbs — no JS */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage: `
+            radial-gradient(ellipse 45% 40% at 15% 35%, rgba(16,185,129,0.06) 0%, transparent 60%),
+            radial-gradient(ellipse 45% 40% at 85% 65%, rgba(99,102,241,0.05) 0%, transparent 60%)
+          `,
+        }}
       />
       
       <div className="container relative z-10">

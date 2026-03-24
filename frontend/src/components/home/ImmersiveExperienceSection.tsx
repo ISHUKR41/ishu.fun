@@ -53,15 +53,14 @@ const ImmersiveExperienceSection = () => {
   return (
     <section ref={sectionRef} className="relative overflow-hidden border-t border-border py-20 md:py-28">
       <div className="pointer-events-none absolute inset-0 mesh-gradient-advanced opacity-50" />
-      <motion.div
-        animate={{ x: [0, 50, 0], y: [0, -30, 0] }}
-        transition={{ repeat: Infinity, duration: 16, ease: "easeInOut" }}
-        className="pointer-events-none absolute left-[10%] top-[20%] h-[360px] w-[360px] rounded-full bg-primary/10 blur-[120px]"
-      />
-      <motion.div
-        animate={{ x: [0, -40, 0], y: [0, 35, 0] }}
-        transition={{ repeat: Infinity, duration: 14, ease: "easeInOut" }}
-        className="pointer-events-none absolute right-[10%] bottom-[10%] h-[320px] w-[320px] rounded-full bg-accent/10 blur-[120px]"
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage: `
+            radial-gradient(ellipse 40% 40% at 10% 30%, rgba(99,102,241,0.07) 0%, transparent 60%),
+            radial-gradient(ellipse 40% 40% at 90% 70%, rgba(139,92,246,0.05) 0%, transparent 60%)
+          `,
+        }}
       />
 
       <div className="container relative">

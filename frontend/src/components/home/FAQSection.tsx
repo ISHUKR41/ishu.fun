@@ -1,29 +1,132 @@
 /**
- * FAQSection.tsx - Frequently Asked Questions
- * 
- * Accordion-style FAQ section with 8 common questions about ISHU.
- * Features GSAP scroll-triggered animations and JSON-LD structured data for SEO.
+ * FAQSection.tsx — Frequently Asked Questions
+ *
+ * Accordion FAQ with 10 rich questions about ISHU.
+ * Performance: CSS-only backgrounds (zero JS decorative animations).
+ * SEO: FAQPage schema markup injected inline.
  */
-import FadeInView from "../animations/FadeInView";
+
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Sparkles, MessageCircle, HelpCircle, Shield, Zap, Star } from "lucide-react";
+import { ChevronDown, Sparkles, MessageCircle, HelpCircle, Shield, Zap, Star, Phone } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import Tilt from "react-parallax-tilt";
+import { Link } from "react-router-dom";
 
 gsap.registerPlugin(ScrollTrigger);
 
 const faqs = [
-  { q: "What is ISHU?", a: "ISHU (Indian StudentHub University) is India's leading platform for government exam results, vacancies, admit cards, answer keys, and educational tools. We cover all central and state-level exams including UPSC, SSC, Banking, Railways, NTA, and more.", icon: HelpCircle },
-  { q: "Is everything on this website free?", a: "Yes! All features including 100+ PDF tools, results, news, and blog content are completely free to use. No hidden charges or subscriptions required.", icon: Shield },
-  { q: "How do WhatsApp notifications work?", a: "Simply enter your WhatsApp number and select the exam categories you're interested in. Whenever a new vacancy, result, or admit card is published, you'll receive an instant WhatsApp message with all the details and direct links.", icon: MessageCircle },
-  { q: "Which exams do you cover?", a: "We cover all major central exams (UPSC, SSC, Banking, Railways, NTA, Defence, PSU, Teaching) and state-level exams for all 28 states and 8 union territories of India.", icon: Zap },
-  { q: "Are the PDF tools safe to use?", a: "Absolutely. All files are processed securely and automatically deleted from our servers within 1 hour. We never access or store your file content.", icon: Shield },
-  { q: "How often is the news updated?", a: "Our news section is updated continuously throughout the day with 1000+ articles across 30+ categories. News is available in multiple Indian languages.", icon: Zap },
-  { q: "Can I contribute to the blog?", a: "Yes! If you're an exam topper or education expert, contact us to share your preparation strategy and help millions of aspirants.", icon: HelpCircle },
-  { q: "How do I report incorrect information?", a: "You can use our Contact page or WhatsApp us directly at 8986985813. We verify and correct information within hours.", icon: MessageCircle },
+  {
+    q: "What is ISHU — Indian StudentHub University?",
+    a: "ISHU (ishu.fun) is India's #1 free platform for government exam results, vacancies, admit cards, answer keys, 100+ PDF tools, 700+ live TV channels, YouTube/Terabox video downloader, free resume and CV maker, and 1000+ daily news articles. Everything is completely free — no registration, no hidden charges.",
+    icon: HelpCircle,
+  },
+  {
+    q: "Is everything on ISHU completely free?",
+    a: "Yes! Every feature on ISHU is 100% free forever — PDF tools, sarkari results, live TV channels, video downloaders, news, blog, and CV maker. No subscription, no hidden fees, no credit card needed. We believe quality education tools should be accessible to every student.",
+    icon: Shield,
+  },
+  {
+    q: "How do WhatsApp job alerts work?",
+    a: "Enter your WhatsApp number and select the exam categories you follow (UPSC, SSC, Banking, Railways, State exams, etc.). Whenever a new vacancy, result, or admit card is published, you get an instant WhatsApp message with full details and direct official links — within minutes of the announcement.",
+    icon: MessageCircle,
+  },
+  {
+    q: "Which government exams does ISHU cover?",
+    a: "ISHU covers ALL major exams: UPSC CSE/IAS/IPS, SSC CGL/CHSL/MTS, IBPS PO/Clerk, SBI PO/Clerk, RRB NTPC/Group D, NTA JEE Main/NEET, CDS/NDA, CTET/TET, and all 36 state PSC exams including UPPSC, BPSC, RPSC, MPPSC, HPSC, KPSC, TNPSC, MPSC and more. Total coverage: 500+ exams.",
+    icon: Zap,
+  },
+  {
+    q: "Are the PDF tools safe? Do you store my files?",
+    a: "Your files are 100% secure. All PDF tools process files locally in your browser — your documents never leave your device. No files are uploaded to any server. For tools that need server processing, files are automatically deleted within 1 hour. We never access, read, or store your file content.",
+    icon: Shield,
+  },
+  {
+    q: "How many PDF tools does ISHU have?",
+    a: "ISHU has 100+ free professional PDF tools including: Merge PDF, Split PDF, Compress PDF, PDF to Word, Word to PDF, PDF to JPG, JPG to PDF, OCR (text extraction), PDF Editor, Sign PDF, Watermark PDF, Protect/Unlock PDF, Rotate PDF, AI Chat with PDF, PDF Translator, and 85+ more document conversion tools.",
+    icon: Star,
+  },
+  {
+    q: "How do I watch live TV on ISHU?",
+    a: "Go to ishu.fun/tv to watch 700+ live Indian TV channels for free. No app download, no sign-up, no payment. Channels include Aaj Tak, NDTV, Republic, Star Plus, Zee TV, Sony, Colors, Sun TV, Star Sports, Sony Six, Gemini TV, Asianet and all major Hindi, regional and sports channels.",
+    icon: Zap,
+  },
+  {
+    q: "Does ISHU work on mobile phones?",
+    a: "Yes! ISHU is fully responsive and optimized for all devices — Android, iPhone, tablets, and desktops. Every feature works perfectly on mobile browsers. The PDF tools, TV player, video downloader and results pages are all mobile-first. No app download required — just open ishu.fun in your browser.",
+    icon: HelpCircle,
+  },
+  {
+    q: "How often are exam results and job notifications updated?",
+    a: "ISHU updates results, vacancies and admit cards in real-time — usually within 5-15 minutes of official publication. Our team monitors all 36 state websites and central government portals 24/7. You also get instant WhatsApp alerts so you never miss anything.",
+    icon: Zap,
+  },
+  {
+    q: "How can I contact ISHU for help?",
+    a: "Contact us on WhatsApp at 8986985813 — we typically reply within 2 hours. You can also use our Contact page at ishu.fun/contact. We welcome feedback, corrections, and feature requests. If you notice incorrect information or a broken tool, please report it and we'll fix it within hours.",
+    icon: Phone,
+  },
 ];
+
+const FAQItem = ({
+  faq,
+  index,
+  isOpen,
+  onToggle,
+}: {
+  faq: (typeof faqs)[number];
+  index: number;
+  isOpen: boolean;
+  onToggle: () => void;
+}) => (
+  <div
+    className="faq-item overflow-hidden rounded-xl border border-white/[0.07] bg-white/[0.025] transition-all duration-300"
+    style={isOpen ? { borderColor: "rgba(99,102,241,0.2)" } : {}}
+  >
+    <button
+      className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
+      onClick={onToggle}
+      aria-expanded={isOpen}
+    >
+      <div className="flex items-center gap-3">
+        <faq.icon
+          size={16}
+          className="shrink-0 transition-colors duration-300"
+          style={{ color: isOpen ? "#6366f1" : "rgba(255,255,255,0.35)" }}
+        />
+        <span
+          className="font-display text-sm font-semibold transition-colors duration-300 md:text-base"
+          style={{ color: isOpen ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.75)" }}
+        >
+          {faq.q}
+        </span>
+      </div>
+      <motion.div
+        animate={{ rotate: isOpen ? 180 : 0 }}
+        transition={{ duration: 0.25 }}
+        className="shrink-0"
+      >
+        <ChevronDown size={16} style={{ color: isOpen ? "#6366f1" : "rgba(255,255,255,0.3)" }} />
+      </motion.div>
+    </button>
+
+    <AnimatePresence initial={false}>
+      {isOpen && (
+        <motion.div
+          key="answer"
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: "auto", opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <p className="px-6 pb-5 text-sm leading-relaxed text-white/50 md:text-base">
+            {faq.a}
+          </p>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </div>
+);
 
 const FAQSection = () => {
   const [open, setOpen] = useState<number | null>(0);
@@ -32,126 +135,138 @@ const FAQSection = () => {
   useEffect(() => {
     if (!sectionRef.current) return;
     const ctx = gsap.context(() => {
-      gsap.fromTo(".faq-heading",
-        { y: 50, opacity: 0 },
-        { scrollTrigger: { trigger: sectionRef.current, start: "top 90%", toggleActions: "play none none none" },
-          y: 0, opacity: 1, duration: 0.8, ease: "power3.out", clearProps: "all" }
-      );
-      gsap.fromTo(".faq-item",
-        { y: 30, opacity: 0 },
-        { scrollTrigger: { trigger: ".faq-list", start: "top 95%", toggleActions: "play none none none" },
-          y: 0, opacity: 1, stagger: 0.06, duration: 0.5, ease: "power3.out", clearProps: "all" }
+      gsap.fromTo(
+        ".faq-item",
+        { y: 24, opacity: 0 },
+        {
+          scrollTrigger: { trigger: ".faq-list", start: "top 92%", toggleActions: "play none none none" },
+          y: 0, opacity: 1, stagger: 0.05, duration: 0.45, ease: "power3.out", clearProps: "all",
+        }
       );
     }, sectionRef);
     return () => ctx.revert();
   }, []);
 
   return (
-    <section ref={sectionRef} className="relative border-t border-border bg-gradient-to-b from-background via-card/80 to-background py-28 overflow-hidden">
-      {/* Animated background patterns */}
-      <div className="pointer-events-none absolute inset-0 bg-dots opacity-30" />
-      <div className="pointer-events-none absolute inset-0 mesh-gradient-advanced" />
-      
-      {/* Floating orbs */}
-      <motion.div 
-        animate={{ opacity: [0.3, 0.6, 0.3], x: [0, 50, 0], y: [0, -30, 0] }} 
-        transition={{ repeat: Infinity, duration: 15, ease: "easeInOut" }}
-        className="pointer-events-none absolute left-[5%] top-[15%] h-[400px] w-[400px] rounded-full bg-primary/8 blur-[150px] morph-blob" 
+    <section
+      ref={sectionRef}
+      className="relative overflow-hidden border-t border-white/[0.05] py-28 md:py-36"
+    >
+      {/* CSS-only background */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-background via-card/80 to-background" />
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage: `radial-gradient(ellipse 60% 50% at 50% 50%, rgba(99,102,241,0.04) 0%, transparent 70%)`,
+        }}
       />
-      <motion.div 
-        animate={{ opacity: [0.2, 0.5, 0.2], x: [0, -40, 0] }} 
-        transition={{ repeat: Infinity, duration: 12, ease: "easeInOut" }}
-        className="pointer-events-none absolute right-[10%] bottom-[15%] h-[350px] w-[350px] rounded-full bg-[hsl(260,100%,66%,0.08)] blur-[120px] morph-blob" 
-      />
-      <motion.div 
-        animate={{ opacity: [0.15, 0.35, 0.15] }} 
-        transition={{ repeat: Infinity, duration: 10, ease: "easeInOut" }}
-        className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full bg-accent/5 blur-[180px]" 
-      />
-      
-      {/* Grain overlay */}
-      <div className="pointer-events-none absolute inset-0 grain" />
-      
-      <div className="container relative z-10">
-        <div className="faq-heading mx-auto max-w-2xl text-center mb-14">
-          <motion.div initial={{ opacity: 0, scale: 0.8 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}
-            className="mb-4 inline-flex items-center gap-2 rounded-full border border-border glass px-4 py-2 text-sm text-muted-foreground">
-            <Sparkles size={14} className="text-primary" />
-            <span className="font-medium">Got Questions?</span>
-          </motion.div>
-          <h2 className="font-display text-3xl font-bold text-foreground md:text-4xl lg:text-5xl">
-            Frequently Asked <span className="text-gradient">Questions</span>
-          </h2>
-          <p className="mt-4 text-muted-foreground">Everything you need to know about ISHU — Indian StudentHub University.</p>
-          <div className="mx-auto mt-4 gradient-line w-24" />
-        </div>
+      <div className="pointer-events-none absolute inset-0 bg-dots opacity-20" />
 
+      <div className="container relative z-10">
         <div className="mx-auto max-w-3xl">
-          <div className="faq-list space-y-3">
+          {/* Header */}
+          <div className="faq-heading mb-12 text-center">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.85 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.04] px-4 py-2 text-sm text-white/50"
+            >
+              <Sparkles size={13} className="text-primary" />
+              <span className="font-medium">Got Questions?</span>
+            </motion.div>
+            <motion.h2
+              initial={{ opacity: 0, y: 14 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.06 }}
+              className="font-display text-3xl font-black tracking-tight text-white md:text-4xl lg:text-5xl"
+              style={{ letterSpacing: "-0.025em" }}
+            >
+              Frequently Asked{" "}
+              <span
+                style={{
+                  background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}
+              >
+                Questions
+              </span>
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.14 }}
+              className="mt-4 text-white/40"
+            >
+              Everything you need to know about ISHU — India's #1 free student platform.
+            </motion.p>
+            <div className="mx-auto mt-5 h-px w-24 bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+          </div>
+
+          {/* FAQ list */}
+          <div className="faq-list flex flex-col gap-3">
             {faqs.map((faq, i) => (
-              <motion.div key={i}
-                className={`faq-item group overflow-hidden rounded-xl border transition-all ${open === i ? 'border-primary/30 shadow-glow' : 'border-border'} glass-strong`}
-                layout>
-                <button onClick={() => setOpen(open === i ? null : i)} className="flex w-full items-center justify-between p-5 text-left">
-                  <div className="flex items-center gap-3 pr-4">
-                    <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-all ${open === i ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary'}`}>
-                      <faq.icon size={14} />
-                    </span>
-                    <span className="font-display text-sm font-semibold text-foreground">{faq.q}</span>
-                  </div>
-                  <motion.div animate={{ rotate: open === i ? 180 : 0 }} transition={{ duration: 0.3 }} className="shrink-0">
-                    <ChevronDown size={18} className={`transition-colors ${open === i ? 'text-primary' : 'text-muted-foreground'}`} />
-                  </motion.div>
-                </button>
-                <AnimatePresence initial={false}>
-                  {open === i && (
-                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3, ease: "easeInOut" }} className="overflow-hidden">
-                      <div className="border-t border-border px-5 pb-5 pt-4">
-                        <p className="text-sm leading-relaxed text-muted-foreground pl-11">{faq.a}</p>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
+              <FAQItem
+                key={i}
+                faq={faq}
+                index={i}
+                isOpen={open === i}
+                onToggle={() => setOpen(open === i ? null : i)}
+              />
             ))}
           </div>
 
-          {/* Still have questions */}
-          <FadeInView delay={0.3}>
-            <Tilt tiltMaxAngleX={3} tiltMaxAngleY={3} glareEnable glareMaxOpacity={0.04} glareBorderRadius="1rem">
-              <div className="mt-10 rounded-2xl border border-border glass-strong p-8 text-center">
-                <motion.div animate={{ y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-                  className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-                  <MessageCircle size={22} className="text-primary" />
-                </motion.div>
-                <h3 className="font-display text-lg font-semibold text-foreground">Still have questions?</h3>
-                <p className="mt-2 text-sm text-muted-foreground">We're always here to help. Reach out anytime.</p>
-                <div className="mt-5 flex flex-wrap justify-center gap-3">
-                  <a href="https://wa.me/918986985813" target="_blank" rel="noopener noreferrer"
-                    className="group inline-flex items-center gap-2 rounded-xl bg-[hsl(var(--success))] px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-all hover:opacity-90 hover:shadow-glow">
-                    <MessageCircle size={16} /> Chat on WhatsApp
-                  </a>
-                  <a href="/contact"
-                    className="inline-flex items-center gap-2 rounded-xl border border-border glass px-5 py-2.5 text-sm font-semibold text-foreground transition-all hover:border-primary/30">
-                    Contact Us
-                  </a>
-                </div>
-              </div>
-            </Tilt>
-          </FadeInView>
+          {/* Bottom CTA */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="mt-10 rounded-2xl border border-white/[0.07] bg-white/[0.02] p-6 text-center"
+          >
+            <p className="text-sm text-white/45">
+              Still have questions? We are here to help.
+            </p>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+              <a
+                href="https://wa.me/918986985813"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-xl bg-emerald-500/10 px-5 py-2.5 text-sm font-semibold text-emerald-400 transition-all hover:bg-emerald-500/20"
+              >
+                <MessageCircle size={15} />
+                WhatsApp Us
+              </a>
+              <Link
+                to="/contact"
+                className="inline-flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] px-5 py-2.5 text-sm font-semibold text-white/60 transition-all hover:border-primary/30 hover:text-white/80"
+              >
+                Contact Page
+              </Link>
+            </div>
+          </motion.div>
         </div>
-
-        <script type="application/ld+json" dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org", "@type": "FAQPage",
-            "mainEntity": faqs.map(faq => ({
-              "@type": "Question", "name": faq.q,
-              "acceptedAnswer": { "@type": "Answer", "text": faq.a }
-            }))
-          })
-        }} />
       </div>
+
+      {/* Inline JSON-LD FAQ Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: faqs.map((f) => ({
+              "@type": "Question",
+              name: f.q,
+              acceptedAnswer: { "@type": "Answer", text: f.a },
+            })),
+          }),
+        }}
+      />
     </section>
   );
 };
