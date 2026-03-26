@@ -52,24 +52,26 @@ const HeroSection = () => {
 
   useEffect(() => {
     if (!containerRef.current) return;
+    // Skip GSAP animations on mobile for performance
+    if (window.innerWidth <= 768) return;
     const ctx = gsap.context(() => {
       if (statsBarRef.current) {
         gsap.fromTo(
           statsBarRef.current,
-          { y: 24, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.8, delay: 0.5, ease: "power4.out", clearProps: "all" }
+          { y: 18, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.6, delay: 0.4, ease: "power3.out", clearProps: "all" }
         );
         gsap.fromTo(
           statsBarRef.current.querySelectorAll(".stat-item"),
-          { scale: 0.8, opacity: 0 },
-          { scale: 1, opacity: 1, duration: 0.5, stagger: 0.08, delay: 0.65, ease: "back.out(1.7)", clearProps: "all" }
+          { scale: 0.9, opacity: 0 },
+          { scale: 1, opacity: 1, duration: 0.4, stagger: 0.06, delay: 0.5, ease: "power2.out", clearProps: "all" }
         );
       }
       if (chipsRef.current) {
         gsap.fromTo(
           chipsRef.current.querySelectorAll(".feature-chip"),
-          { y: 12, opacity: 0, scale: 0.9 },
-          { y: 0, opacity: 1, scale: 1, duration: 0.45, stagger: 0.07, delay: 0.35, ease: "power3.out", clearProps: "all" }
+          { y: 8, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.35, stagger: 0.05, delay: 0.3, ease: "power2.out", clearProps: "all" }
         );
       }
     }, containerRef);
@@ -138,7 +140,7 @@ const HeroSection = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.75, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           >
-            <h1 className="font-display text-5xl font-black leading-[1.04] tracking-[-0.03em] text-white sm:text-6xl md:text-7xl lg:text-8xl xl:text-[96px]">
+            <h1 className="font-display text-3xl font-black leading-[1.04] tracking-[-0.03em] text-white sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl 2xl:text-8xl">
               <span className="block text-white/90">Your Gateway</span>
               <span className="block mt-1 md:mt-2">
                 <span
@@ -244,7 +246,6 @@ const HeroSection = () => {
               className="mx-auto grid max-w-2xl grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/[0.08] sm:flex sm:max-w-none sm:items-center sm:justify-center"
               style={{
                 background: "rgba(255,255,255,0.03)",
-                backdropFilter: "blur(12px)",
               }}
             >
               {liveStats.map((stat, i) => (

@@ -15,7 +15,7 @@
 
 import { useState, useMemo, useEffect, useRef, useCallback, memo, lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Fuse from "fuse.js";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -177,13 +177,13 @@ const PopularCard = memo(function PopularCard({
 /* ─── Animation variants ──────────────────────────────────────────────────── */
 const containerVariants = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.035 } },
+  visible: { opacity: 1, transition: { staggerChildren: 0.018 } },
 };
 const cardVariants = {
-  hidden: { opacity: 0, y: 24, scale: 0.94 },
+  hidden: { opacity: 0, y: 16, scale: 0.97 },
   visible: {
     opacity: 1, y: 0, scale: 1,
-    transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
+    transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
   },
 };
 
@@ -247,8 +247,6 @@ const PAGE_SIZE = 48;
 /* MAIN COMPONENT                                                             */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 const ToolsPage = () => {
-  const { scrollY } = useScroll();
-  const bgY = useTransform(scrollY, [0, 2000], [0, -130]);
 
   const [activeCat, setActiveCat] = useState("All");
   const [searchInput, setSearchInput] = useState("");
@@ -260,10 +258,16 @@ const ToolsPage = () => {
   const trustRef = useRef<HTMLElement>(null);
   const whyRef = useRef<HTMLElement>(null);
 
-  const isMobile = useMemo(
-    () => typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches,
-    []
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined" ? window.matchMedia("(max-width: 768px)").matches : false
   );
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 768px)");
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
 
   // Debounced search
   useEffect(() => {
@@ -274,36 +278,37 @@ const ToolsPage = () => {
   // Reset page on filter change
   useEffect(() => { setVisibleCount(PAGE_SIZE); }, [activeCat, search]);
 
-  // GSAP scroll animations
+  // GSAP scroll animations — fire once only for performance
   useEffect(() => {
+    if (isMobile) return; // Skip heavy GSAP on mobile entirely
     const ctx = gsap.context(() => {
       gsap.fromTo(
         ".how-step",
-        { y: 50, opacity: 0 },
+        { y: 30, opacity: 0 },
         {
-          scrollTrigger: { trigger: howRef.current, start: "top 80%", toggleActions: "play none none none" },
-          y: 0, opacity: 1, stagger: 0.12, duration: 0.7, ease: "back.out(1.7)", clearProps: "all",
+          scrollTrigger: { trigger: howRef.current, start: "top 85%", once: true },
+          y: 0, opacity: 1, stagger: 0.08, duration: 0.5, ease: "power3.out", clearProps: "all",
         }
       );
       gsap.fromTo(
         ".trust-badge",
-        { scale: 0.8, opacity: 0 },
+        { scale: 0.9, opacity: 0 },
         {
-          scrollTrigger: { trigger: trustRef.current, start: "top 85%", toggleActions: "play none none none" },
-          scale: 1, opacity: 1, stagger: 0.08, duration: 0.5, ease: "back.out(2)", clearProps: "all",
+          scrollTrigger: { trigger: trustRef.current, start: "top 90%", once: true },
+          scale: 1, opacity: 1, stagger: 0.06, duration: 0.4, ease: "power2.out", clearProps: "all",
         }
       );
       gsap.fromTo(
         ".why-card",
-        { y: 40, opacity: 0 },
+        { y: 20, opacity: 0 },
         {
-          scrollTrigger: { trigger: whyRef.current, start: "top 80%", toggleActions: "play none none none" },
-          y: 0, opacity: 1, stagger: 0.1, duration: 0.6, ease: "power3.out", clearProps: "all",
+          scrollTrigger: { trigger: whyRef.current, start: "top 85%", once: true },
+          y: 0, opacity: 1, stagger: 0.06, duration: 0.4, ease: "power3.out", clearProps: "all",
         }
       );
     });
     return () => ctx.revert();
-  }, []);
+  }, [isMobile]);
 
   // Category counts
   const categoryCounts = useMemo(() => {
@@ -345,12 +350,11 @@ const ToolsPage = () => {
       />
       <FAQSchema faqs={FAQS.map((f) => ({ question: f.q, answer: f.a }))} />
 
-      {/* Parallax background */}
-      <motion.div
+      {/* Static gradient background (CSS-only, no scroll handler overhead) */}
+      <div
         className="fixed inset-0 -z-10 pointer-events-none"
         style={{
           backgroundImage: "radial-gradient(ellipse at 20% 50%, rgba(99,102,241,0.08) 0%, transparent 50%), radial-gradient(ellipse at 80% 20%, rgba(139,92,246,0.06) 0%, transparent 50%)",
-          y: bgY,
         }}
       />
 
@@ -367,9 +371,11 @@ const ToolsPage = () => {
           className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[800px] w-[800px] rounded-full border border-white/[0.02]"
         />
 
-        <Suspense fallback={null}>
-          <ToolsScene3D />
-        </Suspense>
+        {!isMobile && (
+          <Suspense fallback={null}>
+            <ToolsScene3D />
+          </Suspense>
+        )}
 
         <div className="container relative">
           <FadeInView>
@@ -492,17 +498,15 @@ const ToolsPage = () => {
 
           {/* Category tabs */}
           <FadeInView delay={0.15}>
-            <div className="mt-8 flex flex-wrap justify-center gap-2">
+            <div className="mt-8 flex gap-2 overflow-x-auto pb-2 scrollbar-none sm:flex-wrap sm:justify-center sm:overflow-visible sm:pb-0">
               {toolCategories.map((cat) => {
                 const { color } = getCatColor(cat);
                 const isActive = activeCat === cat;
                 return (
-                  <motion.button
+                  <button
                     key={cat}
-                    whileHover={{ scale: 1.05, y: -2 }}
-                    whileTap={{ scale: 0.95 }}
                     onClick={() => setActiveCat(cat)}
-                    className="rounded-xl px-5 py-2.5 text-sm font-medium transition-all"
+                    className="shrink-0 rounded-xl px-5 py-2.5 text-sm font-medium transition-all hover:scale-[1.03]"
                     style={
                       isActive
                         ? { background: cat === "All" ? "#6366f1" : color, color: "#fff", boxShadow: `0 0 16px ${cat === "All" ? "#6366f140" : color + "40"}` }
@@ -512,7 +516,7 @@ const ToolsPage = () => {
                   >
                     {cat}
                     <span className="ml-1.5 text-[11px] opacity-60">({categoryCounts[cat] ?? 0})</span>
-                  </motion.button>
+                  </button>
                 );
               })}
             </div>

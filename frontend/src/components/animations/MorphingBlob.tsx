@@ -1,25 +1,13 @@
 /**
- * MorphingBlob.tsx - Animated Shape-Shifting Blob
- * 
- * A decorative background element that continuously changes shape.
- * It rotates and scales with a static organic border-radius.
- * Highly blurred so it creates a soft ambient glow effect.
+ * MorphingBlob.tsx - Animated Shape-Shifting Blob (CSS-only, zero JS overhead)
  *
- * Performance: Only animates GPU-accelerated transform properties
- * (scale, rotate). The 80px blur is composited by GPU since only
- * transform changes - no layout/repaint per frame.
- * 
- * Props:
- * - color: CSS color value (default: blue at 8% opacity)
- * - size: Width/height in pixels (default: 400)
- * - duration: Time for one full animation cycle (default: 20 seconds)
- * - className: CSS classes for positioning (e.g., "left-10 top-20")
- * 
- * Usage:
- *   <MorphingBlob color="hsl(260 100% 66% / 0.08)" size={500} className="right-0 top-0" />
+ * Uses pure CSS @keyframes (morph-blob class from index.css) instead of
+ * Framer Motion for continuous animations. This eliminates JS main-thread
+ * work — the blob is 100% GPU-composited.
+ *
+ * On mobile (via .morph-blob class in index.css), the animation is disabled
+ * and border-radius set to 50% for maximum performance.
  */
-
-import { motion } from "framer-motion";
 
 interface MorphingBlobProps {
   className?: string;
@@ -35,24 +23,15 @@ const MorphingBlob = ({
   duration = 20,
 }: MorphingBlobProps) => {
   return (
-    <motion.div
-      animate={{
-        scale: [1, 1.2, 0.9, 1.1, 1],                    // Breathing effect
-        rotate: [0, 90, 180, 270, 360],                    // Full rotation
-      }}
-      transition={{
-        repeat: Infinity,
-        duration,
-        ease: "easeInOut",
-      }}
-      className={`pointer-events-none absolute ${className}`}
+    <div
+      className={`pointer-events-none absolute morph-blob ${className}`}
       style={{
         width: size,
         height: size,
         background: color,
-        filter: "blur(80px)",  // Heavy blur for soft glow
-        borderRadius: "40% 60% 70% 30% / 40% 50% 60% 50%", // Static organic shape (blur hides the edges anyway)
-        willChange: "transform", // GPU-accelerated compositing - only transform changes per frame
+        filter: "blur(60px)",
+        borderRadius: "40% 60% 70% 30% / 40% 50% 60% 50%",
+        animationDuration: `${duration}s`,
       }}
     />
   );
