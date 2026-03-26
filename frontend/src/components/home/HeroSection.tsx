@@ -41,14 +41,19 @@ const HeroSection = () => {
   const statsBarRef = useRef<HTMLDivElement>(null);
   const chipsRef = useRef<HTMLDivElement>(null);
 
+  // Skip parallax on mobile — saves a useScroll RAF loop
+  const [isMobile] = useState(() =>
+    typeof window !== "undefined" && window.innerWidth <= 768
+  );
+
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end start"]
   });
 
-  const textY = useTransform(scrollYProgress, [0, 1], ["0%", "35%"]);
-  const opacity = useTransform(scrollYProgress, [0, 0.75], [1, 0]);
-  const scale = useTransform(scrollYProgress, [0, 1], [1, 0.95]);
+  const textY = useTransform(scrollYProgress, [0, 1], isMobile ? ["0%", "0%"] : ["0%", "35%"]);
+  const opacity = useTransform(scrollYProgress, [0, 0.75], isMobile ? [1, 1] : [1, 0]);
+  const scale = useTransform(scrollYProgress, [0, 1], isMobile ? [1, 1] : [1, 0.95]);
 
   useEffect(() => {
     if (!containerRef.current) return;

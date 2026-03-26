@@ -1,16 +1,9 @@
 /**
- * ToolsPage.tsx — Rebuilt from scratch
+ * ToolsPage.tsx — Performance-optimized tools directory
  *
  * Premium dark-theme tools directory inspired by Vercel / Linear / Figma / Apple.
- * Features:
- *  - Fuse.js fuzzy search with debounce
- *  - Category-coloured icons & filter pills
- *  - Framer Motion stagger grid animation
- *  - GSAP scroll-triggered animations
- *  - 3-D tilt cards for popular tools
- *  - Paginated "Load More" grid grouped by category
- *  - Stats, How-It-Works, FAQ, Testimonials, CTA sections
- *  - Full SEO: 100+ keywords, JSON-LD schemas
+ * PERFORMANCE: Tilt removed (was creating 100+ GPU layers), replaced with CSS hover.
+ * PERFORMANCE: Framer Motion stagger removed, using CSS animation-delay.
  */
 
 import { useState, useMemo, useEffect, useRef, useCallback, memo, lazy, Suspense } from "react";
@@ -19,7 +12,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import Fuse from "fuse.js";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import Tilt from "react-parallax-tilt";
 
 import Layout from "@/components/layout/Layout";
 import FadeInView from "@/components/animations/FadeInView";
@@ -40,10 +32,6 @@ import {
 
 gsap.registerPlugin(ScrollTrigger);
 
-const ToolsScene3D = lazy(() =>
-  import("@/components/3d/ToolsScene3D").catch(() => ({ default: () => null }))
-);
-
 /* ─── Category colour system ──────────────────────────────────────────────── */
 const CAT_COLORS: Record<string, { color: string; bg: string; border: string; gradient: string }> = {
   "Convert":     { color: "#3b82f6", bg: "rgba(59,130,246,0.12)",  border: "rgba(59,130,246,0.3)",  gradient: "from-blue-500/20 to-blue-600/10" },
@@ -61,39 +49,19 @@ function getCatColor(cat: string) {
 /* ─── Tool Card ───────────────────────────────────────────────────────────── */
 const ToolCard = memo(function ToolCard({ tool }: { tool: typeof allToolsData[number] }) {
   const { color, bg } = getCatColor(tool.category);
-  const [hovered, setHovered] = useState(false);
 
   return (
     <Link to={`/tools/${tool.slug}`} aria-label={`Use ${tool.name} tool`}>
-      <motion.div
-        whileHover={{ y: -6, scale: 1.03 }}
-        whileTap={{ scale: 0.97 }}
-        onHoverStart={() => setHovered(true)}
-        onHoverEnd={() => setHovered(false)}
-        className="relative h-full cursor-pointer overflow-hidden rounded-2xl border border-white/[0.07] bg-[#111118] p-5 text-center transition-shadow duration-300"
-        style={{
-          boxShadow: hovered
-            ? `0 0 0 1px ${getCatColor(tool.category).border}, 0 12px 40px rgba(0,0,0,0.5), 0 0 30px ${color}15`
-            : "0 2px 8px rgba(0,0,0,0.3)",
-        }}
+      <div
+        className="tool-card relative h-full cursor-pointer overflow-hidden rounded-2xl border border-white/[0.07] bg-[#111118] p-5 text-center"
       >
-        <motion.div
-          className="pointer-events-none absolute inset-0 rounded-2xl"
-          style={{
-            background: hovered ? `linear-gradient(135deg, ${color}18 0%, transparent 60%)` : "transparent",
-            transition: "background 0.4s ease",
-          }}
-        />
-
         <div className="relative z-10 flex flex-col items-center gap-1">
-          <motion.div
-            whileHover={{ scale: 1.18, rotate: 8 }}
-            transition={{ type: "spring", stiffness: 300, damping: 15 }}
-            className="mb-2 flex h-11 w-11 items-center justify-center rounded-xl"
+          <div
+            className="tool-card-icon mb-2 flex h-11 w-11 items-center justify-center rounded-xl"
             style={{ background: bg }}
           >
             <ToolIcon iconName={tool.icon} size={22} color={color} />
-          </motion.div>
+          </div>
 
           <h3 className="font-display text-[12px] font-semibold leading-tight text-white/90">
             {tool.name}
@@ -109,83 +77,59 @@ const ToolCard = memo(function ToolCard({ tool }: { tool: typeof allToolsData[nu
             {tool.category}
           </span>
         </div>
-      </motion.div>
+      </div>
     </Link>
   );
 });
 
-/* ─── Popular Card (3D tilt) ──────────────────────────────────────────────── */
+/* ─── Popular Card (CSS hover only — Tilt removed for performance) ───────── */
 const PopularCard = memo(function PopularCard({
   tool,
-  isMobile,
 }: {
   tool: typeof allToolsData[number];
-  isMobile: boolean;
 }) {
   const { color, bg, border } = getCatColor(tool.category);
 
   return (
     <Link to={`/tools/${tool.slug}`} aria-label={`Use ${tool.name} — popular tool`}>
-      <Tilt
-        tiltMaxAngleX={isMobile ? 0 : 10}
-        tiltMaxAngleY={isMobile ? 0 : 10}
-        glareEnable={!isMobile}
-        glareMaxOpacity={0.08}
-        glareBorderRadius="1rem"
-        scale={isMobile ? 1 : 1.04}
+      <div
+        className="group relative overflow-hidden rounded-2xl border bg-[#111118] p-6 text-center transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 hover:scale-[1.02]"
+        style={{ borderColor: "rgba(255,255,255,0.07)" }}
+        onMouseEnter={(e) => {
+          (e.currentTarget as HTMLElement).style.borderColor = border;
+          (e.currentTarget as HTMLElement).style.boxShadow = `0 0 32px ${color}20`;
+        }}
+        onMouseLeave={(e) => {
+          (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.07)";
+          (e.currentTarget as HTMLElement).style.boxShadow = "";
+        }}
       >
-        <motion.div
-          whileTap={{ scale: 0.97 }}
-          className="group relative overflow-hidden rounded-2xl border bg-[#111118] p-6 text-center transition-all duration-300 hover:shadow-2xl"
-          style={{ borderColor: "rgba(255,255,255,0.07)" }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.borderColor = border;
-            (e.currentTarget as HTMLElement).style.boxShadow = `0 0 32px ${color}20`;
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.07)";
-            (e.currentTarget as HTMLElement).style.boxShadow = "";
-          }}
-        >
+        <div
+          className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+          style={{ background: `linear-gradient(135deg, ${color}10 0%, transparent 70%)` }}
+        />
+        <div className="relative z-10">
           <div
-            className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-            style={{ background: `linear-gradient(135deg, ${color}10 0%, transparent 70%)` }}
-          />
-          <div className="relative z-10">
-            <motion.div
-              whileHover={{ scale: 1.2, rotate: 8 }}
-              className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl transition-all duration-300"
-              style={{ background: bg }}
-            >
-              <ToolIcon iconName={tool.icon} size={28} color={color} />
-            </motion.div>
-            <h3 className="font-display text-sm font-semibold text-white/90">{tool.name}</h3>
-            <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-white/45">{tool.desc}</p>
-            <motion.span
-              className="mt-3 inline-flex items-center gap-1 text-xs font-semibold opacity-0 transition-opacity duration-200 group-hover:opacity-100"
-              style={{ color }}
-            >
-              Use Tool <ArrowRight size={12} />
-            </motion.span>
+            className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl transition-all duration-300 group-hover:scale-110"
+            style={{ background: bg }}
+          >
+            <ToolIcon iconName={tool.icon} size={28} color={color} />
           </div>
-        </motion.div>
-      </Tilt>
+          <h3 className="font-display text-sm font-semibold text-white/90">{tool.name}</h3>
+          <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-white/45">{tool.desc}</p>
+          <span
+            className="mt-3 inline-flex items-center gap-1 text-xs font-semibold opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+            style={{ color }}
+          >
+            Use Tool <ArrowRight size={12} />
+          </span>
+        </div>
+      </div>
     </Link>
   );
 });
 
-/* ─── Animation variants ──────────────────────────────────────────────────── */
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.018 } },
-};
-const cardVariants = {
-  hidden: { opacity: 0, y: 16, scale: 0.97 },
-  visible: {
-    opacity: 1, y: 0, scale: 1,
-    transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
-  },
-};
+/* Animation variants removed — using CSS animation-delay for zero lag */
 
 /* ─── Fuse search instance ────────────────────────────────────────────────── */
 const fuse = new Fuse(allToolsData, {
@@ -360,22 +304,16 @@ const ToolsPage = () => {
 
       {/* ═══ HERO ═══ */}
       <section className="relative overflow-hidden bg-gradient-hero pb-20 pt-8">
-        <GradientMesh variant="aurora" />
+        {!isMobile && <GradientMesh variant="aurora" />}
         <div className="pointer-events-none absolute inset-0 cross-grid opacity-10" />
-        <MorphingBlob color="hsl(240 100% 65% / 0.07)" size={550} className="left-[3%] top-[8%]" />
-        <MorphingBlob color="hsl(260 100% 66% / 0.06)" size={420} className="right-[8%] bottom-[10%]" duration={22} />
+        {!isMobile && <MorphingBlob color="hsl(240 100% 65% / 0.07)" size={550} className="left-[3%] top-[8%]" />}
+        {!isMobile && <MorphingBlob color="hsl(260 100% 66% / 0.06)" size={420} className="right-[8%] bottom-[10%]" duration={22} />}
 
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ repeat: Infinity, duration: 80, ease: "linear" }}
+        {/* Subtle rotating ring — CSS only, no JS */}
+        <div
           className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[800px] w-[800px] rounded-full border border-white/[0.02]"
+          style={{ animation: "spin 80s linear infinite" }}
         />
-
-        {!isMobile && (
-          <Suspense fallback={null}>
-            <ToolsScene3D />
-          </Suspense>
-        )}
 
         <div className="container relative">
           <FadeInView>
@@ -577,7 +515,7 @@ const ToolsPage = () => {
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4">
             {popularTools.slice(0, 8).map((tool, i) => (
               <FadeInView key={tool.slug} delay={Math.min(i * 0.05, 0.3)}>
-                <PopularCard tool={tool} isMobile={isMobile} />
+                <PopularCard tool={tool} />
               </FadeInView>
             ))}
           </div>
@@ -605,21 +543,17 @@ const ToolsPage = () => {
             </div>
           </FadeInView>
 
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={`${activeCat}-${search}`}
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
-            >
-              {visibleTools.map((tool) => (
-                <motion.div key={tool.slug} variants={cardVariants}>
-                  <ToolCard tool={tool} />
-                </motion.div>
-              ))}
-            </motion.div>
-          </AnimatePresence>
+          <div
+            key={`${activeCat}-${search}`}
+            className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
+            style={{ animation: "smooth-fade-in 0.3s ease both" }}
+          >
+            {visibleTools.map((tool) => (
+              <div key={tool.slug}>
+                <ToolCard tool={tool} />
+              </div>
+            ))}
+          </div>
 
           {filtered.length === 0 && (
             <div className="py-20 text-center">
@@ -671,35 +605,24 @@ const ToolsPage = () => {
 
           <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-4">
             {HOW_IT_WORKS.map((step, i) => (
-              <Tilt
+              <div
                 key={step.title}
-                tiltMaxAngleX={isMobile ? 0 : 10}
-                tiltMaxAngleY={isMobile ? 0 : 10}
-                glareEnable={!isMobile}
-                glareMaxOpacity={0.06}
-                glareBorderRadius="1rem"
-                scale={isMobile ? 1 : 1.03}
+                className="how-step group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-[#111118] p-8 text-center transition-all duration-300 hover:border-primary/25 hover:shadow-[0_8px_32px_rgba(0,0,0,0.5)] hover:-translate-y-1"
               >
-                <motion.div
-                  whileTap={{ scale: 0.98 }}
-                  className={`how-step group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-[#111118] p-8 text-center transition-all hover:border-primary/25 hover:shadow-[0_8px_32px_rgba(0,0,0,0.5)]`}
-                >
-                  <div className={`absolute inset-0 bg-gradient-to-br ${step.gradient} opacity-0 transition-opacity duration-300 group-hover:opacity-100`} />
-                  <div className="relative z-10">
-                    <div className="mx-auto mb-4 flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 font-display text-sm font-bold text-primary">
-                      {i + 1}
-                    </div>
-                    <motion.div
-                      whileHover={{ scale: 1.15, rotate: 6 }}
-                      className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-all group-hover:bg-primary group-hover:text-white group-hover:shadow-[0_0_20px_rgba(99,102,241,0.4)]"
-                    >
-                      <step.icon size={30} />
-                    </motion.div>
-                    <h3 className="font-display text-base font-semibold text-white/90">{step.title}</h3>
-                    <p className="mt-2 text-xs leading-relaxed text-white/45">{step.desc}</p>
+                <div className={`absolute inset-0 bg-gradient-to-br ${step.gradient} opacity-0 transition-opacity duration-300 group-hover:opacity-100`} />
+                <div className="relative z-10">
+                  <div className="mx-auto mb-4 flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 font-display text-sm font-bold text-primary">
+                    {i + 1}
                   </div>
-                </motion.div>
-              </Tilt>
+                  <div
+                    className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-all duration-300 group-hover:bg-primary group-hover:text-white group-hover:shadow-[0_0_20px_rgba(99,102,241,0.4)] group-hover:scale-110"
+                  >
+                    <step.icon size={30} />
+                  </div>
+                  <h3 className="font-display text-base font-semibold text-white/90">{step.title}</h3>
+                  <p className="mt-2 text-xs leading-relaxed text-white/45">{step.desc}</p>
+                </div>
+              </div>
             ))}
           </div>
         </div>
@@ -726,26 +649,16 @@ const ToolsPage = () => {
               { value: 1000000, suffix: "+", label: "Happy Users", icon: Users },
               { value: 99, suffix: "%", label: "Accuracy Rate", icon: CheckCircle },
             ].map((s) => (
-              <Tilt
-                key={s.label}
-                tiltMaxAngleX={isMobile ? 0 : 12}
-                tiltMaxAngleY={isMobile ? 0 : 12}
-                glareEnable={!isMobile}
-                glareMaxOpacity={0.06}
-                glareBorderRadius="1rem"
-                scale={isMobile ? 1 : 1.02}
-              >
-                <div className="rounded-2xl border border-white/[0.07] bg-[#111118] p-6 text-center transition-all hover:shadow-[0_0_24px_rgba(99,102,241,0.15)]">
-                  <s.icon size={22} className="mx-auto mb-3 text-primary" />
-                  <div
-                    className="font-display text-3xl font-extrabold md:text-4xl bg-clip-text text-transparent"
-                    style={{ backgroundImage: "linear-gradient(135deg,#6366f1,#8b5cf6,#06b6d4)" }}
-                  >
-                    <AnimatedCounter target={s.value} suffix={s.suffix} />
-                  </div>
-                  <p className="mt-1 text-xs font-medium text-white/45">{s.label}</p>
+              <div key={s.label} className="rounded-2xl border border-white/[0.07] bg-[#111118] p-6 text-center transition-all duration-300 hover:shadow-[0_0_24px_rgba(99,102,241,0.15)] hover:-translate-y-1">
+                <s.icon size={22} className="mx-auto mb-3 text-primary" />
+                <div
+                  className="font-display text-3xl font-extrabold md:text-4xl bg-clip-text text-transparent"
+                  style={{ backgroundImage: "linear-gradient(135deg,#6366f1,#8b5cf6,#06b6d4)" }}
+                >
+                  <AnimatedCounter target={s.value} suffix={s.suffix} />
                 </div>
-              </Tilt>
+                <p className="mt-1 text-xs font-medium text-white/45">{s.label}</p>
+              </div>
             ))}
           </div>
         </div>
@@ -860,32 +773,23 @@ const ToolsPage = () => {
           <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
             {TESTIMONIALS.map((t, i) => (
               <FadeInView key={i} delay={i * 0.08}>
-                <Tilt
-                  tiltMaxAngleX={isMobile ? 0 : 6}
-                  tiltMaxAngleY={isMobile ? 0 : 6}
-                  glareEnable={!isMobile}
-                  glareMaxOpacity={0.05}
-                  glareBorderRadius="1rem"
-                  scale={isMobile ? 1 : 1.02}
-                >
-                  <div className="rounded-2xl border border-white/[0.07] bg-[#111118] p-6 transition-all hover:border-primary/20 hover:shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
-                    <div className="mb-3 flex gap-0.5">
-                      {Array.from({ length: t.rating }).map((_, j) => (
-                        <Star key={j} size={13} className="fill-amber-400 text-amber-400" />
-                      ))}
+                <div className="rounded-2xl border border-white/[0.07] bg-[#111118] p-6 transition-all duration-300 hover:border-primary/20 hover:shadow-[0_8px_32px_rgba(0,0,0,0.4)] hover:-translate-y-1">
+                  <div className="mb-3 flex gap-0.5">
+                    {Array.from({ length: t.rating }).map((_, j) => (
+                      <Star key={j} size={13} className="fill-amber-400 text-amber-400" />
+                    ))}
+                  </div>
+                  <p className="text-sm italic leading-relaxed text-white/50">"{t.text}"</p>
+                  <div className="mt-5 flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 font-display text-sm font-bold text-primary">
+                      {t.name.charAt(0)}
                     </div>
-                    <p className="text-sm italic leading-relaxed text-white/50">"{t.text}"</p>
-                    <div className="mt-5 flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 font-display text-sm font-bold text-primary">
-                        {t.name.charAt(0)}
-                      </div>
-                      <div>
-                        <p className="font-display text-sm font-semibold text-white/80">{t.name}</p>
-                        <p className="text-[11px] text-white/35">{t.role}</p>
-                      </div>
+                    <div>
+                      <p className="font-display text-sm font-semibold text-white/80">{t.name}</p>
+                      <p className="text-[11px] text-white/35">{t.role}</p>
                     </div>
                   </div>
-                </Tilt>
+                </div>
               </FadeInView>
             ))}
           </div>

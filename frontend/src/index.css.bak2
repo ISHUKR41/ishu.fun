@@ -97,29 +97,57 @@ table {
 }
 
 /* ═══ PERFORMANCE OPTIMIZATIONS ═══ */
-/* GPU acceleration — ONLY on actively animated elements */
+/* DISABLED: content-visibility: auto on containers causes below-fold sections
+   to render blank then pop in = jank. Only use on specific large lists. */
+
+/* GPU acceleration — ONLY apply to elements that are actively being animated.
+   Blanket will-change creates thousands of compositor layers = flickering + lag */
 .will-change-transform {
   will-change: transform;
 }
 
-/* ═══ SCROLL SAFETY NET (Lenis-compatible) ═══ */
-html {
-  overflow-x: clip;
-  pointer-events: auto;
-  overscroll-behavior: none;
-  height: auto;
-  position: relative;
+/* Reduce paint on scroll */
+.fixed, .sticky {
+  will-change: transform;
+  transform: translateZ(0);
 }
 
+/* Optimize text rendering */
 body {
-  overflow-x: hidden;
-  overscroll-behavior: none;
   text-rendering: optimizeSpeed;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Prevent horizontal overflow from Layout wrapper */
+/* ═══ SCROLL SAFETY NET (Lenis-compatible) ═══ */
+/*
+ * CRITICAL: Do NOT set overflow-x: hidden on <html> when using Lenis.
+ * It makes html the scroll container, breaking window-based Lenis scroll interception.
+ * Use overflow: clip instead — it clips visually but does NOT create a scroll container.
+ */
+html {
+  /* overflow: clip does NOT create a BFC / new scroll container (safe for Lenis) */
+  overflow-x: clip;
+  pointer-events: auto;
+  overscroll-behavior: none;
+  /* Lenis needs html height to be auto */
+  height: auto;
+  /* Required by Lenis — content element must have non-static position */
+  position: relative;
+}
+
+body {
+  /* body can safely use overflow-x: hidden */
+  overflow-x: hidden;
+  overscroll-behavior: none;
+}
+
+#root {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* Prevent horizontal overflow from Layout wrapper without creating scroll container */
 #root > div {
   overflow-x: clip;
 }
@@ -130,17 +158,21 @@ body {
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* ═══ PERFORMANCE OPTIMIZATIONS ═══ */
+  /* ═══ 120fps PERFORMANCE OPTIMIZATIONS ═══ */
   html {
+    /* Lenis handles all scroll behavior — always keep auto */
     scroll-behavior: auto !important;
     max-width: 100vw;
+    /* Prevent layout shift from scrollbar appearing/disappearing */
     scrollbar-gutter: stable;
     image-rendering: auto;
     height: auto;
     min-height: 100%;
+    /* Allow both axes for Lenis to intercept */
     touch-action: pan-x pan-y;
   }
 
+  /* Mobile: disable smooth scroll to prevent jank during fast scrolling */
   @media (max-width: 768px) {
     html {
       scroll-behavior: auto;
@@ -148,19 +180,30 @@ body {
     }
   }
 
+  /* ═══ ROOT CONTAINER — FLOW CONTAINER (not scroll container) ═══ */
+  /* #root must NOT create a separate scroll context — scroll is on html/body */
   #root {
     min-height: 100vh;
     min-height: 100dvh;
     position: relative;
+    /* Let content flow naturally — do NOT add overflow-y: auto here */
   }
 
   body {
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeSpeed;
+    /* Safe area for notch phones */
     padding-left: env(safe-area-inset-left, 0);
     padding-right: env(safe-area-inset-right, 0);
     padding-bottom: env(safe-area-inset-bottom, 0);
+    /* Prevent browser bounce — Lenis handles all scroll momentum */
     overscroll-behavior: none;
+    /* Improve font rendering */
+    font-display: optional;
+    /* Allow touch scrolling on all mobile devices */
     touch-action: pan-x pan-y;
     height: auto;
     min-height: 100vh;
@@ -373,12 +416,50 @@ body {
   contain: layout style;
 }
 
-/* [PERF] Mobile performance rules consolidated to DEFINITIVE block at end of file */
+/* ═══ MOBILE PERFORMANCE MODE ═══ */
+/* FIX: Disable heavy animations/effects on mobile & tablet to prevent lag */
+@media (max-width: 1024px) {
+  /* Reduce GPU compositing layers on mobile */
+  .gpu-accelerated {
+    will-change: auto !important;
+  }
+  
+  /* Disable backdrop-filter on mobile — extremely expensive */
+  .glass, .glass-strong {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: hsl(0 0% 6% / 0.95) !important;
+  }
+  
+  /* Simplify transitions on mobile */
+  .smooth-transition {
+    transition-duration: 100ms !important;
+  }
+  
+  /* Reduce animation complexity on smaller screens */
+  
+  @keyframes pulse-subtle { from, to { transform: none; opacity: 1; } }
+}
 
-/* [PERF] Small phone rules consolidated to DEFINITIVE block at end of file */
+/* Small phone optimizations — reduce non-essential animations */
+@media (max-width: 480px) {
+  .animate-bounce,
+  .animate-ping {
+    animation: none !important;
+  }
+  
+  /* Disable heavy backdrop-filter blur on very small phones */
+  .glass, .glass-strong, .glass-premium, .glass-ultra, .frosted-panel {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: hsl(0 0% 6% / 0.95) !important;
+  }
+}
 
 /* ═══ STICKY ELEMENT FIX ═══ */
-.sticky {
+/* FIX: Prevent sticky elements from following scroll improperly */
+.sticky, [class*="sticky"] {
+  position: sticky;
   z-index: 40;
   transform: translateZ(0);
   will-change: transform;
@@ -386,9 +467,12 @@ body {
   -webkit-backface-visibility: hidden;
 }
 
+/* Search bars should NOT be sticky by default on results page */
+
 /* Prevent scroll chaining between nested scrollable areas */
 .scroll-contained {
   overscroll-behavior: contain;
+  scroll-behavior: smooth;
 }
 
 /* ═══ COMPREHENSIVE RESPONSIVE BREAKPOINTS ═══ */
@@ -550,7 +634,67 @@ body {
   }
 }
 
-/* [PERF] 768px glass/effect rules consolidated to DEFINITIVE block at end of file */
+/* ═══ MOBILE PERFORMANCE: Reduce heavy effects for 120fps ═══ */
+@media (max-width: 768px) {
+
+  /* Reduce all backdrop-filter blur values on mobile for 120fps */
+  .glass {
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+    contain: layout style paint;
+  }
+
+  .glass-strong {
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
+    contain: layout style paint;
+  }
+
+  .glass-premium {
+    backdrop-filter: blur(8px) saturate(130%) !important;
+    -webkit-backdrop-filter: blur(8px) saturate(130%) !important;
+    contain: layout style paint;
+  }
+
+  .glass-ultra {
+    backdrop-filter: blur(10px) saturate(130%) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(130%) !important;
+    contain: layout style paint;
+  }
+
+  .frosted-panel {
+    backdrop-filter: blur(10px) saturate(130%) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(130%) !important;
+    contain: layout style paint;
+  }
+
+  /* Disable heavy pseudo-element effects on mobile */
+  .noise-overlay::after,
+  .grain::before {
+    display: none !important;
+  }
+
+  /* Completely stop morphing blob on mobile — border-radius anim causes repaints */
+  .morph-blob {
+    animation: none !important;
+    border-radius: 50% !important;
+  }
+
+  /* Stop holo-effect on mobile — background-position anim is not compositable */
+  .holo-effect {
+    animation: none !important;
+  }
+
+  /* Reduce card-shine frequency */
+  .card-shine::after {
+    animation-duration: 12s !important;
+  }
+
+  /* Disable 3D transforms */
+  .card-3d:hover {
+    transform: scale(1.02) !important;
+  }
+}
 
 /* ═══ PAGE SECTION PERFORMANCE ═══ */
 /* content-visibility DISABLED — it delays rendering of below-fold sections */
@@ -3698,11 +3842,22 @@ section {
     will-change: transform;
   }
   
-  /* [PERF] Removed broad [data-state] transition — was applying to every Radix element */
-  /* Dialog/modal animations handled by Framer Motion in components */
+  /* Smooth CSS transitions for all Radix UI elements */
+  [data-state] {
+    transition: all 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  
+  /* Smooth dialog/modal overlays */
+  [data-state="open"] {
+    animation: smooth-fade-in 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
 }
 
-/* [PERF] Font smoothing already applied to body in @layer base — removed wildcard rule */
+/* Ensure font rendering is always smooth */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
 /* Smooth scrollbar styling */
 ::-webkit-scrollbar {
@@ -4982,11 +5137,10 @@ html {
 /* ═══════════════════════════════════════════════════════════════════
    DEFINITIVE MOBILE PERFORMANCE — FINAL AUTHORITY
    This block must be LAST to override all conflicting mobile rules above.
-   Optimizes GPU-heavy effects on PHONES ONLY (≤768px).
-   Tablets (769px+) keep full premium effects for a beautiful experience.
+   It completely kills all expensive effects on mobile/tablet.
    ═══════════════════════════════════════════════════════════════════ */
-@media (max-width: 768px) {
-  /* Reduce backdrop-filter on phones — keep glass look, reduce GPU cost */
+@media (max-width: 1024px) {
+  /* Kill ALL backdrop-filter on mobile/tablet — saves massive GPU overhead */
   .glass,
   .glass-strong,
   .glass-premium,
@@ -4994,40 +5148,33 @@ html {
   .glass-inner-light,
   .frosted-panel,
   .frosted-card,
-  .funky-glass-card {
-    backdrop-filter: blur(4px) !important;
-    -webkit-backdrop-filter: blur(4px) !important;
+  .funky-glass-card,
+  .dark-card,
+  .section-badge,
+  [class*="backdrop-blur"] {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background-color: hsl(0 0% 6% / 0.96) !important;
   }
 
-  /* Slow down heavy continuous animations instead of killing them */
+  /* Kill all heavy continuous animations on mobile */
   .morph-blob,
-  .funky-liquid-blob {
-    animation-duration: 30s !important;
-  }
-
-  .aurora-bg,
-  .mesh-animated {
-    animation-duration: 40s !important;
-  }
-
-  /* Keep shimmer/gradient text alive but slower */
-  .text-shimmer,
-  .funky-gradient-bg,
-  .funky-send-btn,
-  .liquid-bg,
-  .liquid-gradient,
-  .text-gradient-animated,
-  .gradient-shift-text {
-    animation-duration: 12s !important;
-  }
-
-  /* Kill truly expensive effects on phones */
   .holo-effect,
   .holographic,
+  .aurora-bg,
   .animated-border,
   .animated-border-gradient,
+  .liquid-bg,
+  .liquid-gradient,
+  .text-shimmer,
+  .funky-gradient-bg,
+  .funky-liquid-blob,
   .funky-animated-grid,
-  .funky-holographic {
+  .funky-holographic,
+  .funky-send-btn,
+  .mesh-animated,
+  .text-gradient-animated,
+  .gradient-shift-text {
     animation: none !important;
   }
 
@@ -5045,22 +5192,14 @@ html {
     transform: none !important;
   }
 
-  /* Reduce card hover effects on touch devices */
+  /* Reduce all card hover effects on touch devices */
+  .tool-card:hover,
   .card-3d:hover,
   .card-3d-shadow:hover,
   .hover-3d:hover,
+  .hover-lift:hover,
   .card-rotate-3d:hover {
     transform: none !important;
-  }
-
-  /* Keep tool-card and hover-lift with simplified transforms */
-  .tool-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-  }
-
-  .hover-lift:hover {
-    transform: translateY(-3px);
   }
 
   /* Mobile-friendly scrolling */
@@ -5072,6 +5211,8 @@ html {
 
 /* Extra small phones (≤480px) — maximum performance */
 @media (max-width: 480px) {
+  .animate-bounce,
+  .animate-ping,
   .electric-border,
   .rainbow-border,
   .glow-pulse,

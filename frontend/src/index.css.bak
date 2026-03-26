@@ -97,29 +97,69 @@ table {
 }
 
 /* ═══ PERFORMANCE OPTIMIZATIONS ═══ */
-/* GPU acceleration — ONLY on actively animated elements */
+/* DISABLED: content-visibility: auto on containers causes below-fold sections
+   to render blank then pop in = jank. Only use on specific large lists. */
+
+/* GPU acceleration — ONLY apply to elements that are actively being animated.
+   Blanket will-change creates thousands of compositor layers = flickering + lag */
 .will-change-transform {
   will-change: transform;
 }
 
-/* ═══ SCROLL SAFETY NET (Lenis-compatible) ═══ */
-html {
-  overflow-x: clip;
-  pointer-events: auto;
-  overscroll-behavior: none;
-  height: auto;
-  position: relative;
+/* Reduce paint on scroll */
+.fixed, .sticky {
+  will-change: transform;
+  transform: translateZ(0);
 }
 
+/* Optimize text rendering */
 body {
-  overflow-x: hidden;
-  overscroll-behavior: none;
   text-rendering: optimizeSpeed;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Prevent horizontal overflow from Layout wrapper */
+/* ═══ SCROLL SAFETY NET (Lenis-compatible) ═══ */
+/*
+ * CRITICAL: Do NOT set overflow-x: hidden on <html> when using Lenis.
+ * It makes html the scroll container, breaking window-based Lenis scroll interception.
+ * Use overflow: clip instead — it clips visually but does NOT create a scroll container.
+ */
+html {
+  /* overflow: clip does NOT create a BFC / new scroll container (safe for Lenis) */
+  overflow-x: clip;
+  pointer-events: auto;
+  overscroll-behavior: none;
+  /* Lenis needs html height to be auto */
+  height: auto;
+  /* Required by Lenis — content element must have non-static position */
+  position: relative;
+}
+
+body {
+  /* body can safely use overflow-x: hidden */
+  overflow-x: hidden;
+  overscroll-behavior: none;
+}
+
+/* Lenis adds these classes when active — ensure no overflow interference */
+html.lenis,
+html.lenis-smooth {
+  height: auto;
+  overflow: unset !important;
+}
+
+/* When Lenis stops (modal open, etc.) allow native scroll */
+html.lenis-stopped {
+  overflow: auto;
+}
+
+#root {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* Prevent horizontal overflow from Layout wrapper without creating scroll container */
 #root > div {
   overflow-x: clip;
 }
@@ -130,17 +170,21 @@ body {
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* ═══ PERFORMANCE OPTIMIZATIONS ═══ */
+  /* ═══ 120fps PERFORMANCE OPTIMIZATIONS ═══ */
   html {
+    /* Lenis handles all scroll behavior — always keep auto */
     scroll-behavior: auto !important;
     max-width: 100vw;
+    /* Prevent layout shift from scrollbar appearing/disappearing */
     scrollbar-gutter: stable;
     image-rendering: auto;
     height: auto;
     min-height: 100%;
+    /* Allow both axes for Lenis to intercept */
     touch-action: pan-x pan-y;
   }
 
+  /* Mobile: disable smooth scroll to prevent jank during fast scrolling */
   @media (max-width: 768px) {
     html {
       scroll-behavior: auto;
@@ -148,19 +192,30 @@ body {
     }
   }
 
+  /* ═══ ROOT CONTAINER — FLOW CONTAINER (not scroll container) ═══ */
+  /* #root must NOT create a separate scroll context — scroll is on html/body */
   #root {
     min-height: 100vh;
     min-height: 100dvh;
     position: relative;
+    /* Let content flow naturally — do NOT add overflow-y: auto here */
   }
 
   body {
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeSpeed;
+    /* Safe area for notch phones */
     padding-left: env(safe-area-inset-left, 0);
     padding-right: env(safe-area-inset-right, 0);
     padding-bottom: env(safe-area-inset-bottom, 0);
+    /* Prevent browser bounce — Lenis handles all scroll momentum */
     overscroll-behavior: none;
+    /* Improve font rendering */
+    font-display: optional;
+    /* Allow touch scrolling on all mobile devices */
     touch-action: pan-x pan-y;
     height: auto;
     min-height: 100vh;
@@ -181,6 +236,7 @@ body {
      Applying GPU layers to every .animate-smooth element causes compositor overload = flickering.
      Use .gpu-layer or .gpu-accelerated only on elements that are actually being animated. */
 
+
   /* ═══ SCROLL PERFORMANCE ═══ */
   /* Use contain for better scroll performance */
   .scroll-container {
@@ -191,6 +247,7 @@ body {
   /* Passive scroll listeners (handled in JS) */
   .passive-scroll {
     overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
   }
 
   /* ═══ IMAGE OPTIMIZATION ═══ */
@@ -234,7 +291,15 @@ body {
   }
 
   /* ═══ REDUCED MOTION ACCESSIBILITY ═══ */
-  
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
   /* ═══ HIGH REFRESH RATE OPTIMIZATION ═══ */
   @media (min-resolution: 2dppx) {
     /* On high-DPI displays, optimize rendering */
@@ -286,7 +351,18 @@ body {
   }
 
   /* ═══ REDUCED MOTION ═══ */
-  
+  @media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
   /* ═══ HIGH CONTRAST MODE ═══ */
   @media (prefers-contrast: high) {
     * {
@@ -332,6 +408,17 @@ body {
 }
 
 /* ═══ Performance: Reduce motion for users who prefer it ═══ */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 
 /* GPU acceleration hints for animated elements */
 .gpu-accelerated {
@@ -340,6 +427,8 @@ body {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
+
+
 
 /* ═══ PERFORMANCE CONTAINMENT ═══ */
 .perf-contain {
@@ -373,12 +462,50 @@ body {
   contain: layout style;
 }
 
-/* [PERF] Mobile performance rules consolidated to DEFINITIVE block at end of file */
+/* ═══ MOBILE PERFORMANCE MODE ═══ */
+/* FIX: Disable heavy animations/effects on mobile & tablet to prevent lag */
+@media (max-width: 1024px) {
+  /* Reduce GPU compositing layers on mobile */
+  .gpu-accelerated {
+    will-change: auto !important;
+  }
+  
+  /* Disable backdrop-filter on mobile — extremely expensive */
+  .glass, .glass-strong {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: hsl(0 0% 6% / 0.95) !important;
+  }
+  
+  /* Simplify transitions on mobile */
+  .smooth-transition {
+    transition-duration: 100ms !important;
+  }
+  
+  /* Reduce animation complexity on smaller screens */
+  @keyframes float { from, to { transform: none; } }
+  @keyframes pulse-subtle { from, to { transform: none; opacity: 1; } }
+}
 
-/* [PERF] Small phone rules consolidated to DEFINITIVE block at end of file */
+/* Small phone optimizations — reduce non-essential animations */
+@media (max-width: 480px) {
+  .animate-bounce,
+  .animate-ping {
+    animation: none !important;
+  }
+  
+  /* Disable heavy backdrop-filter blur on very small phones */
+  .glass, .glass-strong, .glass-premium, .glass-ultra, .frosted-panel {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: hsl(0 0% 6% / 0.95) !important;
+  }
+}
 
 /* ═══ STICKY ELEMENT FIX ═══ */
-.sticky {
+/* FIX: Prevent sticky elements from following scroll improperly */
+.sticky, [class*="sticky"] {
+  position: sticky;
   z-index: 40;
   transform: translateZ(0);
   will-change: transform;
@@ -386,9 +513,56 @@ body {
   -webkit-backface-visibility: hidden;
 }
 
+/* Search bars should NOT be sticky by default on results page */
+/* Override: sticky search bar should stop being sticky after scroll */
+.search-section-stick {
+  position: sticky;
+  top: 4rem; /* below header */
+  z-index: 30;
+  transform: translateZ(0);
+}
+
+/* ═══ ENHANCED TYPOGRAPHY ═══ */
+/* Professional font rendering for all text */
+body {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+  font-variant-ligatures: common-ligatures;
+  letter-spacing: -0.011em;
+  line-height: 1.6;
+}
+
+/* Heading typography improvements */
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  font-weight: 700;
+  text-rendering: optimizeLegibility;
+}
+
+/* Paragraph improvements */
+p {
+  line-height: 1.7;
+  letter-spacing: -0.005em;
+}
+
+/* Small text improvements */
+small, .text-sm, .text-xs {
+  letter-spacing: 0.01em;
+}
+
+/* ═══ ULTRA-SMOOTH SCROLL ENHANCEMENTS ═══ */
+/* Ensure scroll containers use passive touch handling */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
 /* Prevent scroll chaining between nested scrollable areas */
 .scroll-contained {
   overscroll-behavior: contain;
+  scroll-behavior: smooth;
 }
 
 /* ═══ COMPREHENSIVE RESPONSIVE BREAKPOINTS ═══ */
@@ -448,14 +622,60 @@ body {
   }
 }
 
+/* TV / Large screens (1921px+) */
+@media (min-width: 1921px) {
+  body {
+    font-size: 18px;
+  }
+  
+  .container {
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+}
 
+/* 4K screens (2560px+) */
+@media (min-width: 2560px) {
+  body {
+    font-size: 20px;
+  }
+  
+  .container {
+    max-width: 2000px;
+  }
+}
 
 /* ═══ BACKDROP-FILTER PERFORMANCE ═══ */
 /* Use hardware-accelerated compositing for glass effects */
+.glass {
+  transform: translateZ(0);
+  isolation: isolate;
+}
 
 /* ═══ SCROLLBAR STYLING (Modern, thin, smooth) ═══ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(0 0% 30%);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(0 0% 50%);
+}
 
 /* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(0 0% 30%) transparent;
+}
 
 /* Offscreen content — skip paint until visible */
 .offscreen-optimize {
@@ -550,7 +770,67 @@ body {
   }
 }
 
-/* [PERF] 768px glass/effect rules consolidated to DEFINITIVE block at end of file */
+/* ═══ MOBILE PERFORMANCE: Reduce heavy effects for 120fps ═══ */
+@media (max-width: 768px) {
+
+  /* Reduce all backdrop-filter blur values on mobile for 120fps */
+  .glass {
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+    contain: layout style paint;
+  }
+
+  .glass-strong {
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
+    contain: layout style paint;
+  }
+
+  .glass-premium {
+    backdrop-filter: blur(8px) saturate(130%) !important;
+    -webkit-backdrop-filter: blur(8px) saturate(130%) !important;
+    contain: layout style paint;
+  }
+
+  .glass-ultra {
+    backdrop-filter: blur(10px) saturate(130%) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(130%) !important;
+    contain: layout style paint;
+  }
+
+  .frosted-panel {
+    backdrop-filter: blur(10px) saturate(130%) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(130%) !important;
+    contain: layout style paint;
+  }
+
+  /* Disable heavy pseudo-element effects on mobile */
+  .noise-overlay::after,
+  .grain::before {
+    display: none !important;
+  }
+
+  /* Completely stop morphing blob on mobile — border-radius anim causes repaints */
+  .morph-blob {
+    animation: none !important;
+    border-radius: 50% !important;
+  }
+
+  /* Stop holo-effect on mobile — background-position anim is not compositable */
+  .holo-effect {
+    animation: none !important;
+  }
+
+  /* Reduce card-shine frequency */
+  .card-shine::after {
+    animation-duration: 12s !important;
+  }
+
+  /* Disable 3D transforms */
+  .card-3d:hover {
+    transform: scale(1.02) !important;
+  }
+}
 
 /* ═══ PAGE SECTION PERFORMANCE ═══ */
 /* content-visibility DISABLED — it delays rendering of below-fold sections */
@@ -809,6 +1089,22 @@ section[class*="py-"] {
 }
 
 /* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(0 0% 5%);
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(0 0% 20%);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(0 0% 30%);
+}
 
 /* Particle animation keyframes */
 @keyframes float {
@@ -873,14 +1169,37 @@ section[class*="py-"] {
   }
 }
 
+@property --angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
 .animated-border {
   background: conic-gradient(from var(--angle), hsl(210 100% 56% / 0.3), hsl(260 100% 66% / 0.3), hsl(170 100% 50% / 0.3), hsl(210 100% 56% / 0.3));
   animation: gradient-rotate 4s linear infinite;
 }
 
 /* Noise texture overlay */
+.noise-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  opacity: 0.4;
+}
 
 /* Smooth gradient text shimmer */
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+
+  100% {
+    background-position: 200% center;
+  }
+}
 
 .text-shimmer {
   background: linear-gradient(90deg, hsl(210 100% 56%), hsl(260 100% 66%), hsl(170 100% 50%), hsl(210 100% 56%));
@@ -903,6 +1222,14 @@ section[class*="py-"] {
 }
 
 /* Breathing glow — uses opacity on a pseudo-element (GPU compositable, no repaint) */
+@keyframes breathe {
+  0%, 100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
 
 .animate-breathe {
   animation: breathe 4s ease-in-out infinite;
@@ -987,6 +1314,13 @@ section[class*="py-"] {
     radial-gradient(ellipse 60% 40% at 80% 50%, hsl(260 100% 66% / 0.1), transparent),
     radial-gradient(ellipse 70% 50% at 20% 80%, hsl(170 100% 50% / 0.08), transparent);
   animation: aurora 15s ease-in-out infinite alternate;
+}
+
+/* Glassmorphism */
+.glass {
+  background: hsl(0 0% 100% / 0.03);
+  backdrop-filter: blur(12px);
+  border: 1px solid hsl(0 0% 100% / 0.06);
 }
 
 /* Floating animation */
@@ -1091,6 +1425,12 @@ section[class*="py-"] {
 /* ═══ ENHANCED EFFECTS ═══ */
 
 /* Neon glow effect */
+.neon-glow {
+  text-shadow:
+    0 0 7px hsl(210 100% 56% / 0.6),
+    0 0 20px hsl(210 100% 56% / 0.3),
+    0 0 42px hsl(210 100% 56% / 0.15);
+}
 
 .neon-border {
   box-shadow:
@@ -1100,6 +1440,31 @@ section[class*="py-"] {
 }
 
 /* Morphing blob */
+@keyframes morph {
+
+  0%,
+  100% {
+    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+  }
+
+  25% {
+    border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
+  }
+
+  50% {
+    border-radius: 50% 60% 30% 60% / 30% 60% 70% 40%;
+  }
+
+  75% {
+    border-radius: 60% 40% 50% 40% / 70% 30% 50% 60%;
+  }
+}
+
+.morph-blob {
+  animation: morph 8s ease-in-out infinite;
+  will-change: transform;
+  transform: translateZ(0);
+}
 
 /* Ripple effect */
 @keyframes ripple {
@@ -1128,6 +1493,15 @@ section[class*="py-"] {
 }
 
 /* Frosted glass premium — blur capped for scroll performance */
+.glass-premium {
+  background: hsl(0 0% 100% / 0.04);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid hsl(0 0% 100% / 0.1);
+  box-shadow:
+    0 8px 32px hsl(0 0% 0% / 0.3),
+    inset 0 1px 0 hsl(0 0% 100% / 0.08);
+}
 
 /* Holographic effect */
 @keyframes holo {
@@ -1350,7 +1724,38 @@ section[class*="py-"] {
   }
 }
 
+.text-reveal {
+  background: linear-gradient(90deg, hsl(var(--primary)) 50%, transparent 50%);
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: text-reveal 1s ease-out forwards;
+}
+
 /* Floating particles */
+@keyframes particle-float {
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.6;
+  }
+
+  25% {
+    transform: translate(10px, -20px) scale(1.1);
+    opacity: 0.8;
+  }
+
+  50% {
+    transform: translate(-5px, -40px) scale(0.9);
+    opacity: 0.4;
+  }
+
+  75% {
+    transform: translate(15px, -20px) scale(1.05);
+    opacity: 0.7;
+  }
+}
 
 /* Frosted panel — blur capped at 20px for smooth 120fps scroll */
 .frosted-panel {
@@ -1445,6 +1850,21 @@ section[class*="py-"] {
   animation: liquid-gradient 20s ease infinite;
 }
 
+/* Chromatic aberration text */
+.chromatic-text {
+  position: relative;
+}
+
+.chromatic-text::before,
+.chromatic-text::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
 .chromatic-text::before {
   color: hsl(210 100% 56% / 0.3);
   transform: translate(-2px, 0);
@@ -1456,6 +1876,16 @@ section[class*="py-"] {
 }
 
 /* Glassmorphism premium card — blur capped at 24px for smooth 120fps scroll */
+.glass-ultra {
+  background: hsl(0 0% 100% / 0.03);
+  backdrop-filter: blur(24px) saturate(180%) brightness(1.1);
+  -webkit-backdrop-filter: blur(24px) saturate(180%) brightness(1.1);
+  border: 1px solid hsl(0 0% 100% / 0.08);
+  box-shadow:
+    0 8px 32px hsl(0 0% 0% / 0.3),
+    0 0 0 1px hsl(0 0% 100% / 0.04),
+    inset 0 1px 0 hsl(0 0% 100% / 0.1);
+}
 
 /* Animated gradient mesh background */
 @keyframes mesh-animate {
@@ -1474,14 +1904,39 @@ section[class*="py-"] {
   }
 }
 
+.mesh-animated {
+  background:
+    radial-gradient(ellipse at 20% 50%, hsl(210 100% 56% / 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, hsl(260 100% 66% / 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, hsl(170 100% 50% / 0.05) 0%, transparent 50%);
+  background-size: 200% 200%;
+  animation: mesh-animate 20s ease-in-out infinite;
+}
+
 /* Shimmer loading effect */
-.shimmer-load-effect::after {
+@keyframes shimmer-load {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.shimmer-overlay {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer-overlay::after {
   content: '';
   position: absolute;
   inset: 0;
   background: linear-gradient(90deg, transparent, hsl(0 0% 100% / 0.03), transparent);
   animation: shimmer-load 3s ease-in-out infinite;
 }
+
 /* 3D perspective hover */
 .hover-3d {
   transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.5s ease;
@@ -1498,6 +1953,28 @@ section[class*="py-"] {
 /* Animated counter glow */
 .counter-glow {
   text-shadow: 0 0 10px hsl(210 100% 56% / 0.4);
+}
+
+/* Cyberpunk scanline */
+@keyframes cyber-scan {
+  0% {
+    top: -100%;
+  }
+
+  100% {
+    top: 200%;
+  }
+}
+
+.cyber-scan::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: -100%;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, hsl(210 100% 56% / 0.4), transparent);
+  animation: cyber-scan 4s linear infinite;
 }
 
 /* Embossed text */
@@ -1659,9 +2136,63 @@ section[class*="py-"] {
 }
 
 /* Floating badge pulse */
+@keyframes badge-pulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 hsl(210 100% 56% / 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 0 8px hsl(210 100% 56% / 0);
+  }
+}
+
+.badge-pulse {
+  animation: badge-pulse 2s ease-in-out infinite;
+}
 
 /* Staggered reveal for lists */
+@keyframes slide-up-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
 
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reveal-stagger>* {
+  opacity: 0;
+  animation: slide-up-reveal 0.5s ease forwards;
+}
+
+.reveal-stagger>*:nth-child(1) {
+  animation-delay: 0.05s;
+}
+
+.reveal-stagger>*:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.reveal-stagger>*:nth-child(3) {
+  animation-delay: 0.15s;
+}
+
+.reveal-stagger>*:nth-child(4) {
+  animation-delay: 0.2s;
+}
+
+.reveal-stagger>*:nth-child(5) {
+  animation-delay: 0.25s;
+}
+
+.reveal-stagger>*:nth-child(6) {
+  animation-delay: 0.3s;
+}
 
 /* Glass card with animated border */
 .glass-premium {
@@ -1796,11 +2327,69 @@ section[class*="py-"] {
     0 25px 50px hsl(0 0% 0% / 0.15);
 }
 
+/* Neon glow effect */
+.neon-glow {
+  text-shadow:
+    0 0 5px currentColor,
+    0 0 10px currentColor,
+    0 0 20px currentColor,
+    0 0 40px currentColor;
+}
+
 /* Cyber scan line effect */
+@keyframes cyber-scan {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+.cyber-scan::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom,
+      transparent,
+      hsl(170 100% 50% / 0.1) 50%,
+      transparent);
+  height: 50%;
+  animation: cyber-scan 3s ease-in-out infinite;
+  pointer-events: none;
+}
 
 /* Glassmorphism ultra */
+.glass-ultra {
+  background: hsl(0 0% 100% / 0.02);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border: 1px solid hsl(0 0% 100% / 0.08);
+  box-shadow:
+    0 8px 32px hsl(0 0% 0% / 0.3),
+    inset 0 0 0 1px hsl(0 0% 100% / 0.05),
+    inset 0 1px 0 hsl(0 0% 100% / 0.1);
+}
 
 /* Gradient border animation */
+@keyframes border-flow {
+
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+}
 
 .gradient-border-animated {
   position: relative;
@@ -1845,6 +2434,31 @@ section[class*="py-"] {
 }
 
 /* Electric pulse */
+@keyframes electric-pulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 5px hsl(170 100% 50% / 0.5), 0 0 10px hsl(170 100% 50% / 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 15px hsl(170 100% 50% / 0.8), 0 0 30px hsl(170 100% 50% / 0.5), 0 0 45px hsl(170 100% 50% / 0.3);
+  }
+}
+
+.electric-pulse {
+  animation: electric-pulse 2s ease-in-out infinite;
+}
+
+/* Matrix rain effect background */
+.matrix-bg {
+  background:
+    repeating-linear-gradient(0deg,
+      transparent,
+      transparent 2px,
+      hsl(170 100% 50% / 0.03) 2px,
+      hsl(170 100% 50% / 0.03) 4px);
+}
 
 /* Morphing blob animation */
 @keyframes morph {
@@ -1986,8 +2600,29 @@ section[class*="py-"] {
 }
 
 /* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
 
 /* Selection styling */
+::selection {
+  background: hsl(210 100% 56% / 0.3);
+  color: hsl(var(--foreground));
+}
 
 /* ═══ ULTRA MODERN EFFECTS V2 ═══ */
 
@@ -2062,6 +2697,15 @@ section[class*="py-"] {
   }
 }
 
+/* Neon text */
+.neon-text {
+  text-shadow:
+    0 0 5px hsl(210 100% 56%),
+    0 0 10px hsl(210 100% 56%),
+    0 0 20px hsl(210 100% 56%),
+    0 0 40px hsl(210 100% 56%);
+}
+
 /* Pulse border */
 @keyframes pulse-border {
 
@@ -2097,6 +2741,19 @@ section[class*="py-"] {
 }
 
 /* Gradient shift text */
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
 
 .gradient-shift-text {
   background: linear-gradient(135deg,
@@ -2257,6 +2914,13 @@ section[class*="py-"] {
    RESPONSIVE UTILITIES
    ══════════════════════════════════════════ */
 
+/* Prevent horizontal overflow globally */
+html,
+body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
 /* Fix for very small screens (<375px) */
 @media (max-width: 374px) {
   .container {
@@ -2268,6 +2932,16 @@ section[class*="py-"] {
     font-size: 1.75rem !important;
     line-height: 1.2 !important;
   }
+}
+
+/* Ensure all images and media are responsive */
+img,
+video,
+iframe,
+embed,
+object {
+  max-width: 100%;
+  height: auto;
 }
 
 /* Prevent text overflow on cards */
@@ -2309,8 +2983,82 @@ section[class*="py-"] {
   }
 }
 
+/* Large desktop / 4K displays */
+@media (min-width: 1920px) {
+  html {
+    font-size: 18px;
+  }
+}
+
+/* ═══ PERFORMANCE OPTIMIZATIONS ═══ */
+
+/* GPU acceleration for animated elements */
+.gpu-accelerated {
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* Content visibility for off-screen sections - massive FPS boost */
+.section-lazy {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 300px;
+}
 
 /* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Optimize scrolling performance */
+.scroll-smooth-gpu {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Contain layout for grid containers - prevents layout thrashing */
+.contain-layout {
+  contain: layout style paint;
+}
+
+/* Optimized rendering for large card grids */
+.contain-layout>* {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 180px;
+}
+
+/* Optimized image rendering */
+img[loading="lazy"] {
+  content-visibility: auto;
+}
+
+/* Mobile performance: disable heavy effects */
+@media (max-width: 768px) {
+  .particle-field-canvas {
+    display: none !important;
+  }
+
+  .tilt-wrapper {
+    transform: none !important;
+  }
+
+  /* Reduce backdrop blur on mobile (GPU expensive) */
+  .glass,
+  .glass-strong,
+  .glass-ultra {
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+  }
+}
 
 /* ============================================
    FUNKY CONTACT PAGE STYLES — ULTRA V2
@@ -3352,6 +4100,14 @@ a:active {
 /* ── 5. All images — standard sizing only, no GPU layer per-image ── */
 /* NOTE: backface-visibility: hidden REMOVED from all img — creates a GPU layer
    for every image on the page = massive compositor overload = flickering */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+img[loading="lazy"] {
+  /* NOTE: will-change: opacity REMOVED — not needed for lazy images */
+}
 
 /* ── 6. Scrollable containers — momentum scroll ── */
 [class*="overflow-y-auto"],
@@ -3511,6 +4267,17 @@ section {
   }
 }
 
+/* ── 12. Large TV / 4K displays (≥1920px) ── */
+@media (min-width: 1920px) {
+  .container {
+    max-width: 1680px;
+  }
+
+  html {
+    font-size: 112%;
+  }
+}
+
 @media (min-width: 2560px) {
   .container {
     max-width: 2200px;
@@ -3522,6 +4289,11 @@ section {
 }
 
 /* ── 13. Focus-visible — accessible keyboard nav ── */
+:focus-visible {
+  outline: 2px solid hsl(210 100% 56%);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
 
 :focus:not(:focus-visible) {
   outline: none;
@@ -3560,10 +4332,55 @@ section {
 }
 
 /* ── 16. Reduced-motion fallbacks ── */
+@media (prefers-reduced-motion: reduce) {
+
+  .animate-page-in,
+  .animate-pop-in,
+  .animate-slide-right,
+  .animate-slide-left,
+  .animate-smooth-in,
+  .animate-scale-in,
+  .animate-slide-up {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
 
 /* ── 17. Performance: remove will-change after animation ── */
 .animation-done {
   will-change: auto !important;
+}
+
+/* ── 18. Grid auto-fit responsive patterns ── */
+.grid-auto-xs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 0.75rem;
+}
+
+.grid-auto-sm {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 1rem;
+}
+
+.grid-auto-md {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.25rem;
+}
+
+.grid-auto-lg {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.grid-auto-xl {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 1.5rem;
 }
 
 /* ── 19. Aspect-ratio responsive ── */
@@ -3698,11 +4515,22 @@ section {
     will-change: transform;
   }
   
-  /* [PERF] Removed broad [data-state] transition — was applying to every Radix element */
-  /* Dialog/modal animations handled by Framer Motion in components */
+  /* Smooth CSS transitions for all Radix UI elements */
+  [data-state] {
+    transition: all 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  
+  /* Smooth dialog/modal overlays */
+  [data-state="open"] {
+    animation: smooth-fade-in 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
 }
 
-/* [PERF] Font smoothing already applied to body in @layer base — removed wildcard rule */
+/* Ensure font rendering is always smooth */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
 /* Smooth scrollbar styling */
 ::-webkit-scrollbar {
@@ -3725,6 +4553,10 @@ section {
 }
 
 /* Firefox smooth scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(0 0% 30%) transparent;
+}
 
 /* ═══════════════════════════════════════════════════════════
    PERFORMANCE LAYER — Targeted GPU compositing (SAFE)
@@ -3939,8 +4771,8 @@ main {
   }
 
   .glass-strong {
-    backdrop-filter: blur(6px) !important;
-    -webkit-backdrop-filter: blur(6px) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
   }
 
   .hero-responsive {
@@ -4172,6 +5004,10 @@ main,
 }
 
 /* Image responsive fixes */
+img {
+  max-width: 100%;
+  height: auto;
+}
 
 /* Prevent horizontal scroll on all devices */
 .overflow-x-clip {
@@ -4248,6 +5084,16 @@ main,
     animation-range: entry 0% entry 30%;
   }
 
+  @keyframes reveal-up {
+    from {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }
 
 /* ═══ ANTI-BLINK for specific known issues ═══ */
@@ -4634,8 +5480,8 @@ html {
   overflow: hidden;
 }
 
-/* ── 21. SCROLLBAR STYLING ── */
-html {
+/* ── 21. SCROLLBAR ON ALL DEVICES ── */
+* {
   scrollbar-width: thin;
   scrollbar-color: hsl(0 0% 20%) hsl(0 0% 5%);
 }
@@ -4977,112 +5823,4 @@ html {
 /* CSS-only spin animation (replaces Framer Motion infinite rotate) */
 @keyframes spin {
   to { transform: rotate(360deg); }
-}
-
-/* ═══════════════════════════════════════════════════════════════════
-   DEFINITIVE MOBILE PERFORMANCE — FINAL AUTHORITY
-   This block must be LAST to override all conflicting mobile rules above.
-   Optimizes GPU-heavy effects on PHONES ONLY (≤768px).
-   Tablets (769px+) keep full premium effects for a beautiful experience.
-   ═══════════════════════════════════════════════════════════════════ */
-@media (max-width: 768px) {
-  /* Reduce backdrop-filter on phones — keep glass look, reduce GPU cost */
-  .glass,
-  .glass-strong,
-  .glass-premium,
-  .glass-ultra,
-  .glass-inner-light,
-  .frosted-panel,
-  .frosted-card,
-  .funky-glass-card {
-    backdrop-filter: blur(4px) !important;
-    -webkit-backdrop-filter: blur(4px) !important;
-  }
-
-  /* Slow down heavy continuous animations instead of killing them */
-  .morph-blob,
-  .funky-liquid-blob {
-    animation-duration: 30s !important;
-  }
-
-  .aurora-bg,
-  .mesh-animated {
-    animation-duration: 40s !important;
-  }
-
-  /* Keep shimmer/gradient text alive but slower */
-  .text-shimmer,
-  .funky-gradient-bg,
-  .funky-send-btn,
-  .liquid-bg,
-  .liquid-gradient,
-  .text-gradient-animated,
-  .gradient-shift-text {
-    animation-duration: 12s !important;
-  }
-
-  /* Kill truly expensive effects on phones */
-  .holo-effect,
-  .holographic,
-  .animated-border,
-  .animated-border-gradient,
-  .funky-animated-grid,
-  .funky-holographic {
-    animation: none !important;
-  }
-
-  /* Hide heavy decorative elements on mobile */
-  .funky-aurora-band,
-  .funky-scan-line::before,
-  .noise-overlay::after,
-  .grain::before {
-    display: none !important;
-  }
-
-  /* Simplify GPU-heavy transitions */
-  .gpu-accelerated {
-    will-change: auto !important;
-    transform: none !important;
-  }
-
-  /* Reduce card hover effects on touch devices */
-  .card-3d:hover,
-  .card-3d-shadow:hover,
-  .hover-3d:hover,
-  .card-rotate-3d:hover {
-    transform: none !important;
-  }
-
-  /* Keep tool-card and hover-lift with simplified transforms */
-  .tool-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-  }
-
-  .hover-lift:hover {
-    transform: translateY(-3px);
-  }
-
-  /* Mobile-friendly scrolling */
-  html {
-    scroll-behavior: auto !important;
-    -webkit-overflow-scrolling: touch;
-  }
-}
-
-/* Extra small phones (≤480px) — maximum performance */
-@media (max-width: 480px) {
-  .electric-border,
-  .rainbow-border,
-  .glow-pulse,
-  .pulse-border,
-  .funky-breathe,
-  .funky-neon {
-    animation: none !important;
-  }
-
-  .card-shine::after,
-  .funky-light-streak::before {
-    display: none !important;
-  }
 }

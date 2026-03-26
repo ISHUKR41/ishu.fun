@@ -2,35 +2,17 @@
  * Index.tsx - Home Page
  *
  * Landing page of ISHU — Indian StudentHub University.
- * Sections:
- *  1.  HeroSection           - Main banner (Apple/Tesla/Vercel style)
- *  2.  MarqueeSection        - Infinite scroll marquee of exams + tools
- *  3.  TrustedBySection      - Social proof logos / badges
- *  4.  StatsSection          - Key numbers (users, tools, states, news)
- *  5.  PlatformOverview      - General platform intro
- *  6.  HowItWorksSection     - 4-step guide
- *  7.  ImmersiveExperienceSection
- *  8.  InnovationMatrixSection
- *  9.  FeaturesSection       - 6-card features grid
- *  10. ExamCategoriesSection - Exam category links
- *  11. ResultsPreview        - Latest govt exam results
- *  12. StatesMapSection      - India map
- *  13. ToolsPreview          - Popular PDF tools
- *  14. NewsPreview           - Latest news
- *  15. WhyChooseUs
- *  16. TechStackSection
- *  17. WhatsAppCTA
- *  18. BlogPreview
- *  19. TestimonialsSection
- *  20. AchievementsSection
- *  21. LivePulseSection
- *  22. CallToActionSection
- *  23. FAQSection
+ * 
+ * PERFORMANCE FIX v2: Each below-fold section uses LazySection which defers
+ * loading the JS chunk until the section is ~300px from viewport. This means
+ * on initial page load, ONLY the above-fold code is downloaded + executed.
+ * Below-fold sections load progressively as the user scrolls.
  *
- * SEO: WebsiteSchema, OrganizationSchema, HomeFAQSchema, SiteLinksSearchBoxSchema
+ * Above-fold sections (Hero, Marquee, TrustedBy, Stats) are imported
+ * directly (no lazy) for instant render.
  */
 
-import { lazy, Suspense } from "react";
+import { lazy } from "react";
 import Layout from "@/components/layout/Layout";
 import SEOHead, { SEO_DATA } from "@/components/seo/SEOHead";
 import HeroSection from "@/components/home/HeroSection";
@@ -38,6 +20,7 @@ import MarqueeSection from "@/components/home/MarqueeSection";
 import TrustedBySection from "@/components/home/TrustedBySection";
 import StatsSection from "@/components/home/StatsSection";
 import { WebsiteSchema, OrganizationSchema, HomeFAQSchema, SiteLinksSearchBoxSchema } from "@/components/seo/JsonLd";
+import LazySection from "@/components/performance/LazySection";
 
 const ProductShowcase         = lazy(() => import("@/components/home/ProductShowcase"));
 const PlatformOverview        = lazy(() => import("@/components/home/PlatformOverview"));
@@ -60,8 +43,6 @@ const LivePulseSection        = lazy(() => import("@/components/home/LivePulseSe
 const CallToActionSection     = lazy(() => import("@/components/home/CallToActionSection"));
 const FAQSection              = lazy(() => import("@/components/home/FAQSection"));
 
-const SectionFallback = () => <div aria-hidden="true" />;
-
 const Index = () => {
   return (
     <Layout>
@@ -77,29 +58,27 @@ const Index = () => {
       <TrustedBySection />
       <StatsSection />
 
-      {/* ── Below-fold: lazy loaded ── */}
-      <Suspense fallback={<SectionFallback />}>
-        <ProductShowcase />
-        <PlatformOverview />
-        <HowItWorksSection />
-        <ImmersiveExperienceSection />
-        <InnovationMatrixSection />
-        <FeaturesSection />
-        <ExamCategoriesSection />
-        <ResultsPreview />
-        <StatesMapSection />
-        <ToolsPreview />
-        <NewsPreview />
-        <WhyChooseUs />
-        <TechStackSection />
-        <WhatsAppCTA />
-        <BlogPreview />
-        <TestimonialsSection />
-        <AchievementsSection />
-        <LivePulseSection />
-        <CallToActionSection />
-        <FAQSection />
-      </Suspense>
+      {/* ── Below-fold: each section loads only when near viewport ── */}
+      <LazySection><ProductShowcase /></LazySection>
+      <LazySection><PlatformOverview /></LazySection>
+      <LazySection><HowItWorksSection /></LazySection>
+      <LazySection><ImmersiveExperienceSection /></LazySection>
+      <LazySection><InnovationMatrixSection /></LazySection>
+      <LazySection><FeaturesSection /></LazySection>
+      <LazySection><ExamCategoriesSection /></LazySection>
+      <LazySection><ResultsPreview /></LazySection>
+      <LazySection><StatesMapSection /></LazySection>
+      <LazySection><ToolsPreview /></LazySection>
+      <LazySection><NewsPreview /></LazySection>
+      <LazySection><WhyChooseUs /></LazySection>
+      <LazySection><TechStackSection /></LazySection>
+      <LazySection><WhatsAppCTA /></LazySection>
+      <LazySection><BlogPreview /></LazySection>
+      <LazySection><TestimonialsSection /></LazySection>
+      <LazySection><AchievementsSection /></LazySection>
+      <LazySection><LivePulseSection /></LazySection>
+      <LazySection><CallToActionSection /></LazySection>
+      <LazySection><FAQSection /></LazySection>
     </Layout>
   );
 };
