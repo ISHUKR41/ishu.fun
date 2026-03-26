@@ -1516,7 +1516,7 @@ sudo apt-get update && sudo apt-get install -y libreoffice ghostscript poppler-u
 npm install express multer cors helmet express-rate-limit dotenv morgan pdf-lib pdfkit pdf-parse libreoffice-convert sharp jimp archiver unzipper puppeteer fs-extra uuid file-type mime-types openai axios xml2js marked bull ioredis bcryptjs jsonwebtoken
 
 # Step 5: Python packages install
-pip3 install PyMuPDF pypdf pdfplumber pdf2docx python-docx openpyxl python-pptx Pillow pytesseract camelot-py tabula-py weasyprint pikepdf reportlab pdfminer.six rarfile pandas
+pip3 install PyMuPDF pypdf pdfplumber pdf2docx python-docx openpyxl python-pptx Pillow pytesseract camelot-py tabula-py weasyprint pikepdf reportlab pdfminer.six rarfile pandas 
 
 # Step 6: Puppeteer browser
 npx puppeteer browsers install chrome
