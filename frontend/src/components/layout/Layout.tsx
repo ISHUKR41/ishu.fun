@@ -16,8 +16,9 @@ import Header from "./Header";
 import Footer from "./Footer";
 import ScrollToTop from "../animations/ScrollToTop";
 import ScrollFixer from "./ScrollFixer";
-import SmoothScroll from "./SmoothScroll";
+import UltraSmoothScroll from "./UltraSmoothScroll";
 import PerformanceOptimizer from "./PerformanceOptimizer";
+import PerformanceMonitor from "../performance/PerformanceMonitor";
 import IshuBrandSEO from "../seo/IshuBrandSEO";
 
 interface LayoutProps {
@@ -31,10 +32,12 @@ const Layout = ({ children }: LayoutProps) => {
       <IshuBrandSEO />
       {/* Scroll fix for modal/dialog overflow issues */}
       <ScrollFixer />
-      {/* Lenis smooth scroll (ALL devices - mobile, tablet, desktop, TV) */}
-      <SmoothScroll />
+      {/* Ultra Smooth Scroll (ALL devices - mobile, tablet, desktop, TV) with optimized RAF */}
+      <UltraSmoothScroll />
       {/* Lightweight performance hints (font preconnect, lazy images) */}
       <PerformanceOptimizer />
+      {/* Real-time performance monitoring (dev only, toggle with Ctrl+Shift+P) */}
+      <PerformanceMonitor />
       
       {/* Fixed background */}
       <div className="pointer-events-none fixed inset-0 bg-background z-0" />

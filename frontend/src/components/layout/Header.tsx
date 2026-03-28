@@ -13,9 +13,10 @@
 
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, LogOut, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useScrollY, useScrollDirection } from "@/hooks/useUnifiedScroll";
 
 // All navigation links shown in the header
 const navLinks = [
@@ -38,14 +39,14 @@ const Header = () => {
   const location = useLocation();                          // Current page URL
   const navigate = useNavigate();
   const { user, isAdmin, signOut } = useAuth();           // Auth state from context
-  const { scrollY } = useScroll();                        // Track scroll position
+  const scrollY = useScrollY();                           // Track scroll position (unified hook)
+  const direction = useScrollDirection();                 // Track scroll direction
 
-  // Watch scroll position to show/hide header
-  useMotionValueEvent(scrollY, "change", (latest) => {
-    const prev = scrollY.getPrevious() ?? 0;
-    setScrolled(latest > 20);                              // Add glass effect after 20px scroll
-    setHidden(latest > 200 && latest > prev);              // Hide when scrolling down past 200px
-  });
+  // Update header visibility based on scroll
+  useEffect(() => {
+    setScrolled(scrollY > 20);                             // Add glass effect after 20px scroll
+    setHidden(scrollY > 200 && direction === "down");      // Hide when scrolling down past 200px
+  }, [scrollY, direction]);
 
   // Sign out and redirect to home page
   const handleSignOut = async () => {
