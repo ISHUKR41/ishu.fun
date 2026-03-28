@@ -133,12 +133,22 @@ body {
     image-rendering: auto;
     height: auto;
     min-height: 100%;
+    /* Enable GPU acceleration for smooth scrolling */
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    /* Optimize rendering */
+    -webkit-font-smoothing: subpixel-antialiased;
+    -moz-osx-font-smoothing: auto;
   }
 
   @media (max-width: 768px) {
     html {
       scroll-behavior: auto;
       scrollbar-gutter: auto;
+      /* Mobile-specific optimizations */
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: none;
     }
   }
 
@@ -157,6 +167,11 @@ body {
     height: auto;
     min-height: 100vh;
     min-height: 100dvh;
+    /* Smooth scrolling optimizations */
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
+    /* Prevent scroll jank */
+    transform: translateZ(0);
   }
 
   h1,
@@ -178,11 +193,22 @@ body {
   .scroll-container {
     contain: layout style paint;
     content-visibility: auto;
+    /* Optimize scroll performance */
+    will-change: scroll-position;
+    -webkit-overflow-scrolling: touch;
   }
 
   /* Passive scroll listeners (handled in JS) */
   .passive-scroll {
     overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Ultra smooth scroll optimization */
+  * {
+    -webkit-tap-highlight-color: transparent;
+    /* Prevent janky text selection during scroll */
+    -webkit-touch-callout: none;
   }
 
   /* ═══ IMAGE OPTIMIZATION ═══ */

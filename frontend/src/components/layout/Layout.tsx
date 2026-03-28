@@ -31,7 +31,7 @@ const Layout = ({ children }: LayoutProps) => {
       <IshuBrandSEO />
       {/* Scroll fix for modal/dialog overflow issues */}
       <ScrollFixer />
-      {/* Lenis smooth scroll (desktop only — skipped on mobile for perf) */}
+      {/* Lenis smooth scroll (ALL devices - mobile, tablet, desktop, TV) */}
       <SmoothScroll />
       {/* Lightweight performance hints (font preconnect, lazy images) */}
       <PerformanceOptimizer />
