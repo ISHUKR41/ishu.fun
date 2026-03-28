@@ -92,6 +92,7 @@
     "react-hook-form": "^7.61.1",
     "react-hot-toast": "^2.6.0",
     "react-intersection-observer": "^10.0.3",
+    "react-lazy-load-image-component": "^1.6.3",
     "react-parallax-tilt": "^1.7.319",
     "react-resizable-panels": "^2.1.9",
     "react-router-dom": "^6.30.1",
