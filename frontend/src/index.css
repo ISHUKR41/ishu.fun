@@ -140,6 +140,10 @@ body {
     /* Optimize rendering */
     -webkit-font-smoothing: subpixel-antialiased;
     -moz-osx-font-smoothing: auto;
+    /* Critical: Enable CSS containment for massive performance boost */
+    contain: layout style;
+    /* Optimize compositing */
+    will-change: auto;
   }
 
   @media (max-width: 768px) {
@@ -169,9 +173,12 @@ body {
     min-height: 100dvh;
     /* Smooth scrolling optimizations */
     overscroll-behavior-y: none;
+    overscroll-behavior-x: none;
     -webkit-overflow-scrolling: touch;
     /* Prevent scroll jank */
     transform: translateZ(0);
+    /* CSS containment for scroll performance */
+    contain: layout style;
   }
 
   h1,
