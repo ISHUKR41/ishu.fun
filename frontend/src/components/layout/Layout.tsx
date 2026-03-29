@@ -16,7 +16,7 @@ import Header from "./Header";
 import Footer from "./Footer";
 import ScrollToTop from "../animations/ScrollToTop";
 import ScrollFixer from "./ScrollFixer";
-import UltraSmoothScroll from "./UltraSmoothScroll";
+import EnhancedSmoothScroll from "./EnhancedSmoothScroll";
 import PerformanceOptimizer from "./PerformanceOptimizer";
 import PerformanceMonitor from "../performance/PerformanceMonitor";
 import IshuBrandSEO from "../seo/IshuBrandSEO";
@@ -32,8 +32,8 @@ const Layout = ({ children }: LayoutProps) => {
       <IshuBrandSEO />
       {/* Scroll fix for modal/dialog overflow issues */}
       <ScrollFixer />
-      {/* Ultra Smooth Scroll (ALL devices - mobile, tablet, desktop, TV) with optimized RAF */}
-      <UltraSmoothScroll />
+      {/* Enhanced Smooth Scroll (ALL devices - mobile, tablet, desktop, TV) with optimized RAF */}
+      <EnhancedSmoothScroll />
       {/* Lightweight performance hints (font preconnect, lazy images) */}
       <PerformanceOptimizer />
       {/* Real-time performance monitoring (dev only, toggle with Ctrl+Shift+P) */}
