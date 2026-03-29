@@ -1,14 +1,15 @@
 /**
- * UltraSmoothScroll.tsx — Ultimate Smooth Scrolling System
+ * UltraSmoothScroll.tsx — Ultimate Smooth Scrolling System v2
  *
  * ULTRA PERFORMANCE OPTIMIZED: Single unified scroll system for ALL devices
- * - Consolidates Lenis with optimized RAF management
- * - Removes competing scroll listeners
+ * - Enhanced Lenis configuration with advanced RAF management
+ * - Adaptive FPS based on device capabilities
  * - Device-specific ultra-smooth configurations
  * - Lazy loading integration
- * - Performance monitoring
+ * - Real-time performance monitoring and auto-adjustment
+ * - Prevents scroll jank and lag on all devices
  *
- * Devices: Mobile, Tablet, Desktop, TV - all optimized
+ * Devices: Mobile, Tablet, Desktop, TV - all optimized with smart detection
  */
 
 import { useEffect, useRef } from "react";
@@ -17,23 +18,24 @@ import Lenis from "lenis";
 
 export let globalLenis: Lenis | null = null;
 
-// Device detection with caching
+// Device detection with enhanced logic and touch support detection
 const getDeviceType = () => {
   if (typeof window === "undefined") return "desktop";
 
   const width = window.innerWidth;
   const height = window.innerHeight;
+  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
   // TV/Large displays
   if (width >= 1920 || (width >= 1440 && height >= 900)) {
     return "tv";
   }
-  // Tablet
-  if (width >= 641 && width <= 1024) {
+  // Tablet (with touch support)
+  if ((width >= 641 && width <= 1024) || (isTouchDevice && width <= 1366)) {
     return "tablet";
   }
   // Mobile
-  if (width <= 640) {
+  if (width <= 640 || (isTouchDevice && width <= 768)) {
     return "mobile";
   }
   // Desktop (default)
@@ -44,11 +46,14 @@ const DEVICE_TYPE = typeof window !== "undefined" ? getDeviceType() : "desktop";
 const PREFER_REDUCED_MOTION =
   typeof window !== "undefined" &&
   window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+const IS_TOUCH_DEVICE = typeof window !== "undefined" && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
-// Performance monitoring
+// Performance monitoring with better FPS tracking
 let lastScrollTime = 0;
 let scrollFrameCount = 0;
 let scrollFPS = 60;
+let fpsHistory: number[] = [];
+let isLowPerformance = false;
 
 const monitorScrollPerformance = () => {
   if (typeof window === "undefined") return;
@@ -58,13 +63,22 @@ const monitorScrollPerformance = () => {
 
   if (delta > 0) {
     scrollFrameCount++;
-    if (scrollFrameCount >= 60) {
-      scrollFPS = Math.round(1000 / (delta / scrollFrameCount));
+    const currentFPS = Math.round(1000 / delta);
+
+    if (scrollFrameCount >= 10) {
+      fpsHistory.push(currentFPS);
+      if (fpsHistory.length > 30) fpsHistory.shift();
+
+      const avgFPS = fpsHistory.reduce((a, b) => a + b, 0) / fpsHistory.length;
+      scrollFPS = Math.round(avgFPS);
       scrollFrameCount = 0;
+
+      // Detect low performance
+      isLowPerformance = scrollFPS < 45;
 
       // Log performance warnings in dev
       if (import.meta.env.DEV && scrollFPS < 30) {
-        console.warn(`⚠️ Scroll performance degraded: ${scrollFPS}fps`);
+        console.warn(`⚠️ Scroll performance degraded: ${scrollFPS}fps (avg of last ${fpsHistory.length} samples)`);
       }
     }
   }
@@ -84,49 +98,49 @@ const UltraSmoothScroll = () => {
       return;
     }
 
-    // Ultra-optimized device-specific configurations
+    // Ultra-optimized device-specific configurations (enhanced)
     const configs = {
       mobile: {
-        lerp: 0.15, // More responsive on mobile
-        duration: 1.0,
+        lerp: isLowPerformance ? 0.2 : 0.15, // Adaptive based on performance
+        duration: 0.8,
         smoothWheel: false,
         wheelMultiplier: 1.0,
-        touchMultiplier: 1.5, // Lighter touch response
+        touchMultiplier: IS_TOUCH_DEVICE ? 1.4 : 1.5,
         syncTouch: true,
-        syncTouchLerp: 0.18,
-        touchInertiaMultiplier: 20,
+        syncTouchLerp: 0.2,
+        touchInertiaMultiplier: 18,
         easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       },
       tablet: {
-        lerp: 0.12,
-        duration: 1.2,
+        lerp: isLowPerformance ? 0.15 : 0.11,
+        duration: 1.0,
         smoothWheel: true,
         wheelMultiplier: 1.0,
-        touchMultiplier: 1.8,
+        touchMultiplier: IS_TOUCH_DEVICE ? 1.6 : 1.8,
         syncTouch: true,
-        syncTouchLerp: 0.14,
-        touchInertiaMultiplier: 22,
+        syncTouchLerp: 0.15,
+        touchInertiaMultiplier: 20,
         easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       },
       desktop: {
-        lerp: 0.1, // Buttery smooth on desktop
-        duration: 1.5,
+        lerp: isLowPerformance ? 0.14 : 0.09, // Buttery smooth on desktop
+        duration: 1.2,
         smoothWheel: true,
         wheelMultiplier: 1.0,
         touchMultiplier: 2.0,
-        syncTouch: true,
-        syncTouchLerp: 0.12,
-        touchInertiaMultiplier: 24,
+        syncTouch: IS_TOUCH_DEVICE,
+        syncTouchLerp: 0.11,
+        touchInertiaMultiplier: 22,
         easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       },
       tv: {
-        lerp: 0.08, // Ultra smooth for large screens
-        duration: 2.0,
+        lerp: 0.07, // Ultra smooth for large screens
+        duration: 1.5,
         smoothWheel: true,
-        wheelMultiplier: 1.2,
+        wheelMultiplier: 1.3,
         touchMultiplier: 2.5,
         syncTouch: false,
-        touchInertiaMultiplier: 25,
+        touchInertiaMultiplier: 24,
         easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       },
     };
@@ -160,10 +174,21 @@ const UltraSmoothScroll = () => {
     lenisRef.current = lenis;
     globalLenis = lenis;
 
-    // Single optimized RAF loop
+    // Single optimized RAF loop with adaptive FPS
     let lastTime = 0;
-    const targetFPS = DEVICE_TYPE === "mobile" ? 30 : 60;
-    const frameInterval = 1000 / targetFPS;
+    // Adaptive target FPS based on device and performance
+    const getTargetFPS = () => {
+      if (DEVICE_TYPE === "mobile" && isLowPerformance) return 30;
+      if (DEVICE_TYPE === "mobile") return 45;
+      if (isLowPerformance) return 45;
+      return 60;
+    };
+
+    let targetFPS = getTargetFPS();
+    let frameInterval = 1000 / targetFPS;
+
+    // Dynamically adjust FPS if performance drops
+    let performanceCheckCounter = 0;
 
     function raf(time: number) {
       const delta = time - lastTime;
@@ -172,6 +197,20 @@ const UltraSmoothScroll = () => {
         lenis.raf(time);
         monitorScrollPerformance();
         lastTime = time - (delta % frameInterval);
+
+        // Periodically adjust target FPS based on performance
+        performanceCheckCounter++;
+        if (performanceCheckCounter > 120) {
+          const newTargetFPS = getTargetFPS();
+          if (newTargetFPS !== targetFPS) {
+            targetFPS = newTargetFPS;
+            frameInterval = 1000 / targetFPS;
+            if (import.meta.env.DEV) {
+              console.log(`🎯 Adjusted target FPS to ${targetFPS} (current: ${scrollFPS}fps)`);
+            }
+          }
+          performanceCheckCounter = 0;
+        }
       }
 
       rafRef.current = requestAnimationFrame(raf);

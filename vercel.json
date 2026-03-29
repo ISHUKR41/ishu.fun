@@ -1,8 +1,9 @@
 {
-  "buildCommand": "cd frontend && npm install --legacy-peer-deps && npm run build",
+  "buildCommand": "cd frontend && npm ci --legacy-peer-deps && npm run build",
   "outputDirectory": "frontend/dist",
-  "installCommand": "npm install --prefix frontend --legacy-peer-deps",
+  "installCommand": "npm ci --prefix frontend --legacy-peer-deps",
   "framework": null,
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD ./frontend/",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
