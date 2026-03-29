@@ -1,57 +1,154 @@
-# Smooth Scrolling & Lazy Loading Implementation Guide
+# Smooth Scrolling & Lazy Loading Implementation Guide v2
 
 ## Overview
-This document describes the ultra-smooth scrolling and lazy loading implementation across all devices (mobile, tablet, desktop, TV) for the ISHU application.
+This document describes the ultra-smooth scrolling and advanced lazy loading implementation across ALL devices (mobile, tablet, desktop, TV) for the ISHU application with ZERO lag and optimal performance.
+
+## ✅ Latest Improvements (2026-03-29)
+
+### 1. Adaptive FPS Management
+- **Real-time performance monitoring** with FPS tracking
+- **Automatic FPS adjustment** based on device capabilities
+- **Performance history tracking** (30-sample moving average)
+- **Dynamic configuration switching** when performance degrades
+
+### 2. Enhanced Device Detection
+- **Touch support detection** for hybrid devices
+- **Improved device type classification** (mobile, tablet, desktop, TV)
+- **Adaptive scroll parameters** based on device and touch capabilities
+- **Performance-aware configuration** (adjusts lerp values dynamically)
+
+### 3. Global Lazy Loading Configuration
+- **Centralized lazy load settings** in `lazyLoadConfig.ts`
+- **Browser capability detection** (Intersection Observer, native lazy loading)
+- **Optimal strategy selection** (hybrid, intersection-observer, native, eager)
+- **Configurable thresholds** for images, components, and sections
+
+### 4. Virtual Scrolling Support
+- **VirtualList component** for rendering large lists efficiently
+- **Only renders visible items** + configurable overscan
+- **Automatic height calculation** with dynamic item heights
+- **Memory efficient** - handles thousands of items without lag
 
 ## Components Implemented
 
-### 1. SmoothScroll Component (`/src/components/layout/SmoothScroll.tsx`)
+### 1. UltraSmoothScroll Component (`/src/components/layout/UltraSmoothScroll.tsx`)
 
-**Purpose**: Provides buttery-smooth scrolling using Lenis library across ALL devices.
+**Purpose**: Provides buttery-smooth scrolling using Lenis library across ALL devices with adaptive performance.
 
 **Key Features**:
-- ✅ Device-specific optimizations (mobile, tablet, desktop, TV)
-- ✅ Automatic device detection and configuration
-- ✅ Respects user's reduced motion preference
-- ✅ Smooth page transitions on route change
-- ✅ Prevents scroll interference with inputs, textareas, and video players
+- ✅ **Adaptive FPS management** - adjusts target FPS based on performance
+- ✅ **Enhanced device detection** with touch support
+- ✅ **Real-time performance monitoring** with FPS tracking
+- ✅ **Dynamic configuration** that adapts to device capabilities
+- ✅ **Smart device-specific optimizations** (mobile, tablet, desktop, TV)
+- ✅ **Respects user's reduced motion preference**
+- ✅ **Smooth page transitions** on route change
+- ✅ **Prevents scroll interference** with inputs, textareas, and video players
 
-**Device Configurations**:
+**Enhanced Device Configurations**:
 
 ```typescript
-// Mobile (≤640px)
+// Mobile (≤640px or touch device ≤768px)
 {
-  lerp: 0.12,              // Faster interpolation for responsiveness
-  touchMultiplier: 1.8,    // Optimized touch scrolling
-  syncTouchLerp: 0.15,     // Smooth touch momentum
-  touchInertiaMultiplier: 25,
-  smoothWheel: false       // Disabled (not used on mobile)
+  lerp: 0.15 (adaptive: 0.2 if low performance),
+  duration: 0.8,
+  touchMultiplier: 1.4 (if touch device),
+  syncTouchLerp: 0.2,
+  touchInertiaMultiplier: 18,
+  smoothWheel: false,
+  targetFPS: 30-45 (adaptive based on performance)
 }
 
-// Tablet (641px - 1024px)
+// Tablet (641px - 1024px or touch device ≤1366px)
 {
-  lerp: 0.1,               // Balanced interpolation
-  touchMultiplier: 2.0,    // Good touch experience
-  wheelMultiplier: 1.1,    // Smooth wheel scrolling
-  syncTouchLerp: 0.12,
-  touchInertiaMultiplier: 22
+  lerp: 0.11 (adaptive: 0.15 if low performance),
+  duration: 1.0,
+  touchMultiplier: 1.6-1.8 (adaptive based on touch),
+  syncTouchLerp: 0.15,
+  touchInertiaMultiplier: 20,
+  smoothWheel: true,
+  targetFPS: 45-60 (adaptive)
 }
 
 // Desktop (1025px - 1919px)
 {
-  lerp: 0.08,              // Smooth interpolation
-  smoothWheel: true,       // Full wheel smoothing
+  lerp: 0.09 (adaptive: 0.14 if low performance),
+  duration: 1.2,
+  smoothWheel: true,
   wheelMultiplier: 1.0,
   touchMultiplier: 2.0,
-  syncTouch: true
+  syncTouch: adaptive based on touch capability,
+  syncTouchLerp: 0.11,
+  touchInertiaMultiplier: 22,
+  targetFPS: 60 (45 if low performance)
 }
 
 // TV (≥1920px)
 {
-  lerp: 0.06,              // Very smooth for large screens
-  wheelMultiplier: 1.2,    // Faster scrolling for large content
-  touchMultiplier: 2.5
+  lerp: 0.07,
+  duration: 1.5,
+  smoothWheel: true,
+  wheelMultiplier: 1.3,
+  touchMultiplier: 2.5,
+  touchInertiaMultiplier: 24,
+  targetFPS: 60
 }
+```
+
+### 2. Lazy Loading Configuration (`/src/utils/lazyLoadConfig.ts`)
+
+**Purpose**: Centralized configuration for all lazy loading across the application.
+
+**Features**:
+- ✅ **Unified settings** for images, components, and sections
+- ✅ **Browser capability detection**
+- ✅ **Optimal strategy selection**
+- ✅ **Performance settings** (native lazy loading, async decoding, content-visibility)
+
+**Configuration**:
+```typescript
+{
+  images: {
+    rootMargin: '300px',
+    threshold: 0.01,
+    effect: 'opacity',
+  },
+  components: {
+    rootMargin: '400px',
+    threshold: 0.01,
+    minHeight: '200px',
+  },
+  sections: {
+    rootMargin: '500px',
+    threshold: 0,
+    minHeight: '300px',
+  },
+}
+```
+
+### 3. VirtualList Component (`/src/components/performance/VirtualList.tsx`)
+
+**Purpose**: High-performance virtual scrolling for large lists.
+
+**Features**:
+- ✅ **Only renders visible items** + overscan
+- ✅ **Handles thousands of items** without lag
+- ✅ **Dynamic item heights** support
+- ✅ **Memory efficient** - constant memory usage
+- ✅ **Smooth scrolling integration**
+
+**Usage**:
+```tsx
+import VirtualList from '@/components/performance/VirtualList';
+
+<VirtualList
+  items={largeDataArray}
+  itemHeight={100}
+  overscan={5}
+  renderItem={(item, index) => (
+    <div key={index}>{item.name}</div>
+  )}
+/>
 ```
 
 ### 2. LazyImage Component (`/src/components/common/LazyImage.tsx`)
