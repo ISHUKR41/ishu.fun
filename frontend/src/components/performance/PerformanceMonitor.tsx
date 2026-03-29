@@ -12,7 +12,7 @@
  */
 
 import { useEffect, useState, useRef } from "react";
-import { getScrollFPS } from "@/components/layout/UltraSmoothScroll";
+import { getScrollFPS } from "@/components/layout/EnhancedSmoothScroll";
 
 interface PerformanceMetrics {
   scrollFPS: number;
